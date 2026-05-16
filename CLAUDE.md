@@ -4,6 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Keep your answers short and meaningfull.
 
+Whenever working with any third-party library or something similar, you MUST look up the official documentation to ensure that you're working with up-to-date information. Use the DocsExplorer subagent for efficient documentation lookup.
+
+We're building the app described in @SPEC.MD. Read that file for general architectural tasks or to double-check the exact database structure, tech stack or application architecture. UPDATE: take into consideration we want one user identified by email use two different SSO providers.
+
 ## Project Overview
 
 This is a full-stack Personal To-Do Manager web application built as an MVP to demonstrate end-to-end product implementation. Users can manage tasks across multiple projects with SSO authentication, real-time WebSocket notifications, and task filtering/search capabilities.
