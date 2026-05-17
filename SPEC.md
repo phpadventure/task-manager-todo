@@ -27,7 +27,7 @@ A full-stack web application for managing personal tasks across multiple project
 
 ### 4.1 User
 ```
-id (PK)
+id (PK, UUID)
 email (UNIQUE, identifies the person)
 display_name
 avatar_url
@@ -37,7 +37,7 @@ updated_at
 
 ### 4.2 User Auth Provider
 ```
-id (PK)
+id (PK, UUID)
 user_id (FK → User)
 provider (enum: google, github)
 provider_user_id (unique per provider)
@@ -48,17 +48,16 @@ COMPOSITE UNIQUE: (user_id, provider) - one provider per user
 
 ### 4.3 List (Project)
 ```
-id (PK)
+id (PK, UUID)
 user_id (FK → User)
 title
 created_at
 updated_at
-deleted_at (soft delete optional)
 ```
 
 ### 4.4 Task
 ```
-id (PK)
+id (PK, UUID)
 list_id (FK → List)
 user_id (FK → User, for efficient queries)
 title
@@ -68,8 +67,6 @@ priority (enum: LOW, MEDIUM, HIGH)
 due_date (nullable)
 created_at
 updated_at
-completed_at (nullable)
-deleted_at (soft delete optional)
 ```
 
 ## 5. API Endpoints
@@ -226,19 +223,12 @@ deleted_at (soft delete optional)
 
 ## 11. Deletion Behavior
 
-**Choose ONE**:
-
-**Option A: Cascade Delete**
-- Deleting a list deletes all its tasks
-- Simpler implementation
-- Data loss risk
-
-**Option B: Block Until Empty**
-- Cannot delete list if it contains tasks
-- User must delete all tasks first
-- Safer, prevents accidental data loss
-
-**Decision**: [Document in README which approach is chosen]
+**Block Until Empty** (no database cascade):
+- Cannot delete list if it contains tasks → returns 409 Conflict
+- User must delete all tasks first, then delete the list
+- Deletion logic enforced in application layer (service)
+- Prevents accidental data loss
+- No database-level CASCADE; all constraint logic in Java code
 
 ## 12. Error Handling
 

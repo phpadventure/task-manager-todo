@@ -112,9 +112,10 @@ docker-compose up -d --build backend
 **Backend (Gradle):**
 ```bash
 cd backend
-gradle build        # Full build with tests
-gradle test         # Run tests only
-gradle bootRun      # Local dev (uses start-local.sh wrapper)
+gradle build              # Full build with tests
+gradle test               # Run tests only
+gradle checkstyleMain     # Check code style
+gradle bootRun            # Local dev (uses start-local.sh wrapper)
 ```
 
 **Frontend (Vue):**

@@ -1,12 +1,15 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
+## save tockens
 Keep your answers short and meaningfull.
-
+## Documentation research
 Whenever working with any third-party library or something similar, you MUST look up the official documentation to ensure that you're working with up-to-date information. Use the DocsExplorer subagent for efficient documentation lookup.
-
+## APP reference
 We're building the app described in @SPEC.MD. Read that file for general architectural tasks or to double-check the exact database structure, tech stack or application architecture. UPDATE: take into consideration we want one user identified by email use two different SSO providers.
+## development checks for local CI
+For development purpose after completing some changes suggest to run local build for backend part to verify checkstyle/tests and success completion of feature. Command `./gradlew build`. If you see that feature is not covered with tests suggest to add tests.
+For UI also suggest to add tests where it's possible. Cover mostly with unit test, where is complicated flow or you feel it needs integration tests suggest to add integration test. Ask to run local verification as build/test/pritier or smth together to verify feature is complited.
 
 ## Project Overview
 
@@ -22,13 +25,14 @@ This is a full-stack Personal To-Do Manager web application built as an MVP to d
 - Spring Security (with OAuth2 client)
 - Gradle
 - Spring WebSocket for real-time notifications
-- Spring Data JPA for ORM
+- Spring Data JPA for ORM(Hibernate)
+- OpenAPI(swagger)
 
 **Database**: MySQL 8.x
 
 **Migrations**: Flyway
 
-**Backend Tests**: JUnit 5, Mockito, AssertJ, TestContainers (integration tests)
+**Backend Tests**: JUnit 5, Mockito, AssertJ
 
 **Frontend**:
 - Vue 3

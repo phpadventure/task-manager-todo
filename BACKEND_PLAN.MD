@@ -45,12 +45,12 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 
 ## Phase 3: JPA Entity Models
 
-- [ ] Create `User.java` entity (id, email, display_name, avatar_url, timestamps)
-- [ ] Create `UserAuthProvider.java` entity (user_id, provider, provider_user_id)
-- [ ] Create `TaskList.java` entity
-- [ ] Create `Task.java` entity
-- [ ] Create `TaskStatus.java` enum
-- [ ] Create `TaskPriority.java` enum
+- [ ] Create `User.java` entity (id: UUID, email, display_name, avatar_url, timestamps)
+- [ ] Create `UserAuthProvider.java` entity (id: UUID, user_id, provider, provider_user_id)
+- [ ] Create `TaskList.java` entity (id: UUID, user_id, title, timestamps)
+- [ ] Create `Task.java` entity (id: UUID, list_id, user_id, title, description, status, priority, due_date, timestamps)
+- [ ] Create `TaskStatus.java` enum (TO_DO, IN_PROGRESS, DONE)
+- [ ] Create `TaskPriority.java` enum (LOW, MEDIUM, HIGH)
 - [ ] Create `NotificationMessage.java` DTO for WebSocket messages
 
 **Files to Create**:
@@ -203,9 +203,11 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - Soft deletes: queries filter `deleted_at IS NULL`
 
 ### Deletion Behavior
-**Choose ONE** (document in README):
-- [ ] Option A (Cascade): Deleting list deletes all tasks
-- [ ] Option B (Block): DELETE returns 409 Conflict if list has tasks
+**Block pattern** (document in README):
+- Deleting a list returns 409 Conflict if it has tasks
+- User must delete all tasks first, then delete the list
+- Deletion logic handled in service layer (no database cascade)
+- Prevents accidental data loss
 
 ### WebSocket Notification Rules
 - **Overdue**: `status != DONE AND due_date < TODAY`
