@@ -408,8 +408,12 @@ gradle test --tests com.taskmanager.controller.TaskControllerTest
 # Single test method
 gradle test --tests com.taskmanager.controller.TaskControllerTest.testGetTask_ValidId_ShouldReturnOk
 
-# With coverage report
-gradle test jacocoTestReport
+# With coverage report (excludes DTOs, Entities, Config, Exceptions, etc.)
+gradle jacocoTestReport
+
+# View coverage report (opens HTML in browser)
+# macOS/Linux:
+open build/reports/jacoco/test/html/index.html
 
 # Watch mode (reruns on changes)
 gradle test --continuous

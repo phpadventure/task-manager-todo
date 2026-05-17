@@ -114,7 +114,8 @@ docker-compose up -d --build backend
 cd backend
 gradle build              # Full build with tests
 gradle test               # Run tests only
-gradle checkstyleMain     # Check code style
+gradle checkstyleMain     # Check code style (Google Java Style)
+gradle jacocoTestReport   # Code coverage report (excludes DTOs, Entities, Config, Exceptions)
 gradle bootRun            # Local dev (uses start-local.sh wrapper)
 ```
 
