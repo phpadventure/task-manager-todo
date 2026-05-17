@@ -105,6 +105,21 @@ docker-compose down
 docker-compose up -d --build backend
 ```
 
+## Code Quality
+
+### Code Formatting & Linting
+
+**Frontend**:
+- **Prettier**: Automatic code formatting (semicolons, quotes, indentation)
+- **ESLint**: Code quality checks and Vue 3 best practices
+
+Format and lint code before committing:
+```bash
+cd ui
+npm run format      # Format all files
+npm run lint        # Fix linting issues
+```
+
 ## Development
 
 ### Build Commands
@@ -121,9 +136,11 @@ gradle bootRun            # Local dev (uses start-local.sh wrapper)
 
 **Frontend (Vue):**
 ```bash
-cd frontend
+cd ui
 npm run dev         # Development server with hot reload
 npm run build       # Production build
+npm run lint        # ESLint with auto-fix
+npm run format      # Format code with Prettier
 npm run test        # Unit tests
 ```
 

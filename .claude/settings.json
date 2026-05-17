@@ -8,5 +8,20 @@
   },
   "theme": "dark",
   "hasCompletedProjectOnboarding": true,
-  "hasTrustDialogAccepted": true
+  "hasTrustDialogAccepted": true,
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; if [[ \"$f\" =~ \\.vue$ ]]; then (cd \"$(git rev-parse --show-toplevel)/ui\" && npm run format -- \"$f\" && npm run lint -- \"$f\") || exit 2; fi; }",
+            "statusMessage": "Formatting and linting Vue file...",
+            "asyncRewake": true
+          }
+        ]
+      }
+    ]
+  }
 }
