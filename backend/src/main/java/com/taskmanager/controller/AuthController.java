@@ -3,6 +3,12 @@ package com.taskmanager.controller;
 import com.taskmanager.dto.UserProfileResponse;
 import com.taskmanager.security.CustomOAuth2User;
 import com.taskmanager.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,9 +20,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "OAuth2 login and profile endpoints")
 public class AuthController {
     private final UserService userService;
 
+    @Operation(
+        summary = "Get current authenticated user",
+        description = "Returns the profile of the currently authenticated user "
+            + "(email, name, avatar)")
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "User profile retrieved successfully",
+            content = @Content(
+                schema = @Schema(implementation = UserProfileResponse.class))),
+        @ApiResponse(
+            responseCode = "401",
+            description = "User not authenticated")
+    })
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -33,6 +54,12 @@ public class AuthController {
         }
     }
 
+    @Operation(
+        summary = "Logout current user",
+        description = "Invalidates the session and clears authentication context")
+    @ApiResponse(
+        responseCode = "200",
+        description = "Successfully logged out")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         SecurityContextHolder.clearContext();
