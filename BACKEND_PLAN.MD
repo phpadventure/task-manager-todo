@@ -245,7 +245,7 @@ Phase 6: Polish & Final Integration
   - OAuth2 setup for Google (credentials, redirect URI)
   - OAuth2 setup for GitHub (credentials, redirect URI)
   - Required environment variables
-  - How session persistence works
+  - How session persistence works (see Session-Based Authentication section below)
   - Manual testing: "Login with Google/GitHub" flow
 - [ ] Verify OpenAPI annotations in `AuthController.java`:
   - All endpoints documented with `@Operation` and `@Parameter`
@@ -255,6 +255,124 @@ Phase 6: Polish & Final Integration
 **Status**: Foundation feature. All other features depend on this. After completion, app is runnable with OAuth login.
 
 **Deliverable**: User can OAuth login (Google/GitHub), see profile via `GET /api/auth/me`, stay logged in across refresh. Tests passing. OAuth docs complete. OpenAPI annotations in place, Swagger UI shows auth endpoints.
+
+---
+
+## Session-Based Authentication Architecture
+
+### Overview
+This app uses **Spring Session** with HttpOnly cookies for authentication, not JWT tokens.
+
+**Flow**:
+1. User clicks "Login with Google/GitHub"
+2. Backend exchanges OAuth code for user info
+3. Backend creates session (stored server-side)
+4. Browser receives HttpOnly, Secure session cookie
+5. Browser automatically sends cookie with every request (same-origin)
+6. Spring SecurityContext restores authenticated user from session
+7. Page refresh: Session cookie sent automatically → authenticated ✅
+
+**Security Benefits**:
+- ✅ Token never exposed to JavaScript (XSS protection via HttpOnly)
+- ✅ CSRF protection built-in (Spring Security)
+- ✅ Works across tabs automatically
+- ✅ Logout just invalidates server session
+
+### Local Development Setup (Hosts File + Vite Proxy)
+
+**Problem**: Frontend (localhost:5173) and backend (localhost:8080) are different origins.
+
+**Solution**: Use hosts file to make both same domain, Vite proxy to rewrite cookies.
+
+1. Edit `/etc/hosts`:
+   ```
+   127.0.0.1 app.localhost
+   127.0.0.1 api.localhost
+   ```
+
+2. Start backend on `http://api.localhost:8080`:
+   ```bash
+   cd backend && ./gradlew bootRun
+   ```
+
+3. Start frontend on `http://app.localhost:5173` (Vite proxy handles routing):
+   ```bash
+   cd ui && npm run dev
+   # Vite dev server proxies /api to http://api.localhost:8080
+   ```
+
+4. Configure backend cookie domain in `SecurityConfig.java`:
+   ```java
+   http.sessionManagement(session -> session
+     .sessionCookieConfig(config -> {
+       config.setDomain(".localhost");  // Covers both app.localhost & api.localhost
+       config.setPath("/");
+       config.setHttpOnly(true);
+       config.setSecure(false);  // Allow HTTP in dev
+     })
+   );
+   ```
+
+5. Vite config (UI_PLAN.MD handles this) already has:
+   - Proxy `/api` to `http://api.localhost:8080`
+   - Cookie domain rewrite to `.localhost`
+
+**Result**: Session cookies work across page refresh ✅
+
+### Docker-Compose Architecture (Production)
+
+**Reverse Proxy Pattern** (Nginx routes both):
+```
+User Browser → http://localhost (single origin)
+    ↓
+Nginx (Port 80)
+    ├── GET / → Vue SPA static files
+    ├── POST /api/* → Spring backend :8080
+    └── GET /api/ws → WebSocket :8080
+
+Result: Single origin, cookies work ✅
+```
+
+**Backend Configuration for Docker**:
+```java
+// In SecurityConfig.java
+http.sessionManagement(session -> session
+  .sessionCookieConfig(config -> {
+    config.setDomain("localhost");  // or production domain
+    config.setPath("/");
+    config.setHttpOnly(true);
+    config.setSecure(true);  // HTTPS in production
+    config.setSameSite("Lax");
+  })
+);
+```
+
+**Implementation Plan** (Phase 6: Polish):
+- [ ] Create `docker/nginx/default.conf` routing `/` to frontend, `/api` and `/api/ws` to backend
+- [ ] Update `docker-compose.yml` to add Nginx service (see `.claude/rules/reverse-proxy-setup.md`)
+- [ ] Document reverse proxy setup in README
+- [ ] Test session persistence: login → refresh page → still authenticated
+
+### OAuth Redirect URI Configuration
+
+**Local Development**:
+- OAuth provider redirect URI: `http://app.localhost:5173/oauth/callback`
+- Backend initiates OAuth login: `http://api.localhost:8080/oauth2/authorization/google`
+
+**Docker (Production)**:
+- OAuth provider redirect URI: `http://localhost/oauth/callback`
+- Backend initiates OAuth login: `http://localhost/oauth2/authorization/google`
+
+### Testing Session Persistence
+
+**Local Dev Test**:
+1. Open `http://app.localhost:5173`
+2. Click "Login with Google/GitHub"
+3. Complete OAuth flow
+4. Verify `GET /api/auth/me` returns user profile
+5. Refresh page (Ctrl+R)
+6. User still authenticated, profile still visible ✅
+7. Check DevTools → Application → Cookies → session cookie present
 
 ---
 

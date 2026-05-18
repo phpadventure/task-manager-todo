@@ -12,49 +12,95 @@ Personal To-Do Manager web application with full-stack implementation: Spring Bo
 ### Using Docker
 - **Docker & Docker Compose**: [Install Docker Desktop](https://www.docker.com/products/docker-desktop)
 
+## Authentication: Session-Based Cookies
+
+This app uses **Spring Session with HttpOnly cookies** (not JWT). Session cookie persists across page refresh automatically.
+
+**How it works**:
+1. User clicks "Login with Google/GitHub"
+2. Backend exchanges OAuth code for user info, creates session
+3. Browser receives HttpOnly, Secure session cookie
+4. Page refresh: Cookie sent automatically → user stays logged in ✅
+
+**Security**: Token never exposed to JavaScript (XSS protection).
+
+---
+
 ## Getting Started
 
-### Option 1: Full Stack with Docker (Recommended for quick setup)
+### Option 1: Local Development (Recommended for feature work)
 
+**Setup** (one-time):
+1. Edit `/etc/hosts` and add:
+   ```
+   127.0.0.1 app.localhost
+   127.0.0.1 api.localhost
+   ```
+
+2. Start MySQL (if not already running):
+   ```bash
+   # macOS
+   brew services start mysql
+   # Linux
+   sudo systemctl start mysql
+   ```
+
+3. Copy environment:
+   ```bash
+   cp .env.example .env
+   ```
+
+**Startup** (each time):
+```bash
+# Terminal 1: Backend on http://api.localhost:8080
+cd backend
+./gradlew bootRun
+
+# Terminal 2: Frontend on http://app.localhost:5173
+cd ui
+npm install  # First time only
+npm run dev
+```
+
+**Access**: Open `http://app.localhost:5173` in browser
+
+**Session cookies work**:
+- Vite dev server proxies `/api` to backend
+- Cookie domain rewritten to `.localhost` (covers both subdomains)
+- Page refresh: user stays logged in ✅
+
+---
+
+### Option 2: Full Stack with Docker (For production-like testing)
+
+**Setup**:
 ```bash
 # Copy environment configuration
 cp .env.example .env
 
-# Start all services (MySQL + Backend Java + Frontend Vue)
+# Start all services (MySQL + Backend + Frontend)
 docker-compose up -d
 
 # Verify services are running
 docker-compose ps
 ```
 
-**Access the application:**
-- Frontend: `http://localhost:5173` (Vue dev server)
-- Backend API: `http://localhost:8080/api`
+**Access**: `http://localhost` (via Nginx reverse proxy)
 
-**View logs:**
+**View logs**:
 ```bash
-docker-compose logs -f backend    # Java backend logs
+docker-compose logs -f backend    # Backend logs
 docker-compose logs -f mysql      # MySQL logs
 ```
 
-### Option 2: Everything Local (Java + Node + MySQL)
+**Session cookies work**:
+- Nginx reverse proxy on single origin
+- Frontend and backend communication through Nginx
+- Cookie domain: `localhost`
 
+**Stop services**:
 ```bash
-# Start MySQL locally (if not already running)
-# macOS: brew services start mysql
-# Linux: sudo systemctl start mysql
-
-# Copy environment and update datasource if needed
-cp .env.example .env
-
-# Terminal 1: Start backend
-cd backend
-./start-local.sh
-
-# Terminal 2: Start frontend
-cd frontend
-npm install
-npm run dev
+docker-compose down
 ```
 
 ## Verify Connections

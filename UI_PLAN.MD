@@ -16,18 +16,22 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] `@tanstack/vue-query` (data fetching)
   - [ ] `pinia` (state management)
   - [ ] `tailwindcss` + `@headlessui/vue` (UI)
-  - [ ] `axios` (HTTP client)
+  - [ ] `axios` (HTTP client with credentials: 'include' for cookies)
   - [ ] `ws` (WebSocket client)
   - [ ] `vitest`, `@vue/test-utils` (testing)
   - [ ] `playwright` (E2E testing)
 - [ ] Configure `vite.config.ts`:
-  - [ ] API proxy for backend: `/api` → `http://localhost:8080/api`
+  - [ ] API proxy for backend: `/api` → `http://localhost:8080/api` (see Session-Based Auth section)
   - [ ] WebSocket proxy: `/api/ws` → `ws://localhost:8080/api/ws`
   - [ ] Alias `@` for `src` directory
+  - [ ] **IMPORTANT**: Proxy with `credentials: 'include'` for session cookies
 - [ ] Configure `tsconfig.json` for Vue 3 + TypeScript
 - [ ] Setup Tailwind CSS configuration
-- [ ] Create `.env.example` with `VITE_API_URL`, `VITE_OAUTH_GOOGLE_CLIENT_ID`, `VITE_OAUTH_GITHUB_CLIENT_ID`
+- [ ] Create `.env.example` with `VITE_API_URL` (backend base URL)
 - [ ] Create `.env.development` for local dev settings
+  - [ ] `VITE_API_URL=http://app.localhost:8080` (or environment-specific URL)
+
+**Note**: No OAUTH_*_CLIENT_ID in frontend `.env`—OAuth redirects handled by backend (SecurityConfig redirects to provider).
 
 **Files to Create**:
 - [ ] `ui/vite.config.ts`
@@ -112,8 +116,10 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 - [ ] Create `src/api/client.ts`:
   - [ ] Axios instance with base URL from env
+  - [ ] **CRITICAL**: Set `withCredentials: true` for session cookies
   - [ ] Request/response interceptors
   - [ ] Error handling and status code mapping
+  - [ ] Handle 401 Unauthorized → redirect to login page
 
 - [ ] Create `src/api/authApi.ts`:
   - [ ] `getCurrentUser()` - GET /api/auth/me
@@ -279,10 +285,12 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ### Authentication Components
 - [ ] Create `src/components/auth/LoginPage.vue`:
-  - [ ] "Continue with Google" button
-  - [ ] "Continue with GitHub" button
+  - [ ] "Continue with Google" button → redirects to `/oauth2/authorization/google`
+  - [ ] "Continue with GitHub" button → redirects to `/oauth2/authorization/github`
   - [ ] Centered layout with branding
-  - [ ] OAuth redirect logic
+  - [ ] **No OAuth client IDs in frontend** (backend handles OAuth flow)
+  - [ ] After backend OAuth exchange, backend redirects back to app with session cookie
+  - [ ] Frontend detects user logged in via `GET /api/auth/me`
 
 - [ ] Create `src/components/auth/UserMenu.vue`:
   - [ ] Display user avatar + name
@@ -591,14 +599,128 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ---
 
+## Session-Based Authentication Setup (Frontend)
+
+### Overview
+Frontend uses **session-based cookies** for authentication (not JWT). Browser automatically sends HttpOnly cookies with each request.
+
+**Key Configuration**:
+1. Axios must send cookies: `withCredentials: true`
+2. Vite dev server proxies `/api` to backend (preserves cookies)
+3. OAuth login handled by backend (user redirected to provider, then back to app)
+
+### Local Development Setup (Hosts File + Vite Proxy)
+
+**Prerequisites**:
+1. Edit `/etc/hosts`:
+   ```
+   127.0.0.1 app.localhost
+   127.0.0.1 api.localhost
+   ```
+
+2. Backend must run on `http://api.localhost:8080`:
+   ```bash
+   cd backend && ./gradlew bootRun
+   ```
+
+### Vite Proxy Configuration
+
+**File**: `vite.config.ts`
+
+```typescript
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://api.localhost:8080',
+        changeOrigin: true,
+        cookieDomainRewrite: '.localhost',  // Rewrite cookie domain for same domain
+        credentials: 'include'
+      },
+      '/api/ws': {
+        target: 'ws://api.localhost:8080',
+        ws: true,
+        changeOrigin: true,
+        credentials: 'include'
+      }
+    }
+  }
+});
+```
+
+**Result**:
+- Frontend on `http://app.localhost:5173`
+- Backend on `http://api.localhost:8080`
+- Session cookie domain: `.localhost` (covers both subdomains)
+- API requests automatically include session cookie ✅
+
+### Axios Client Configuration
+
+**File**: `src/api/client.ts`
+
+```typescript
+import axios from 'axios';
+
+export const apiClient = axios.create({
+  baseURL: '/api',  // Relative path, Vite proxy handles routing
+  withCredentials: true,  // CRITICAL: send session cookies with requests
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+### Startup Commands
+
+```bash
+# Terminal 1: Backend (must start first)
+cd backend && ./gradlew bootRun
+# Runs on http://api.localhost:8080
+
+# Terminal 2: Frontend
+cd ui && npm install && npm run dev
+# Runs on http://app.localhost:5173
+# Vite proxy handles /api routing to backend
+```
+
+**Test Session Persistence**:
+1. Open `http://app.localhost:5173`
+2. Click "Login with Google/GitHub" → completes OAuth flow
+3. User profile displayed (via `GET /api/auth/me`)
+4. Refresh page (Ctrl+R)
+5. User still authenticated ✅ (session cookie persisted)
+6. DevTools → Application → Cookies → session cookie present on `.localhost`
+
+### Docker-Compose Setup (Production)
+
+In Docker, frontend and backend served through **Nginx reverse proxy** (single origin):
+- Access: `http://localhost`
+- No hosts file needed
+- No Vite proxy needed (backend static files served by Nginx)
+- Session cookie domain: `localhost`
+
+**Configuration**: `.claude/rules/reverse-proxy-setup.md` (Phase 6 implementation)
+
+### Troubleshooting Session Issues
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| After login, page refresh shows 401 | Session cookie not sent | Check `withCredentials: true` in axios |
+| Session cookie not in DevTools | Different subdomain | Verify `/etc/hosts` has both `app.localhost` and `api.localhost` |
+| Cookie shows `localhost` instead of `.localhost` | Vite proxy not configured | Add `cookieDomainRewrite: '.localhost'` to vite.config.ts proxy |
+| CORS errors | Proxy not configured | Verify `vite.config.ts` has `/api` proxy to `http://api.localhost:8080` |
+
+---
+
 ## Local Development Verification
 
 - [ ] Install dependencies: `npm install`
-- [ ] Setup `.env.development` with local backend URL
-- [ ] Start dev server: `npm run dev`
-- [ ] Browser opens to http://localhost:5173
+- [ ] Setup `/etc/hosts` with `127.0.0.1 app.localhost` and `127.0.0.1 api.localhost`
+- [ ] Create `.env.development` with `VITE_API_URL=http://api.localhost:8080`
+- [ ] Start dev server: `npm run dev` (runs on `http://app.localhost:5173`)
+- [ ] Browser opens to http://app.localhost:5173
 - [ ] Vite hot reload works
-- [ ] API calls work (check Network tab in DevTools)
+- [ ] API calls work with session cookie (check Network tab in DevTools)
 
 ### Manual Testing Checklist
 - [ ] Login with Google OAuth (or mock)
