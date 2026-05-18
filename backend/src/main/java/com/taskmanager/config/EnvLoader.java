@@ -12,8 +12,10 @@ public class EnvLoader {
                 Properties props = new Properties();
                 props.load(new FileInputStream(envFile));
                 props.forEach((key, value) -> {
-                    if (System.getProperty(key.toString()) == null && System.getenv(key.toString()) == null) {
-                        System.setProperty(key.toString(), value.toString());
+                    String keyStr = key.toString();
+                    if (System.getProperty(keyStr) == null
+                        && System.getenv(keyStr) == null) {
+                        System.setProperty(keyStr, value.toString());
                     }
                 });
             }
