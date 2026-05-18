@@ -114,37 +114,37 @@ Phase 6: Polish & Final Integration
 - ✅ Test utilities ready
 - ✅ No manual testing needed for Phase 1.3 (infrastructure layer)
 
-### 1.4 OpenAPI / Swagger Documentation ⏳ PENDING
+### 1.4 OpenAPI / Swagger Documentation ✅ COMPLETE
 
-- [ ] Add SpringDoc OpenAPI dependency to `build.gradle`
-  - `implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'`
-- [ ] Configure OpenAPI in `application.properties`:
+- [x] Add SpringDoc OpenAPI dependency to `build.gradle`
+  - [x] `implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'`
+- [x] Configure OpenAPI in `application.properties`:
   ```properties
   springdoc.api-docs.path=/api-docs
   springdoc.swagger-ui.path=/swagger-ui.html
   springdoc.swagger-ui.operationsSorter=method
   ```
-- [ ] Create OpenAPI info bean in `SecurityConfig.java`:
-  - Add `@Bean` method returning `OpenAPI` with title, version, description, contact
-  - Example: Title="Personal To-Do Manager API", Version="1.0.0"
+- [x] Create OpenAPI info bean in `SecurityConfig.java`:
+  - [x] Added `@Bean` method returning `OpenAPI` with title, version, description, contact
+  - [x] Title="Personal To-Do Manager API", Version="1.0.0"
 
 **Files**:
-- [ ] Update `build.gradle` with springdoc dependency
-- [ ] Update `application.properties` with OpenAPI config
-- [ ] Add OpenAPI bean to `backend/src/main/java/com/taskmanager/config/OpenApiConfig.java` (new file)
+- [x] Update `build.gradle` with springdoc dependency ✅
+- [x] Update `application.properties` with OpenAPI config ✅
+- [x] `backend/src/main/java/com/taskmanager/config/OpenApiConfig.java` ✅ CREATED
 
-**Status**: OpenAPI foundation configured. Ready for Phase 2+ controllers to add `@Operation`, `@Parameter` annotations.
+**Status**: ✅ OpenAPI foundation complete. Swagger UI and API docs endpoints fully functional.
 
 **Deliverable**: 
 - ✅ SpringDoc OpenAPI UI accessible at `http://localhost:8080/swagger-ui.html`
 - ✅ `/api-docs` endpoint serving OpenAPI 3.0 spec (JSON)
-- ✅ Configuration ready for controller annotations in Phase 2+
+- ✅ Configuration ready for Phase 2+ controllers with `@Operation`, `@Parameter` annotations
 
 ---
 
-## Phase 2: Authentication Feature ✅ COMPLETE
+## Phase 2: Authentication Feature ⏳ FUNCTIONALLY COMPLETE (Docs Pending)
 
-**Prerequisite**: Phase 1 complete (including 1.4 OpenAPI setup).
+**Prerequisite**: Phase 1 complete (including 1.4 OpenAPI setup). ✅ Complete!
 
 **Goal**: User can OAuth login (Google/GitHub), see profile, and stay logged in across page refresh. Foundation for all other features.
 
@@ -243,21 +243,21 @@ Phase 6: Polish & Final Integration
 - [x] `backend/src/test/java/com/taskmanager/service/AuthServiceTest.java`
 - [x] `backend/src/test/java/com/taskmanager/controller/AuthControllerTest.java`
 
-### 2.7 Documentation ⏳ PENDING
-- [ ] Update README.md with:
+### 2.7 Documentation ⏳ PENDING (Code Complete)
+- ⏳ Update README.md with: **MISSING**
   - OAuth2 setup for Google (credentials, redirect URI)
   - OAuth2 setup for GitHub (credentials, redirect URI)
   - Required environment variables
   - How session persistence works (see Session-Based Authentication section below)
   - Manual testing: "Login with Google/GitHub" flow
-- [ ] Verify OpenAPI annotations in `AuthController.java`:
-  - All endpoints documented with `@Operation` and `@Parameter` ✅ Already done
-  - OpenAPI spec accessible at `GET /api-docs` ✅ Already accessible
-  - Swagger UI displays auth endpoints at `/swagger-ui.html` ✅ Already accessible
+- [x] Verify OpenAPI annotations in `AuthController.java`:
+  - [x] All endpoints documented with `@Operation` and `@Parameter` ✅ Done
+  - [x] OpenAPI spec accessible at `GET /api-docs` ✅ Accessible
+  - [x] Swagger UI displays auth endpoints at `/swagger-ui.html` ✅ Accessible
 
-**Status**: Foundation feature complete. All other features depend on this. App is runnable with OAuth login.
+**Status**: ✅ Auth functionality 100% complete. Code working, tests passing, Swagger UI functional. ⏳ README documentation still needed.
 
-**Deliverable**: ✅ User can OAuth login (Google/GitHub), see profile via `GET /api/auth/me`, stay logged in across refresh. ✅ Tests passing. ✅ OpenAPI annotations in place, Swagger UI shows auth endpoints. ⏳ README OAuth2 documentation pending.
+**Deliverable**: ✅ User can OAuth login (Google/GitHub), see profile via `GET /api/auth/me`, stay logged in across refresh. ✅ Tests passing. ✅ OpenAPI annotations in place, Swagger UI shows auth endpoints. ⏳ **README OAuth2 documentation STILL NEEDED** (not blocking functionality).
 
 ---
 
@@ -379,31 +379,31 @@ http.sessionManagement(session -> session
 
 ---
 
-## Phase 3: Lists (Projects) Feature ⏳ IN PROGRESS
+## Phase 3: Lists (Projects) Feature ⏳ FUNCTIONALLY COMPLETE (Docs Pending)
 
 **Prerequisite**: Phase 2 complete (Auth required) - ✅ Complete!
 
 **Goal**: User can CRUD their task lists/projects. Authorization enforced.
 
 ### 3.1 TaskList Entity
-- [ ] Create `TaskList.java` entity
+- [x] Create `TaskList.java` entity
   - Fields: id (UUID), user_id (FK → User), title, created_at, updated_at
   - Relationships: Many-to-one with User, One-to-many with Task
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/entity/TaskList.java`
+- [x] `backend/src/main/java/com/taskmanager/entity/TaskList.java`
 
 ### 3.2 Repository
-- [ ] Create `TaskListRepository.java`
+- [x] Create `TaskListRepository.java`
   - `findByUserId(UUID userId)`: get all user's lists
   - `findByIdAndUserId(UUID id, UUID userId)`: verify ownership
   - Custom query for paginated retrieval
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/repository/TaskListRepository.java`
+- [x] `backend/src/main/java/com/taskmanager/repository/TaskListRepository.java`
 
 ### 3.3 Service Layer
-- [ ] Create `TaskListService.java`
+- [x] Create `TaskListService.java`
   - `createList(UUID userId, String title)`: create with ownership
   - `getListsByUser(UUID userId)`: retrieve all user's lists
   - `getListById(UUID id, UUID userId)`: verify ownership, throw UnauthorizedException
@@ -412,153 +412,135 @@ http.sessionManagement(session -> session
   - All methods verify getCurrentUser() == userId
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/service/TaskListService.java`
+- [x] `backend/src/main/java/com/taskmanager/service/TaskListService.java`
 
 ### 3.4 DTOs & Controller
-- [ ] Create DTOs:
-  - [ ] `TaskListDTO.java` (id, title, createdAt, updatedAt)
-  - [ ] `CreateTaskListRequest.java` (title)
-  - [ ] `UpdateTaskListRequest.java` (title)
-- [ ] Create `TaskListController.java`
+- [x] Create DTOs:
+  - [x] `TaskListDTO.java` (id, title, createdAt, updatedAt)
+  - [x] `CreateTaskListRequest.java` (title)
+  - [x] `UpdateTaskListRequest.java` (title)
+- [x] Create `TaskListController.java`
   - `GET /api/lists`: get all user's lists
   - `POST /api/lists`: create new list
   - `PUT /api/lists/{id}`: update list
   - `DELETE /api/lists/{id}`: delete list (409 if not empty)
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/dto/TaskListDTO.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/CreateTaskListRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskListRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/controller/TaskListController.java`
+- [x] `backend/src/main/java/com/taskmanager/dto/TaskListDTO.java`
+- [x] `backend/src/main/java/com/taskmanager/dto/CreateTaskListRequest.java`
+- [x] `backend/src/main/java/com/taskmanager/dto/UpdateTaskListRequest.java`
+- [x] `backend/src/main/java/com/taskmanager/controller/TaskListController.java`
 
 ### 3.5 Tests
-- [ ] Create `TaskListServiceTest.java`
-  - Test CRUD operations
+- [x] Create `TaskListServiceTest.java`
+  - Test CRUD operations (8 test cases covering all flows)
   - Test authorization (can't access other user's lists)
   - Test deletion blocking when tasks exist
-- [ ] Create `TaskListControllerTest.java`
-  - Test all endpoints
+- [x] Create `TaskListControllerTest.java`
+  - Test all endpoints (10 test cases)
   - Test 403 when accessing other user's list
   - Test 409 on delete with tasks
+  - Test 400 on blank title
 
 **Files**:
-- [ ] `backend/src/test/java/com/taskmanager/service/TaskListServiceTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/controller/TaskListControllerTest.java`
+- [x] `backend/src/test/java/com/taskmanager/service/TaskListServiceTest.java` (8 test methods)
+- [x] `backend/src/test/java/com/taskmanager/controller/TaskListControllerTest.java` (10 test methods)
 
-### 3.6 Documentation
-- [ ] Update README.md with:
+### 3.6 Documentation ⏳ PENDING (Code Complete)
+- ⏳ Update README.md with: **MISSING**
   - List API endpoints (GET, POST, PUT, DELETE)
   - Response examples
   - Deletion behavior explanation (block-if-not-empty, no cascade)
   - Error codes (409 Conflict)
 
-**Status**: Lists feature complete and tested.
+**Status**: ✅ Lists feature 100% complete and tested. All CRUD operations working. Authorization enforced. Deletion blocking implemented (409 Conflict). All 18 tests passing. ⏳ README documentation still needed.
 
-**Deliverable**: User can create/read/update/delete lists. Authorization verified. Deletion behavior enforced. Tests passing. List API docs complete.
+**Deliverable**: ✅ User can create/read/update/delete lists. ✅ Authorization verified. ✅ Deletion behavior enforced. ✅ 18 tests passing. ⏳ **README List API docs STILL NEEDED** (not blocking functionality).
 
 ---
 
-## Phase 4: Tasks Feature ⏳ PENDING
+## Phase 4: Tasks Feature ⏳ IN PROGRESS (~5% complete)
 
-**Prerequisite**: Phase 2 (Auth) and Phase 3 (Lists) complete.
+**Prerequisite**: Phase 2 (Auth) and Phase 3 (Lists) complete. ✅ Complete!
 
 **Goal**: Full task management with CRUD, search, filters, status updates, and seed data.
 
 ### 4.1 Task Entities & Enums
-- [ ] Create `TaskStatus.java` enum (TO_DO, IN_PROGRESS, DONE)
-- [ ] Create `TaskPriority.java` enum (LOW, MEDIUM, HIGH)
-- [ ] Create `Task.java` entity
+- ⏳ Create `TaskStatus.java` enum (TO_DO, IN_PROGRESS, DONE) **NOT YET** - currently stored as String
+- ⏳ Create `TaskPriority.java` enum (LOW, MEDIUM, HIGH) **NOT YET** - currently stored as String
+- [x] Create `Task.java` entity
   - Fields: id (UUID), list_id (FK), user_id (FK), title, description, status, priority, due_date (nullable), created_at, updated_at
   - Relationships: Many-to-one with TaskList, Many-to-one with User
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/entity/TaskStatus.java`
-- [ ] `backend/src/main/java/com/taskmanager/entity/TaskPriority.java`
-- [ ] `backend/src/main/java/com/taskmanager/entity/Task.java`
+- ⏳ `backend/src/main/java/com/taskmanager/entity/TaskStatus.java` **NOT YET**
+- ⏳ `backend/src/main/java/com/taskmanager/entity/TaskPriority.java` **NOT YET**
+- [x] `backend/src/main/java/com/taskmanager/entity/Task.java` ✅ (but enums missing)
 
 ### 4.2 Repository with Queries
-- [ ] Create `TaskRepository.java`
-  - `findByListId(UUID listId)`: get all tasks in list
-  - `findByIdAndUserId(UUID id, UUID userId)`: verify ownership
-  - `findByUserIdAndStatus(UUID userId, TaskStatus status)`: filter by status
-  - `findByUserIdAndPriority(UUID userId, TaskPriority priority)`: filter by priority
-  - `findOverdueTasks(UUID userId)`: due_date < TODAY AND status != DONE
-  - `findDueSoonTasks(UUID userId)`: TODAY <= due_date <= TODAY + 3 days AND status != DONE
-  - `searchByTitleOrDescription(UUID userId, String query)`: case-insensitive substring search
+- ⏳ Create `TaskRepository.java` **INCOMPLETE** - only has `countByListId()`
+  - ⏳ `findByListId(UUID listId)`: get all tasks in list **MISSING**
+  - ⏳ `findByIdAndUserId(UUID id, UUID userId)`: verify ownership **MISSING**
+  - ⏳ `findByUserIdAndStatus(UUID userId, TaskStatus status)`: filter by status **MISSING**
+  - ⏳ `findByUserIdAndPriority(UUID userId, TaskPriority priority)`: filter by priority **MISSING**
+  - ⏳ `findOverdueTasks(UUID userId)`: due_date < TODAY AND status != DONE **MISSING**
+  - ⏳ `findDueSoonTasks(UUID userId)`: TODAY <= due_date <= TODAY + 3 days AND status != DONE **MISSING**
+  - ⏳ `searchByTitleOrDescription(UUID userId, String query)`: case-insensitive substring search **MISSING**
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/repository/TaskRepository.java`
+- ⏳ `backend/src/main/java/com/taskmanager/repository/TaskRepository.java` (partial)
 
 ### 4.3 Service Layer
-- [ ] Create `TaskService.java`
-  - `createTask(UUID userId, UUID listId, CreateTaskRequest)`: create with ownership
-  - `getTasksByList(UUID userId, UUID listId)`: retrieve all tasks in list
-  - `getTaskById(UUID id, UUID userId)`: verify ownership, throw if not found
-  - `updateTask(UUID id, UUID userId, UpdateTaskRequest)`: verify ownership
-  - `updateTaskStatus(UUID id, UUID userId, TaskStatus newStatus)`: quick status change
-  - `deleteTask(UUID id, UUID userId)`: soft delete
-  - `searchTasks(UUID userId, String query)`: search title/description
-  - `filterTasks(UUID userId, TaskStatus status, TaskPriority priority, LocalDate dueDate)`: multi-filter
-  - `getOverdueNotifications(UUID userId)`: for WebSocket
-  - `getDueSoonNotifications(UUID userId)`: for WebSocket
-  - All methods verify getCurrentUser() == userId
+- ❌ Create `TaskService.java` **NOT CREATED**
+  - All CRUD, search, filter, and notification methods needed
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/service/TaskService.java`
+- ❌ `backend/src/main/java/com/taskmanager/service/TaskService.java` **MISSING**
 
 ### 4.4 DTOs & Controller
-- [ ] Create DTOs:
-  - [ ] `TaskDTO.java` (id, listId, title, description, status, priority, dueDate, createdAt)
-  - [ ] `CreateTaskRequest.java` (listId, title, description, status, priority, dueDate)
-  - [ ] `UpdateTaskRequest.java` (title, description, priority, dueDate)
-  - [ ] `UpdateTaskStatusRequest.java` (status)
-- [ ] Create `TaskController.java`
-  - `GET /api/tasks?list_id={id}`: get tasks in list
-  - `GET /api/tasks/search?q={query}`: search tasks
-  - `GET /api/tasks?status={status}&priority={priority}&due_date={filter}`: filter tasks
-  - `POST /api/tasks`: create task
-  - `PUT /api/tasks/{id}`: update task
-  - `PATCH /api/tasks/{id}/status`: quick status change
-  - `DELETE /api/tasks/{id}`: delete task
-- [ ] Create `SeedController.java`
-  - `POST /api/seed`: populate database with sample data for current user
-  - Creates sample lists and tasks for testing
+- ❌ Create DTOs **NOT CREATED**:
+  - ❌ `TaskDTO.java` **MISSING**
+  - ❌ `CreateTaskRequest.java` **MISSING**
+  - ❌ `UpdateTaskRequest.java` **MISSING**
+  - ❌ `UpdateTaskStatusRequest.java` **MISSING**
+- ❌ Create `TaskController.java` **NOT CREATED**
+- ❌ Create `SeedController.java` **NOT CREATED**
 
 **Files**:
-- [ ] `backend/src/main/java/com/taskmanager/dto/TaskDTO.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/CreateTaskRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskStatusRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/controller/TaskController.java`
-- [ ] `backend/src/main/java/com/taskmanager/controller/SeedController.java`
+- ❌ `backend/src/main/java/com/taskmanager/dto/TaskDTO.java` **MISSING**
+- ❌ `backend/src/main/java/com/taskmanager/dto/CreateTaskRequest.java` **MISSING**
+- ❌ `backend/src/main/java/com/taskmanager/dto/UpdateTaskRequest.java` **MISSING**
+- ❌ `backend/src/main/java/com/taskmanager/dto/UpdateTaskStatusRequest.java` **MISSING**
+- ❌ `backend/src/main/java/com/taskmanager/controller/TaskController.java` **MISSING**
+- ❌ `backend/src/main/java/com/taskmanager/controller/SeedController.java` **MISSING**
 
 ### 4.5 Tests
-- [ ] Create `TaskServiceTest.java`
+- ❌ Create `TaskServiceTest.java` **NOT CREATED**
   - Test CRUD operations
   - Test authorization (can't access other user's tasks)
   - Test search functionality
   - Test filters (status, priority, due date)
   - Test overdue/due-soon queries
-- [ ] Create `TaskControllerTest.java`
+- ❌ Create `TaskControllerTest.java` **NOT CREATED**
   - Test all endpoints
   - Test 403 when accessing other user's tasks
   - Test seed endpoint creates data
 
 **Files**:
-- [ ] `backend/src/test/java/com/taskmanager/service/TaskServiceTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/controller/TaskControllerTest.java`
+- ❌ `backend/src/test/java/com/taskmanager/service/TaskServiceTest.java` **MISSING**
+- ❌ `backend/src/test/java/com/taskmanager/controller/TaskControllerTest.java` **MISSING**
 
 ### 4.6 Documentation
-- [ ] Update README.md with:
+- ❌ Update README.md with:
   - Task API endpoints (GET, POST, PUT, PATCH, DELETE)
   - Search endpoint documentation
   - Filter examples (status, priority, due date: overdue/today/next_7_days/all)
   - Response examples
   - Seed endpoint usage
 
-**Status**: Core feature complete. MVP now fully functional.
+**Status**: ⏳ IN PROGRESS - ~5% complete. Task entity exists, but critical service/controller/DTOs and 7 of 8 repo queries MISSING. BLOCKER for MVP.
 
-**Deliverable**: User can create/read/update/delete/search/filter tasks. Status updates working. Seed data available. Tests passing. Task API docs complete.
+**Deliverable**: ❌ INCOMPLETE. Task feature required before Phase 5 (WebSocket). Critical next phase.
 
 ---
 
@@ -796,16 +778,28 @@ After each phase completes, verify:
 
 ## Summary
 
-**Total files to create**: ~45 files
+**Total files to create**: ~45 files (Currently: ~33 created)
 
-**Key Phases**:
+**Key Phases** (Actual Status):
 ```
-Phase 1 (Shared)    → Phase 2 (Auth) → Phase 3 (Lists) → Phase 4 (Tasks) → Phase 5 (WebSocket) → Phase 6 (Polish)
-    [COMPLETE]          [IN PROGRESS]     [PENDING]        [PENDING]          [PENDING]           [PENDING]
+Phase 1 (Shared)      → Phase 2 (Auth)        → Phase 3 (Lists)       → Phase 4 (Tasks) → Phase 5 (WebSocket) → Phase 6 (Polish)
+  [✅ 100% Code]       [⏳ Code ✅/Docs ⏳]     [⏳ Code ✅/Docs ⏳]      [⏳ 5%]          [❌ 0%]              [❌ 0%]
 ```
 
-**After Phase 2**: User can OAuth login, see profile
-**After Phase 4**: User can manage tasks across lists
+**Completion Breakdown**:
+- ✅ Phase 1: **100% COMPLETE** - All infrastructure, config, entities, migrations, exceptions, OpenAPI working
+- ⏳ Phase 2: **Code COMPLETE, Docs PENDING** - OAuth, Auth, Session all working. README OAuth setup needed
+- ⏳ Phase 3: **Code COMPLETE, Docs PENDING** - Lists CRUD, 18 tests passing. README List API docs needed
+- ⏳ Phase 4: **~5% COMPLETE** - Task entity exists; missing: 2 enums, 7 repo queries, service, controller, 4 DTOs, tests
+- ❌ Phase 5: **0% - NOT STARTED** (WebSocket blocked by Phase 4)
+- ❌ Phase 6: **0% - NOT STARTED** (Polish, docs blocked by Phase 4)
+
+**Current Blockers**:
+- 🚫 **Phase 4 (Tasks) is critical blocker** - Must complete before Phase 5 & 6
+- 📚 **Phase 2 & 3 Documentation** - Code working, but README docs still needed
+
+**After Phase 3 Code**: ✅ User can OAuth login, create/manage lists (functionality complete)
+**After Phase 4** ⏳: User can manage tasks across lists (CRITICAL NEXT STEP)
 **After Phase 5**: User receives real-time notifications
 **After Phase 6**: Production-ready backend deployed
 
