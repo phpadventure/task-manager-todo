@@ -10,6 +10,7 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - ✅ Exception handling framework (Phase 1.3) complete
 - ✅ Entity domain model defined (Phase 1.3)
 - ✅ Test utilities ready (Phase 1.3)
+- ⏳ OpenAPI/Swagger setup (Phase 1.4) pending
 - ⏳ Ready to start Phase 2: Authentication Feature
 
 ---
@@ -47,7 +48,7 @@ Phase 6: Polish & Final Integration
 
 ---
 
-## Phase 1: Shared Infrastructure ✅ COMPLETE + EXPANDED
+## Phase 1: Shared Infrastructure ⏳ IN PROGRESS (1.1-1.3 COMPLETE, 1.4 PENDING)
 
 **Prerequisite**: MySQL database and user created via `docker/init-db/` scripts.
 
@@ -112,13 +113,41 @@ Phase 6: Polish & Final Integration
 - ✅ Test utilities ready
 - ✅ No manual testing needed for Phase 1.3 (infrastructure layer)
 
+### 1.4 OpenAPI / Swagger Documentation ⏳ PENDING
+
+- [ ] Add SpringDoc OpenAPI dependency to `build.gradle`
+  - `implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'`
+- [ ] Configure OpenAPI in `application.properties`:
+  ```properties
+  springdoc.api-docs.path=/api-docs
+  springdoc.swagger-ui.path=/swagger-ui.html
+  springdoc.swagger-ui.operationsSorter=method
+  ```
+- [ ] Create OpenAPI info bean in `SecurityConfig.java`:
+  - Add `@Bean` method returning `OpenAPI` with title, version, description, contact
+  - Example: Title="Personal To-Do Manager API", Version="1.0.0"
+
+**Files**:
+- [ ] Update `build.gradle` with springdoc dependency
+- [ ] Update `application.properties` with OpenAPI config
+- [ ] Add OpenAPI bean to `backend/src/main/java/com/taskmanager/config/OpenApiConfig.java` (new file)
+
+**Status**: OpenAPI foundation configured. Ready for Phase 2+ controllers to add `@Operation`, `@Parameter` annotations.
+
+**Deliverable**: 
+- ✅ SpringDoc OpenAPI UI accessible at `http://localhost:8080/swagger-ui.html`
+- ✅ `/api-docs` endpoint serving OpenAPI 3.0 spec (JSON)
+- ✅ Configuration ready for controller annotations in Phase 2+
+
 ---
 
 ## Phase 2: Authentication Feature ⏳ IN PROGRESS
 
-**Prerequisite**: Phase 1 complete.
+**Prerequisite**: Phase 1 complete (including 1.4 OpenAPI setup).
 
 **Goal**: User can OAuth login (Google/GitHub), see profile, and stay logged in across page refresh. Foundation for all other features.
+
+**Note**: All controllers in this phase must include OpenAPI `@Operation`, `@Parameter`, and `@RequestBody` annotations (see backend/CLAUDE.md lines 239-269 for examples). OpenAPI UI will auto-generate from annotations.
 
 ### 2.1 User & Auth Provider Entities
 - [ ] Create `User.java` entity
@@ -218,10 +247,14 @@ Phase 6: Polish & Final Integration
   - Required environment variables
   - How session persistence works
   - Manual testing: "Login with Google/GitHub" flow
+- [ ] Verify OpenAPI annotations in `AuthController.java`:
+  - All endpoints documented with `@Operation` and `@Parameter`
+  - OpenAPI spec accessible at `GET /api-docs`
+  - Swagger UI displays auth endpoints at `/swagger-ui.html`
 
 **Status**: Foundation feature. All other features depend on this. After completion, app is runnable with OAuth login.
 
-**Deliverable**: User can OAuth login (Google/GitHub), see profile via `GET /api/auth/me`, stay logged in across refresh. Tests passing. OAuth docs complete.
+**Deliverable**: User can OAuth login (Google/GitHub), see profile via `GET /api/auth/me`, stay logged in across refresh. Tests passing. OAuth docs complete. OpenAPI annotations in place, Swagger UI shows auth endpoints.
 
 ---
 
@@ -516,6 +549,7 @@ Phase 6: Polish & Final Integration
   - Seed endpoint usage
   - Test commands (`gradle test`)
   - Build commands (`gradle build`)
+  - **OpenAPI/Swagger**: How to access Swagger UI at `/swagger-ui.html` and `/api-docs`
 - [ ] Add summary of all features
 
 **Files**:
@@ -594,6 +628,8 @@ After each phase completes, verify:
 - `gradle build` succeeds
 - MySQL migrations run
 - No missing dependencies
+- OpenAPI UI accessible at `http://localhost:8080/swagger-ui.html`
+- `/api-docs` endpoint returns valid OpenAPI 3.0 spec (JSON)
 
 **After Phase 2**:
 - `gradle test` passes for Auth tests
