@@ -30,12 +30,12 @@
     <module name="TypeName"/>
     <module name="MemberName"/>
     <module name="MethodName"/>
-    <module name="CustomImportOrder">
-      <property name="sortImportsInGroupAlphabetically" value="true"/>
-      <property name="separateLineBetweenGroups" value="true"/>
-      <property name="customImportOrderRules" value="STATIC###THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE"/>
-      <property name="standardPackageRegExp" value="^(java|javax)\."/>
-      <property name="thirdPartyPackageRegExp" value="^[^(java|javax)]"/>
+    <module name="ImportOrder">
+      <property name="groups" value="/^java\./,star"/>
+      <property name="ordered" value="true"/>
+      <property name="separated" value="true"/>
+      <property name="option" value="bottom"/>
+      <property name="sortStaticImportsAlphabetically" value="true"/>
     </module>
   </module>
 </module>
