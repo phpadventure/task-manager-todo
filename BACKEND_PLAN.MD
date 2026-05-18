@@ -3,15 +3,52 @@
 ## Context
 This project requires building a full-stack Personal To-Do Manager with OAuth2 SSO (Google & GitHub), task management across multiple lists, and real-time WebSocket notifications. The backend needs to enforce single-user data isolation, provide REST APIs for CRUD operations, and push overdue/due-soon task notifications via WebSocket.
 
-**Current State**: Spring Boot project initialized with base structure. Package: `com.taskmanager` (note: not `com.taskmanager`).
+**Current State**: Spring Boot project initialized with base structure. Package: `com.taskmanager`.
 - ✅ `TaskManagerApplication.java` created
 - ✅ `application.properties` created
-- ⏳ Need to create all entities, services, controllers, configs, and migrations
+- ✅ Database migrations (V001, V002) created
+- ⏳ Ready to start Phase 1: Shared Infrastructure
 
 ---
 
-## Phase 1: Project Structure & Configuration ✅ COMPLETE
+## Why Feature-Based Structure?
 
+**Previous approach (layer-based)**: Build all entities → all repositories → all services → all controllers → all tests
+- ❌ Integration risk deferred: nothing works until Phase 6+
+- ❌ Testing at the end: can't validate during development
+- ❌ Parallelization blocked: each layer waits for previous layer
+- ❌ No runnable app until late stages
+
+**New approach (feature-based)**: Build Auth end-to-end → Lists end-to-end → Tasks end-to-end → WebSocket end-to-end
+- ✅ Early integration testing: catch bugs after each feature
+- ✅ Concurrent testing: each phase includes tests
+- ✅ Runnable app after Phase 2: can demo auth before tasks
+- ✅ Parallel work: UI team can start after Phase 2
+- ✅ Clear dependencies: Auth → Lists → Tasks → WebSocket
+
+---
+
+## Tier Dependency Graph
+
+```
+Phase 1: Shared Infrastructure (Project, DB, Config, Exception Handling)
+    ↓
+Phase 2: Authentication Feature ← All other features depend on this
+    ├─→ Phase 3: Lists Feature
+    │     ├─→ Phase 4: Tasks Feature
+    │           ├─→ Phase 5: WebSocket Feature
+    └─→ Can build Lists/Tasks/WebSocket in parallel after Auth
+    
+Phase 6: Polish & Final Integration
+```
+
+---
+
+## Phase 1: Shared Infrastructure ✅ COMPLETE + EXPANDED
+
+**Prerequisite**: MySQL database and user created via `docker/init-db/` scripts.
+
+### 1.1 Project Setup & Configuration ✅
 - [x] Spring Boot project initialized with Gradle
 - [x] `build.gradle` exists with Spring Boot 3.x dependencies
 - [x] `TaskManagerApplication.java` created
@@ -27,189 +64,479 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - WebSocket CORS for localhost:5173, localhost:3000
 - Spring Security session config (non-secure for dev)
 
----
-
-## Phase 2: Database Design & Migrations ✅ COMPLETE
-
-**Prerequisite**: MySQL database and user created via `docker/init-db/` scripts.
-
+### 1.2 Database Design & Migrations ✅
 - [x] Create `V001__initial_schema.sql` with users, lists, tasks tables
 - [x] Add proper indexes and constraints
-- [x] Create `V002__seed_data.sql` for sample data (optional)
+- [x] Create `V002__seed_data.sql` for sample data
 
-**Files to Create**:
+**Files**: 
 - [x] `backend/src/main/resources/db/migration/V001__initial_schema.sql`
 - [x] `backend/src/main/resources/db/migration/V002__seed_data.sql`
 
-**Status**: 100% complete. Schema includes users, user_auth_providers, task_lists, and tasks tables with appropriate indexes and foreign keys. Seed data available for development.
+**Status**: 100% complete. Schema includes users, user_auth_providers, task_lists, and tasks tables with appropriate indexes and foreign keys.
 
----
+### 1.3 Shared Infrastructure Components ⏳ IN PROGRESS
 
-## Phase 3: JPA Entity Models ⏳ IN PROGRESS
-
-- [ ] Create `User.java` entity (id: UUID, email, display_name, avatar_url, timestamps)
-- [ ] Create `UserAuthProvider.java` entity (id: UUID, user_id, provider, provider_user_id)
-- [ ] Create `TaskList.java` entity (id: UUID, user_id, title, timestamps)
-- [ ] Create `Task.java` entity (id: UUID, list_id, user_id, title, description, status, priority, due_date, timestamps)
-- [ ] Create `TaskStatus.java` enum (TO_DO, IN_PROGRESS, DONE)
-- [ ] Create `TaskPriority.java` enum (LOW, MEDIUM, HIGH)
-- [ ] Create `NotificationMessage.java` DTO for WebSocket messages
-
-**Status**: Next phase to implement. Database schema exists; entities need to be created to map to schema.
+- [ ] Create `GlobalExceptionHandler.java` for centralized error handling
+- [ ] Create custom exception classes:
+  - [ ] `ResourceNotFoundException.java`
+  - [ ] `UnauthorizedException.java`
+  - [ ] `ValidationException.java`
+- [ ] Create `TestDataBuilder.java` utility in test folder for test data generation
+- [ ] Verify Spring Security and OAuth2 dependencies are in build.gradle
 
 **Files to Create**:
-- [ ] `backend/src/main/java/com/taskmanager/entity/User.java`
-- [ ] `backend/src/main/java/com/taskmanager/entity/UserAuthProvider.java`
-- [ ] `backend/src/main/java/com/taskmanager/entity/TaskList.java`
-- [ ] `backend/src/main/java/com/taskmanager/entity/Task.java`
-- [ ] `backend/src/main/java/com/taskmanager/entity/TaskStatus.java`
-- [ ] `backend/src/main/java/com/taskmanager/entity/TaskPriority.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/NotificationMessage.java`
-
----
-
-## Phase 4: Spring Data JPA Repositories ⏳ PENDING
-
-- [ ] Create `UserRepository.java` with email lookup methods
-- [ ] Create `UserAuthProviderRepository.java` with provider lookup methods
-- [ ] Create `TaskListRepository.java` with user-filtered queries
-- [ ] Create `TaskRepository.java` with search, filter, and notification queries
-
-**Files to Create**:
-- [ ] `backend/src/main/java/com/taskmanager/repository/UserRepository.java`
-- [ ] `backend/src/main/java/com/taskmanager/repository/UserAuthProviderRepository.java`
-- [ ] `backend/src/main/java/com/taskmanager/repository/TaskListRepository.java`
-- [ ] `backend/src/main/java/com/taskmanager/repository/TaskRepository.java`
-
-**Status**: Blocked by Phase 3 (entity creation).
-
----
-
-## Phase 5: Service Layer with Business Logic ⏳ PENDING
-
-- [ ] Create `UserService.java` for user profile management and multi-provider lookup
-- [ ] Create `UserAuthProviderService.java` for linking/unlinking OAuth providers to users
-- [ ] Create `ListService.java` with CRUD and authorization checks
-- [ ] Create `TaskService.java` with CRUD, search, filters, and notification queries
-- [ ] Create `AuthService.java` for OAuth2 user mapping: lookup by email, link provider, create session
-- [ ] Create custom exceptions: `ResourceNotFoundException`, `UnauthorizedException`, `ValidationException`
-
-**Status**: Blocked by Phase 4 (repository creation).
-
-**Files to Create**:
-- [ ] `backend/src/main/java/com/taskmanager/service/UserService.java`
-- [ ] `backend/src/main/java/com/taskmanager/service/UserAuthProviderService.java`
-- [ ] `backend/src/main/java/com/taskmanager/service/TaskListService.java`
-- [ ] `backend/src/main/java/com/taskmanager/service/TaskService.java`
-- [ ] `backend/src/main/java/com/taskmanager/service/AuthService.java`
+- [ ] `backend/src/main/java/com/taskmanager/exception/GlobalExceptionHandler.java`
 - [ ] `backend/src/main/java/com/taskmanager/exception/ResourceNotFoundException.java`
 - [ ] `backend/src/main/java/com/taskmanager/exception/UnauthorizedException.java`
 - [ ] `backend/src/main/java/com/taskmanager/exception/ValidationException.java`
-
----
-
-## Phase 6: REST Controllers & DTOs ⏳ PENDING
-
-- [ ] Create all DTOs: UserDTO, ListDTO, TaskDTO, request/response objects
-- [ ] Create `AuthController.java` with GET /api/auth/me
-- [ ] Create `ListController.java` with CRUD endpoints
-- [ ] Create `TaskController.java` with CRUD, search, filter, and status endpoints
-- [ ] Create `SeedController.java` with POST /api/seed
-- [ ] Create `GlobalExceptionHandler.java` for centralized error handling
-
-**Status**: Blocked by Phase 5 (service layer creation).
-
-**Files to Create**:
-- [ ] `backend/src/main/java/com/taskmanager/dto/UserDTO.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/TaskListDTO.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/CreateTaskListRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskListRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/TaskDTO.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/CreateTaskRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskRequest.java`
-- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskStatusRequest.java`
 - [ ] `backend/src/main/java/com/taskmanager/dto/ErrorResponse.java`
-- [ ] `backend/src/main/java/com/taskmanager/controller/AuthController.java`
-- [ ] `backend/src/main/java/com/taskmanager/controller/TaskListController.java`
-- [ ] `backend/src/main/java/com/taskmanager/controller/TaskController.java`
-- [ ] `backend/src/main/java/com/taskmanager/controller/SeedController.java`
-- [ ] `backend/src/main/java/com/taskmanager/exception/GlobalExceptionHandler.java`
+- [ ] `backend/src/test/java/com/taskmanager/util/TestDataBuilder.java`
+
+**Status**: Shared foundation for all other phases. Must complete before Phase 2.
+
+**Deliverable**: Project builds cleanly, MySQL connected, Flyway migrations run, exception handling in place, test utilities ready.
 
 ---
 
-## Phase 7: OAuth2 Security Configuration ⏳ PENDING
+## Phase 2: Authentication Feature ⏳ IN PROGRESS
 
-- [ ] Create `SecurityConfig.java` with OAuth2 login and CSRF protection
-- [ ] Create `OAuth2UserService.java` for OAuth2 user mapping
-- [ ] Create `SecurityUser.java` custom UserDetails implementation
-- [ ] Update `application.properties` with OAuth2 client configuration
+**Prerequisite**: Phase 1 complete.
 
-**Files to Create**:
+**Goal**: User can OAuth login (Google/GitHub), see profile, and stay logged in across page refresh. Foundation for all other features.
+
+### 2.1 User & Auth Provider Entities
+- [ ] Create `User.java` entity
+  - Fields: id (UUID), email (UNIQUE), display_name, avatar_url, created_at, updated_at
+  - Relationships: One-to-many with UserAuthProvider
+- [ ] Create `UserAuthProvider.java` entity
+  - Fields: id (UUID), user_id (FK), provider (enum), provider_user_id, created_at
+  - Constraints: UNIQUE (provider, provider_user_id), UNIQUE (user_id, provider)
+  - Relationships: Many-to-one with User
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/entity/User.java`
+- [ ] `backend/src/main/java/com/taskmanager/entity/UserAuthProvider.java`
+
+### 2.2 Repositories
+- [ ] Create `UserRepository.java`
+  - `findByEmail(String email)`: for OAuth user lookup
+  - `findById(UUID id)`: retrieve user
+- [ ] Create `UserAuthProviderRepository.java`
+  - `findByProviderAndProviderUserId(String provider, String providerUserId)`: OAuth provider lookup
+  - `findByUserIdAndProvider(UUID userId, String provider)`: multi-provider per user
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/repository/UserRepository.java`
+- [ ] `backend/src/main/java/com/taskmanager/repository/UserAuthProviderRepository.java`
+
+### 2.3 Service Layer
+- [ ] Create `UserService.java`
+  - `getUserById(UUID id)`: retrieve user, verify not deleted
+  - `getUserByEmail(String email)`: find user by email
+  - `updateUser(UUID id, UserDTO dto)`: update profile (name, avatar)
+  - Authorization: verify current user owns resource
+- [ ] Create `AuthService.java`
+  - `findOrCreateUserFromOAuth(OAuthUserInfo)`: core OAuth flow
+  - `linkOAuthProvider(User, OAuthUserInfo)`: link multiple providers to one email
+  - `validateAuthProvider(UUID userId, String provider)`: security check
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/service/UserService.java`
+- [ ] `backend/src/main/java/com/taskmanager/service/AuthService.java`
+
+### 2.4 Security & OAuth2 Configuration
+- [ ] Create `SecurityConfig.java`
+  - OAuth2 login configuration (Google + GitHub)
+  - CSRF protection + session config
+  - Redirect on success/failure
+  - Logout endpoint
+- [ ] Create `OAuth2UserService.java`
+  - Implements `DefaultOAuth2UserService`
+  - Maps OAuth provider attributes → User + UserAuthProvider entities
+  - Calls `AuthService.findOrCreateUserFromOAuth()`
+- [ ] Create `SecurityUser.java`
+  - Implements `UserDetails`
+  - Wraps User entity for Spring Security
+  - getCurrentUser() helper
+
+**Files**:
 - [ ] `backend/src/main/java/com/taskmanager/config/SecurityConfig.java`
 - [ ] `backend/src/main/java/com/taskmanager/security/OAuth2UserService.java`
 - [ ] `backend/src/main/java/com/taskmanager/security/SecurityUser.java`
 
-**Status**: Can proceed in parallel with Phase 5/6.
+### 2.5 DTOs & Controller
+- [ ] Create DTOs:
+  - [ ] `UserDTO.java` (id, email, displayName, avatarUrl)
+- [ ] Create `AuthController.java`
+  - `GET /api/auth/me`: return current user profile
+  - Uses `getCurrentUser()` from SecurityContext
+  - Returns 401 if not authenticated
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/dto/UserDTO.java`
+- [ ] `backend/src/main/java/com/taskmanager/controller/AuthController.java`
+
+### 2.6 Tests
+- [ ] Create `UserServiceTest.java`
+  - Test user creation, retrieval, updates
+  - Test authorization (can't access other user's data)
+  - Test soft deletes
+- [ ] Create `AuthServiceTest.java`
+  - Test OAuth provider mapping
+  - Test multi-provider linking
+  - Test findOrCreate with new vs existing users
+- [ ] Create `AuthControllerTest.java`
+  - Mock OAuth authentication
+  - Test GET /api/auth/me with authenticated user
+  - Test 401 without authentication
+
+**Files**:
+- [ ] `backend/src/test/java/com/taskmanager/service/UserServiceTest.java`
+- [ ] `backend/src/test/java/com/taskmanager/service/AuthServiceTest.java`
+- [ ] `backend/src/test/java/com/taskmanager/controller/AuthControllerTest.java`
+
+### 2.7 Documentation
+- [ ] Update README.md with:
+  - OAuth2 setup for Google (credentials, redirect URI)
+  - OAuth2 setup for GitHub (credentials, redirect URI)
+  - Required environment variables
+  - How session persistence works
+  - Manual testing: "Login with Google/GitHub" flow
+
+**Status**: Foundation feature. All other features depend on this. After completion, app is runnable with OAuth login.
+
+**Deliverable**: User can OAuth login (Google/GitHub), see profile via `GET /api/auth/me`, stay logged in across refresh. Tests passing. OAuth docs complete.
 
 ---
 
-## Phase 8: WebSocket Configuration & Notifications ⏳ PENDING
+## Phase 3: Lists (Projects) Feature ⏳ PENDING
 
-- [ ] Create `WebSocketConfig.java` to enable and configure WebSocket
-- [ ] Create `TaskNotificationHandler.java` to handle WebSocket messages
-- [ ] Create `NotificationScheduler.java` for periodic notification checks
-- [ ] Implement message types: notification, subscribe, ack
+**Prerequisite**: Phase 2 complete (Auth required).
 
-**Files to Create**:
+**Goal**: User can CRUD their task lists/projects. Authorization enforced.
+
+### 3.1 TaskList Entity
+- [ ] Create `TaskList.java` entity
+  - Fields: id (UUID), user_id (FK → User), title, created_at, updated_at
+  - Relationships: Many-to-one with User, One-to-many with Task
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/entity/TaskList.java`
+
+### 3.2 Repository
+- [ ] Create `TaskListRepository.java`
+  - `findByUserId(UUID userId)`: get all user's lists
+  - `findByIdAndUserId(UUID id, UUID userId)`: verify ownership
+  - Custom query for paginated retrieval
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/repository/TaskListRepository.java`
+
+### 3.3 Service Layer
+- [ ] Create `TaskListService.java`
+  - `createList(UUID userId, String title)`: create with ownership
+  - `getListsByUser(UUID userId)`: retrieve all user's lists
+  - `getListById(UUID id, UUID userId)`: verify ownership, throw UnauthorizedException
+  - `updateList(UUID id, UUID userId, String newTitle)`: verify ownership
+  - `deleteList(UUID id, UUID userId)`: return 409 if list has tasks, prevent cascade
+  - All methods verify getCurrentUser() == userId
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/service/TaskListService.java`
+
+### 3.4 DTOs & Controller
+- [ ] Create DTOs:
+  - [ ] `TaskListDTO.java` (id, title, createdAt, updatedAt)
+  - [ ] `CreateTaskListRequest.java` (title)
+  - [ ] `UpdateTaskListRequest.java` (title)
+- [ ] Create `TaskListController.java`
+  - `GET /api/lists`: get all user's lists
+  - `POST /api/lists`: create new list
+  - `PUT /api/lists/{id}`: update list
+  - `DELETE /api/lists/{id}`: delete list (409 if not empty)
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/dto/TaskListDTO.java`
+- [ ] `backend/src/main/java/com/taskmanager/dto/CreateTaskListRequest.java`
+- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskListRequest.java`
+- [ ] `backend/src/main/java/com/taskmanager/controller/TaskListController.java`
+
+### 3.5 Tests
+- [ ] Create `TaskListServiceTest.java`
+  - Test CRUD operations
+  - Test authorization (can't access other user's lists)
+  - Test deletion blocking when tasks exist
+- [ ] Create `TaskListControllerTest.java`
+  - Test all endpoints
+  - Test 403 when accessing other user's list
+  - Test 409 on delete with tasks
+
+**Files**:
+- [ ] `backend/src/test/java/com/taskmanager/service/TaskListServiceTest.java`
+- [ ] `backend/src/test/java/com/taskmanager/controller/TaskListControllerTest.java`
+
+### 3.6 Documentation
+- [ ] Update README.md with:
+  - List API endpoints (GET, POST, PUT, DELETE)
+  - Response examples
+  - Deletion behavior explanation (block-if-not-empty, no cascade)
+  - Error codes (409 Conflict)
+
+**Status**: Lists feature complete and tested.
+
+**Deliverable**: User can create/read/update/delete lists. Authorization verified. Deletion behavior enforced. Tests passing. List API docs complete.
+
+---
+
+## Phase 4: Tasks Feature ⏳ PENDING
+
+**Prerequisite**: Phase 2 (Auth) and Phase 3 (Lists) complete.
+
+**Goal**: Full task management with CRUD, search, filters, status updates, and seed data.
+
+### 4.1 Task Entities & Enums
+- [ ] Create `TaskStatus.java` enum (TO_DO, IN_PROGRESS, DONE)
+- [ ] Create `TaskPriority.java` enum (LOW, MEDIUM, HIGH)
+- [ ] Create `Task.java` entity
+  - Fields: id (UUID), list_id (FK), user_id (FK), title, description, status, priority, due_date (nullable), created_at, updated_at
+  - Relationships: Many-to-one with TaskList, Many-to-one with User
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/entity/TaskStatus.java`
+- [ ] `backend/src/main/java/com/taskmanager/entity/TaskPriority.java`
+- [ ] `backend/src/main/java/com/taskmanager/entity/Task.java`
+
+### 4.2 Repository with Queries
+- [ ] Create `TaskRepository.java`
+  - `findByListId(UUID listId)`: get all tasks in list
+  - `findByIdAndUserId(UUID id, UUID userId)`: verify ownership
+  - `findByUserIdAndStatus(UUID userId, TaskStatus status)`: filter by status
+  - `findByUserIdAndPriority(UUID userId, TaskPriority priority)`: filter by priority
+  - `findOverdueTasks(UUID userId)`: due_date < TODAY AND status != DONE
+  - `findDueSoonTasks(UUID userId)`: TODAY <= due_date <= TODAY + 3 days AND status != DONE
+  - `searchByTitleOrDescription(UUID userId, String query)`: case-insensitive substring search
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/repository/TaskRepository.java`
+
+### 4.3 Service Layer
+- [ ] Create `TaskService.java`
+  - `createTask(UUID userId, UUID listId, CreateTaskRequest)`: create with ownership
+  - `getTasksByList(UUID userId, UUID listId)`: retrieve all tasks in list
+  - `getTaskById(UUID id, UUID userId)`: verify ownership, throw if not found
+  - `updateTask(UUID id, UUID userId, UpdateTaskRequest)`: verify ownership
+  - `updateTaskStatus(UUID id, UUID userId, TaskStatus newStatus)`: quick status change
+  - `deleteTask(UUID id, UUID userId)`: soft delete
+  - `searchTasks(UUID userId, String query)`: search title/description
+  - `filterTasks(UUID userId, TaskStatus status, TaskPriority priority, LocalDate dueDate)`: multi-filter
+  - `getOverdueNotifications(UUID userId)`: for WebSocket
+  - `getDueSoonNotifications(UUID userId)`: for WebSocket
+  - All methods verify getCurrentUser() == userId
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/service/TaskService.java`
+
+### 4.4 DTOs & Controller
+- [ ] Create DTOs:
+  - [ ] `TaskDTO.java` (id, listId, title, description, status, priority, dueDate, createdAt)
+  - [ ] `CreateTaskRequest.java` (listId, title, description, status, priority, dueDate)
+  - [ ] `UpdateTaskRequest.java` (title, description, priority, dueDate)
+  - [ ] `UpdateTaskStatusRequest.java` (status)
+- [ ] Create `TaskController.java`
+  - `GET /api/tasks?list_id={id}`: get tasks in list
+  - `GET /api/tasks/search?q={query}`: search tasks
+  - `GET /api/tasks?status={status}&priority={priority}&due_date={filter}`: filter tasks
+  - `POST /api/tasks`: create task
+  - `PUT /api/tasks/{id}`: update task
+  - `PATCH /api/tasks/{id}/status`: quick status change
+  - `DELETE /api/tasks/{id}`: delete task
+- [ ] Create `SeedController.java`
+  - `POST /api/seed`: populate database with sample data for current user
+  - Creates sample lists and tasks for testing
+
+**Files**:
+- [ ] `backend/src/main/java/com/taskmanager/dto/TaskDTO.java`
+- [ ] `backend/src/main/java/com/taskmanager/dto/CreateTaskRequest.java`
+- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskRequest.java`
+- [ ] `backend/src/main/java/com/taskmanager/dto/UpdateTaskStatusRequest.java`
+- [ ] `backend/src/main/java/com/taskmanager/controller/TaskController.java`
+- [ ] `backend/src/main/java/com/taskmanager/controller/SeedController.java`
+
+### 4.5 Tests
+- [ ] Create `TaskServiceTest.java`
+  - Test CRUD operations
+  - Test authorization (can't access other user's tasks)
+  - Test search functionality
+  - Test filters (status, priority, due date)
+  - Test overdue/due-soon queries
+- [ ] Create `TaskControllerTest.java`
+  - Test all endpoints
+  - Test 403 when accessing other user's tasks
+  - Test seed endpoint creates data
+
+**Files**:
+- [ ] `backend/src/test/java/com/taskmanager/service/TaskServiceTest.java`
+- [ ] `backend/src/test/java/com/taskmanager/controller/TaskControllerTest.java`
+
+### 4.6 Documentation
+- [ ] Update README.md with:
+  - Task API endpoints (GET, POST, PUT, PATCH, DELETE)
+  - Search endpoint documentation
+  - Filter examples (status, priority, due date: overdue/today/next_7_days/all)
+  - Response examples
+  - Seed endpoint usage
+
+**Status**: Core feature complete. MVP now fully functional.
+
+**Deliverable**: User can create/read/update/delete/search/filter tasks. Status updates working. Seed data available. Tests passing. Task API docs complete.
+
+---
+
+## Phase 5: WebSocket Notifications ⏳ PENDING
+
+**Prerequisite**: Phase 2 (Auth) and Phase 4 (Tasks) complete.
+
+**Goal**: Real-time push notifications for overdue and due-soon tasks. Two-way WebSocket communication.
+
+### 5.1 WebSocket Configuration
+- [ ] Create `WebSocketConfig.java`
+  - Enable WebSocket with `@EnableWebSocketMessageBroker`
+  - Configure STOMP endpoint: `/api/ws`
+  - Configure message broker (simple, in-memory for MVP)
+  - CORS setup for frontend (localhost:5173, localhost:3000)
+
+**Files**:
 - [ ] `backend/src/main/java/com/taskmanager/config/WebSocketConfig.java`
+
+### 5.2 WebSocket Handler & Messages
+- [ ] Create `TaskNotificationHandler.java`
+  - Implement `WebSocketHandler` or STOMP controller
+  - `afterConnectionEstablished()`: send initial batch of overdue/due-soon tasks on connect
+  - Handle client messages: "subscribe" (custom interval), "ack" (mark notification read)
+  - Send notifications: JSON with type, id, taskId, title, reason, due_date
+- [ ] Create `NotificationMessage.java` DTO
+  - Fields: type (notification), id (UUID), taskId (UUID), title, reason (overdue|due-soon), dueDate
+
+**Files**:
 - [ ] `backend/src/main/java/com/taskmanager/websocket/TaskNotificationHandler.java`
+- [ ] `backend/src/main/java/com/taskmanager/dto/NotificationMessage.java`
+
+### 5.3 Notification Scheduler
+- [ ] Create `NotificationScheduler.java`
+  - `@Scheduled(fixedRate = 60000)` periodic check (60s default, configurable)
+  - For each connected user: query overdue + due-soon tasks
+  - Send via WebSocket to connected clients
+  - Track sent notifications to avoid duplicates
+
+**Files**:
 - [ ] `backend/src/main/java/com/taskmanager/websocket/NotificationScheduler.java`
 
-**Status**: Blocked by Phase 5 (TaskService dependency).
-
----
-
-## Phase 9: Comprehensive Test Suite ⏳ PENDING
-
-- [ ] Create `UserServiceTest.java`
-- [ ] Create `ListServiceTest.java`
-- [ ] Create `TaskServiceTest.java`
-- [ ] Create `AuthControllerTest.java`
-- [ ] Create `ListControllerTest.java`
-- [ ] Create `TaskControllerTest.java`
+### 5.4 Tests
 - [ ] Create `TaskNotificationHandlerTest.java`
-- [ ] Create `TestDataBuilder.java` utility for tests
-- [ ] Run all tests: `gradle test`
-- [ ] Verify 70%+ code coverage
+  - Test WebSocket connection establishes
+  - Test initial notification batch sent on connect
+  - Test periodic notifications sent
+  - Test client subscribe message changes interval
+  - Test client ack message acknowledged
+  - Test authorization: only current user receives their notifications
 
-**Status**: Created incrementally alongside service/controller development.
-
-**Files to Create**:
-- [ ] `backend/src/test/java/com/taskmanager/service/UserServiceTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/service/TaskListServiceTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/service/TaskServiceTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/controller/AuthControllerTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/controller/TaskListControllerTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/controller/TaskControllerTest.java`
+**Files**:
 - [ ] `backend/src/test/java/com/taskmanager/websocket/TaskNotificationHandlerTest.java`
-- [ ] `backend/src/test/java/com/taskmanager/util/TestDataBuilder.java`
+
+### 5.5 Documentation
+- [ ] Update README.md with:
+  - WebSocket endpoint: `ws://server/api/ws`
+  - Server → Client message format (notification)
+  - Client → Server message formats (subscribe, ack)
+  - Notification rules (overdue, due-soon)
+  - Example subscription flow
+
+**Status**: Real-time feature complete.
+
+**Deliverable**: WebSocket notifications working. Overdue/due-soon tasks pushed to client. Two-way communication established. Tests passing. WebSocket docs complete.
 
 ---
 
-## Phase 10: Documentation & Setup ⏳ PENDING
+## Phase 6: Polish & Final Integration ⏳ PENDING
 
-- [ ] Update `README.md` with local setup, OAuth setup, API docs
-- [ ] Create `.env.example` with required environment variables
-- [ ] Document WebSocket message format
-- [ ] Document notification rules
-- [ ] Document deletion behavior choice
-- [ ] Add seed data instructions
+**Prerequisite**: Phases 1-5 complete.
 
-**Files to Create/Update**:
-- [ ] Update `README.md`
-- [ ] Create `.env.example`
+**Goal**: Production-ready backend with complete documentation and verified test coverage.
 
-**Status**: Final phase; completed after Phases 6-8 complete.
+### 6.1 Environment Configuration
+- [ ] Create `.env.example` with all required variables:
+  ```
+  # OAuth
+  GOOGLE_CLIENT_ID=your_google_client_id
+  GOOGLE_CLIENT_SECRET=your_google_client_secret
+  GITHUB_CLIENT_ID=your_github_client_id
+  GITHUB_CLIENT_SECRET=your_github_client_secret
+  
+  # Database
+  DB_HOST=localhost
+  DB_PORT=3306
+  DB_NAME=task_manager
+  DB_USER=root
+  DB_PASSWORD=root
+  
+  # App
+  SERVER_PORT=8080
+  SESSION_TIMEOUT=1800
+  ```
+
+**Files**:
+- [ ] `.env.example`
+
+### 6.2 README Final Pass
+- [ ] Verify all sections complete and accurate:
+  - Local setup (Java 21, MySQL, Gradle)
+  - OAuth setup (Google + GitHub)
+  - Environment variables
+  - List API documentation
+  - Task API documentation (including search/filters)
+  - WebSocket message formats
+  - Notification rules
+  - Deletion behavior choice
+  - Seed endpoint usage
+  - Test commands (`gradle test`)
+  - Build commands (`gradle build`)
+- [ ] Add summary of all features
+
+**Files**:
+- [ ] Update README.md
+
+### 6.3 Integration Testing
+- [ ] Verify end-to-end flows:
+  - OAuth login (Google + GitHub)
+  - Create list → create task → update status → delete task → delete list
+  - Search and filter tasks
+  - WebSocket connect → receive initial notifications → subscribe → ack
+  - Cross-user isolation: User A cannot see User B's data
+- [ ] Manual testing checklist provided in README
+
+### 6.4 Code Quality & Coverage
+- [ ] Run `gradle build` locally
+- [ ] Run `gradle test` and verify all tests pass
+- [ ] Check test coverage ≥70%
+- [ ] Code review for:
+  - Consistent error handling
+  - Authorization checks on all endpoints
+  - Input validation
+  - SQL injection prevention (using JPA)
+  - XSS prevention (server-side validation)
+
+### 6.5 Final Verification
+- [ ] `gradle bootRun` starts successfully
+- [ ] MySQL migrations run without errors
+- [ ] OAuth login works end-to-end
+- [ ] API endpoints respond correctly
+- [ ] WebSocket connects and sends notifications
+- [ ] No console errors or warnings
+
+**Status**: Backend complete and production-ready.
+
+**Deliverable**: All features working. Tests passing. Documentation complete. Deployable backend.
 
 ---
 
@@ -218,45 +545,80 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 ### Authorization Strategy
 - Every endpoint calls `getCurrentUser()` from SecurityContext
 - Verify resource belongs to user: throw `UnauthorizedException` if mismatch
-- Soft deletes: queries filter `deleted_at IS NULL`
+- Hard deletes only: immediately remove from database (no soft delete tracking)
+- Example: `TaskService.getTaskById()` checks `task.user_id == getCurrentUser().id`
 
-### Deletion Behavior
-**Block pattern** (document in README):
+### Deletion Behavior (Block Pattern, Hard Delete)
 - Deleting a list returns 409 Conflict if it has tasks
 - User must delete all tasks first, then delete the list
-- Deletion logic handled in service layer (no database cascade)
+- Deletion logic handled in service layer (no database CASCADE, immediate hard delete)
 - Prevents accidental data loss
+- Documented in README
 
 ### WebSocket Notification Rules
 - **Overdue**: `status != DONE AND due_date < TODAY`
-- **Due Soon**: `status != DONE AND due_date >= TODAY AND due_date <= TODAY + 3 days`
-- Send on connect + periodic (60s default, configurable)
+- **Due Soon**: `status != DONE AND TODAY <= due_date <= TODAY + 3 days`
+- Send on connect (initial batch) + periodic checks (60s default, configurable)
+- Notifications are one-way Server → Client for UI toast display
+- Client can subscribe (custom interval) and ack (mark read)
+
+### Testing Strategy
+- **Unit Tests**: Service layer with mocked repositories
+- **Integration Tests**: Controller layer with `@WebMvcTest` + mocked services
+- **Authorization Tests**: Verify cross-user isolation
+- **Data Tests**: `TestDataBuilder` for consistent test data
+- **Coverage Goal**: ≥70% code coverage
 
 ---
 
-## Local Setup Verification
+## Integration Checkpoints
 
-**Prerequisites**:
-- [ ] MySQL database created (via `docker/init-db/` scripts or docker-compose)
+After each phase completes, verify:
 
-**Steps**:
-- [ ] Build backend: `gradle build`
-- [ ] Run tests: `gradle test`
-- [ ] Set Env variables for `/backend/.env`
-- [ ] Start backend: `gradle bootRun`
-- [ ] Start frontend: `npm run dev`
+**After Phase 1**:
+- `gradle build` succeeds
+- MySQL migrations run
+- No missing dependencies
 
-### Manual Testing Checklist
-- [ ] Login with Google OAuth
-- [ ] Login with GitHub OAuth
-- [ ] Create a list
-- [ ] Create a task in the list
-- [ ] Search tasks by title/description
-- [ ] Filter by status, priority, due date
-- [ ] Update task status via PATCH
-- [ ] Delete task
-- [ ] WebSocket connect → receive notifications
-- [ ] Cross-user isolation: verify User A cannot see User B's data
+**After Phase 2**:
+- `gradle test` passes for Auth tests
+- Can login with Google/GitHub (manual test)
+- `GET /api/auth/me` returns current user
+- **APP IS RUNNABLE**: Frontend can start integration
+
+**After Phase 3**:
+- `gradle test` passes for Lists tests
+- CRUD list endpoints working
+- Authorization blocking cross-user access
+- Deletion returns 409 if list has tasks
+
+**After Phase 4**:
+- `gradle test` passes for Tasks tests
+- Full CRUD working
+- Search and filters working
+- Seed endpoint creates sample data
+- **CORE MVP COMPLETE**: All features working
+
+**After Phase 5**:
+- `gradle test` passes for WebSocket tests
+- WebSocket client can connect
+- Overdue/due-soon notifications sent
+- Client subscribe/ack messages handled
+
+**After Phase 6**:
+- `gradle build && gradle test` succeeds with 70%+ coverage
+- README complete and accurate
+- `.env.example` provided
+- End-to-end manual tests pass
+
+---
+
+## Parallel Work Opportunities
+
+- **UI Team**: After Phase 2 (Auth), can build login page, sidebar, main layout
+- **Backend Team**: Phase 3-5 can work independently in parallel once Phase 2 completes
+- **Dev Ops**: Can set up Docker/deployment while backend is in Phase 4-5
+- **Docs**: Can draft README skeleton while implementation is ongoing
 
 ---
 
@@ -264,29 +626,58 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 
 **Total files to create**: ~45 files
 
-**Key directories** (using `com.taskmanager` package):
+**Key Phases**:
+```
+Phase 1 (Shared)    → Phase 2 (Auth) → Phase 3 (Lists) → Phase 4 (Tasks) → Phase 5 (WebSocket) → Phase 6 (Polish)
+    [COMPLETE]          [IN PROGRESS]     [PENDING]        [PENDING]          [PENDING]           [PENDING]
+```
+
+**After Phase 2**: User can OAuth login, see profile
+**After Phase 4**: User can manage tasks across lists
+**After Phase 5**: User receives real-time notifications
+**After Phase 6**: Production-ready backend deployed
+
+**Build & Test Commands**:
+```bash
+# Build
+gradle build
+
+# Run tests
+gradle test
+
+# Start backend
+gradle bootRun
+
+# View coverage
+gradle test jacocoTestReport
+```
+
+---
+
+## Key Directories (using `com.taskmanager` package)
+
 ```
 backend/
 ├── build.gradle ✓
 ├── src/main/java/com/taskmanager/
-│   ├── TaskManagerApplication.java ✓
+│   ├── TaskmanagerApplication.java ✓
 │   ├── config/ (SecurityConfig, WebSocketConfig)
-│   ├── controller/ (Auth, TaskList, Task, Seed, GlobalExceptionHandler)
+│   ├── controller/ (Auth, TaskList, Task, Seed)
 │   ├── service/ (User, TaskList, Task, Auth)
-│   ├── entity/ (User, TaskList, Task, enums)
-│   ├── repository/ (UserRepository, TaskListRepository, TaskRepository)
-│   ├── dto/ (all request/response DTOs)
+│   ├── entity/ (User, UserAuthProvider, TaskList, Task, enums)
+│   ├── repository/ (User, UserAuthProvider, TaskList, Task)
+│   ├── dto/ (UserDTO, TaskListDTO, TaskDTO, requests/responses)
 │   ├── websocket/ (TaskNotificationHandler, NotificationScheduler)
 │   ├── security/ (OAuth2UserService, SecurityUser)
-│   └── exception/ (custom exceptions)
+│   └── exception/ (GlobalExceptionHandler, custom exceptions)
 ├── src/main/resources/
 │   ├── application.properties ✓
-│   ├── application-dev.properties
-│   └── db/migration/ (V001, V002)
+│   ├── application-dev.properties ✓
+│   └── db/migration/ (V001, V002) ✓
 ├── src/test/java/com/taskmanager/
-│   ├── TaskManagerApplicationTests.java ✓
-│   ├── service/ (service tests)
-│   ├── controller/ (controller tests)
-│   ├── websocket/ (WebSocket tests)
-│   └── util/ (TestDataBuilder)
+│   ├── service/ (UserService, TaskListService, TaskService tests)
+│   ├── controller/ (Auth, TaskList, Task controller tests)
+│   ├── websocket/ (WebSocket handler tests)
+│   └── util/ (TestDataBuilder) ✓
+└── .env.example ⏳
 ```

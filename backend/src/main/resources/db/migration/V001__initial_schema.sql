@@ -30,11 +30,8 @@ CREATE TABLE task_list (
     title VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES user(id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_deleted_at (deleted_at),
-    INDEX idx_user_deleted (user_id, deleted_at)
+    INDEX idx_user_id (user_id)
 );
 
 -- Task table
@@ -49,8 +46,6 @@ CREATE TABLE task (
     due_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP NULL,
-    deleted_at TIMESTAMP NULL,
     FOREIGN KEY (list_id) REFERENCES task_list(id),
     FOREIGN KEY (user_id) REFERENCES user(id),
     INDEX idx_list_id (list_id),
@@ -58,8 +53,7 @@ CREATE TABLE task (
     INDEX idx_status (status),
     INDEX idx_priority (priority),
     INDEX idx_due_date (due_date),
-    INDEX idx_deleted_at (deleted_at),
-    INDEX idx_user_status_deleted (user_id, status, deleted_at),
-    INDEX idx_due_date_status_deleted (due_date, status, deleted_at),
+    INDEX idx_user_status (user_id, status),
+    INDEX idx_due_date_status (due_date, status),
     FULLTEXT INDEX ft_title_description (title, description)
 );
