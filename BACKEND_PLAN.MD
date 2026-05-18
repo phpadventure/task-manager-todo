@@ -29,21 +29,23 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 
 ---
 
-## Phase 2: Database Design & Migrations
+## Phase 2: Database Design & Migrations ✅ COMPLETE
 
 **Prerequisite**: MySQL database and user created via `docker/init-db/` scripts.
 
-- [ ] Create `V001__initial_schema.sql` with users, lists, tasks tables
-- [ ] Add proper indexes and constraints
-- [ ] Create `V002__seed_data.sql` for sample data (optional)
+- [x] Create `V001__initial_schema.sql` with users, lists, tasks tables
+- [x] Add proper indexes and constraints
+- [x] Create `V002__seed_data.sql` for sample data (optional)
 
 **Files to Create**:
-- [ ] `backend/src/main/resources/db/migration/V001__initial_schema.sql`
-- [ ] `backend/src/main/resources/db/migration/V002__seed_data.sql`
+- [x] `backend/src/main/resources/db/migration/V001__initial_schema.sql`
+- [x] `backend/src/main/resources/db/migration/V002__seed_data.sql`
+
+**Status**: 100% complete. Schema includes users, user_auth_providers, task_lists, and tasks tables with appropriate indexes and foreign keys. Seed data available for development.
 
 ---
 
-## Phase 3: JPA Entity Models
+## Phase 3: JPA Entity Models ⏳ IN PROGRESS
 
 - [ ] Create `User.java` entity (id: UUID, email, display_name, avatar_url, timestamps)
 - [ ] Create `UserAuthProvider.java` entity (id: UUID, user_id, provider, provider_user_id)
@@ -52,6 +54,8 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - [ ] Create `TaskStatus.java` enum (TO_DO, IN_PROGRESS, DONE)
 - [ ] Create `TaskPriority.java` enum (LOW, MEDIUM, HIGH)
 - [ ] Create `NotificationMessage.java` DTO for WebSocket messages
+
+**Status**: Next phase to implement. Database schema exists; entities need to be created to map to schema.
 
 **Files to Create**:
 - [ ] `backend/src/main/java/com/taskmanager/entity/User.java`
@@ -64,7 +68,7 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 
 ---
 
-## Phase 4: Spring Data JPA Repositories
+## Phase 4: Spring Data JPA Repositories ⏳ PENDING
 
 - [ ] Create `UserRepository.java` with email lookup methods
 - [ ] Create `UserAuthProviderRepository.java` with provider lookup methods
@@ -77,9 +81,11 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - [ ] `backend/src/main/java/com/taskmanager/repository/TaskListRepository.java`
 - [ ] `backend/src/main/java/com/taskmanager/repository/TaskRepository.java`
 
+**Status**: Blocked by Phase 3 (entity creation).
+
 ---
 
-## Phase 5: Service Layer with Business Logic
+## Phase 5: Service Layer with Business Logic ⏳ PENDING
 
 - [ ] Create `UserService.java` for user profile management and multi-provider lookup
 - [ ] Create `UserAuthProviderService.java` for linking/unlinking OAuth providers to users
@@ -87,6 +93,8 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - [ ] Create `TaskService.java` with CRUD, search, filters, and notification queries
 - [ ] Create `AuthService.java` for OAuth2 user mapping: lookup by email, link provider, create session
 - [ ] Create custom exceptions: `ResourceNotFoundException`, `UnauthorizedException`, `ValidationException`
+
+**Status**: Blocked by Phase 4 (repository creation).
 
 **Files to Create**:
 - [ ] `backend/src/main/java/com/taskmanager/service/UserService.java`
@@ -100,7 +108,7 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 
 ---
 
-## Phase 6: REST Controllers & DTOs
+## Phase 6: REST Controllers & DTOs ⏳ PENDING
 
 - [ ] Create all DTOs: UserDTO, ListDTO, TaskDTO, request/response objects
 - [ ] Create `AuthController.java` with GET /api/auth/me
@@ -108,6 +116,8 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - [ ] Create `TaskController.java` with CRUD, search, filter, and status endpoints
 - [ ] Create `SeedController.java` with POST /api/seed
 - [ ] Create `GlobalExceptionHandler.java` for centralized error handling
+
+**Status**: Blocked by Phase 5 (service layer creation).
 
 **Files to Create**:
 - [ ] `backend/src/main/java/com/taskmanager/dto/UserDTO.java`
@@ -127,7 +137,7 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 
 ---
 
-## Phase 7: OAuth2 Security Configuration
+## Phase 7: OAuth2 Security Configuration ⏳ PENDING
 
 - [ ] Create `SecurityConfig.java` with OAuth2 login and CSRF protection
 - [ ] Create `OAuth2UserService.java` for OAuth2 user mapping
@@ -139,9 +149,11 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - [ ] `backend/src/main/java/com/taskmanager/security/OAuth2UserService.java`
 - [ ] `backend/src/main/java/com/taskmanager/security/SecurityUser.java`
 
+**Status**: Can proceed in parallel with Phase 5/6.
+
 ---
 
-## Phase 8: WebSocket Configuration & Notifications
+## Phase 8: WebSocket Configuration & Notifications ⏳ PENDING
 
 - [ ] Create `WebSocketConfig.java` to enable and configure WebSocket
 - [ ] Create `TaskNotificationHandler.java` to handle WebSocket messages
@@ -153,9 +165,11 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - [ ] `backend/src/main/java/com/taskmanager/websocket/TaskNotificationHandler.java`
 - [ ] `backend/src/main/java/com/taskmanager/websocket/NotificationScheduler.java`
 
+**Status**: Blocked by Phase 5 (TaskService dependency).
+
 ---
 
-## Phase 9: Comprehensive Test Suite
+## Phase 9: Comprehensive Test Suite ⏳ PENDING
 
 - [ ] Create `UserServiceTest.java`
 - [ ] Create `ListServiceTest.java`
@@ -167,6 +181,8 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 - [ ] Create `TestDataBuilder.java` utility for tests
 - [ ] Run all tests: `gradle test`
 - [ ] Verify 70%+ code coverage
+
+**Status**: Created incrementally alongside service/controller development.
 
 **Files to Create**:
 - [ ] `backend/src/test/java/com/taskmanager/service/UserServiceTest.java`
@@ -180,7 +196,7 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 
 ---
 
-## Phase 10: Documentation & Setup
+## Phase 10: Documentation & Setup ⏳ PENDING
 
 - [ ] Update `README.md` with local setup, OAuth setup, API docs
 - [ ] Create `.env.example` with required environment variables
@@ -192,6 +208,8 @@ This project requires building a full-stack Personal To-Do Manager with OAuth2 S
 **Files to Create/Update**:
 - [ ] Update `README.md`
 - [ ] Create `.env.example`
+
+**Status**: Final phase; completed after Phases 6-8 complete.
 
 ---
 
