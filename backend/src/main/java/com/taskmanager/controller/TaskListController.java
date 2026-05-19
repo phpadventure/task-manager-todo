@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.taskmanager.dto.CreateTaskListRequest;
 import com.taskmanager.dto.TaskListDTO;
 import com.taskmanager.dto.UpdateTaskListRequest;
+import com.taskmanager.security.CustomOAuth2User;
 import com.taskmanager.security.SecurityUser;
 import com.taskmanager.service.TaskListService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -148,8 +149,15 @@ public class TaskListController {
   }
 
   private UUID getCurrentUserId() {
-    SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext()
+    var principal = SecurityContextHolder.getContext()
         .getAuthentication().getPrincipal();
-    return securityUser.getId();
+
+    if (principal instanceof SecurityUser securityUser) {
+      return securityUser.getId();
+    } else if (principal instanceof CustomOAuth2User oAuth2User) {
+      return oAuth2User.getUser().getId();
+    }
+
+    throw new IllegalStateException("Unexpected principal type: " + principal.getClass());
   }
 }
