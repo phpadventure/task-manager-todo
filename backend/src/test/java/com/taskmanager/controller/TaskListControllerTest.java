@@ -3,6 +3,7 @@ package com.taskmanager.controller;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -41,8 +42,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @WebMvcTest(controllers = TaskListController.class)
 class TaskListControllerTest {
@@ -91,7 +90,7 @@ class TaskListControllerTest {
     when(taskListService.getListsByUser(userId)).thenReturn(List.of(list1));
 
     mockMvc.perform(
-            get("/api/lists").contentType(MediaType.APPLICATION_JSON).principal(authPrincipal))
+            get("/lists").contentType(MediaType.APPLICATION_JSON).principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].title").value("List 1"));
   }
@@ -102,7 +101,7 @@ class TaskListControllerTest {
     when(taskListService.getListById(listId, userId)).thenReturn(list);
 
     mockMvc.perform(
-            get("/api/lists/{id}", listId)
+            get("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isOk())
@@ -115,7 +114,7 @@ class TaskListControllerTest {
         .thenThrow(new ResourceNotFoundException("TaskList", listId));
 
     mockMvc.perform(
-            get("/api/lists/{id}", listId)
+            get("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isNotFound());
@@ -127,7 +126,7 @@ class TaskListControllerTest {
         .thenThrow(new UnauthorizedException("You do not have access to this resource"));
 
     mockMvc.perform(
-            get("/api/lists/{id}", listId)
+            get("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isForbidden());
@@ -140,7 +139,7 @@ class TaskListControllerTest {
     when(taskListService.createList(eq(userId), eq("New List"))).thenReturn(created);
 
     mockMvc.perform(
-            post("/api/lists")
+            post("/lists")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
@@ -153,7 +152,7 @@ class TaskListControllerTest {
     CreateTaskListRequest request = new CreateTaskListRequest("");
 
     mockMvc.perform(
-            post("/api/lists")
+            post("/lists")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
@@ -168,7 +167,7 @@ class TaskListControllerTest {
         .thenReturn(updated);
 
     mockMvc.perform(
-            put("/api/lists/{id}", listId)
+            put("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
@@ -183,7 +182,7 @@ class TaskListControllerTest {
         .thenThrow(new UnauthorizedException("You do not have access to this resource"));
 
     mockMvc.perform(
-            put("/api/lists/{id}", listId)
+            put("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
@@ -195,7 +194,7 @@ class TaskListControllerTest {
     doNothing().when(taskListService).deleteList(eq(listId), eq(userId));
 
     mockMvc.perform(
-            delete("/api/lists/{id}", listId)
+            delete("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isNoContent());
@@ -210,7 +209,7 @@ class TaskListControllerTest {
         .deleteList(eq(listId), eq(userId));
 
     mockMvc.perform(
-            delete("/api/lists/{id}", listId)
+            delete("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isConflict());
@@ -223,7 +222,7 @@ class TaskListControllerTest {
         .deleteList(eq(listId), eq(userId));
 
     mockMvc.perform(
-            delete("/api/lists/{id}", listId)
+            delete("/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isForbidden());
