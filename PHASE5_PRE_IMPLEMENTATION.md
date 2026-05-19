@@ -96,11 +96,35 @@ Verify that enums (TaskStatus, TaskPriority) are properly validated on REST requ
 
 ---
 
+## Task 4: Review and Improve Task List API Endpoint Design
+
+**Priority**: Medium  
+**Status**: Pending
+
+### Description
+Review the current task list endpoint to ensure it follows RESTful conventions. Currently using query parameters approach; evaluate if nested resource approach would be more appropriate.
+
+### Objectives
+- Check SPEC.md for intended API design (currently: `GET /api/tasks?list_id={id}&status={status}&...`)
+- Evaluate RESTful alternatives (e.g., `GET /api/lists/{listId}/tasks`)
+- Consider backward compatibility if endpoints are in use
+- Document design decision (why query params vs. nested resources)
+- Update if needed to improve clarity and consistency
+
+### Acceptance Criteria
+- API design rationale documented
+- Endpoints follow consistent RESTful patterns
+- Implementation matches SPEC.md requirements or updated SPEC.md reflects design
+- No breaking changes without migration plan
+
+---
+
 ## Implementation Order
 0. **BLOCKER**: Fix Phase 4 manual testing failures (required before proceeding)
 1. Task 1 (DB pruning) - unblocks further development
 2. Task 2 (Authorization refactor) - improves code quality
-3. Task 3 (Enum validation) - data consistency improvement
+3. Task 4 (API endpoint design) - ensure RESTful conventions
+4. Task 3 (Enum validation) - data consistency improvement
 
 ## Next Steps
 1. Debug and fix Phase 4 failures
