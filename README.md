@@ -200,3 +200,77 @@ npm run test        # Unit tests
 **Database Migrations:**
 - Flyway automatically runs migrations on Spring Boot startup
 - Migrations are in `backend/src/main/resources/db/migration/`
+
+## OAuth2 Authentication Setup
+
+### Google OAuth
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. Enable OAuth 2.0:
+   - Go to **APIs & Services > Credentials**
+   - Click **Create Credentials > OAuth client ID**
+   - Application type: **Web Application**
+   - Authorized redirect URIs: `http://localhost:8080/api/login/oauth2/code/google`
+4. Copy **Client ID** and **Client Secret**
+5. Add to `.env`:
+   ```
+   GOOGLE_CLIENT_ID=your-client-id
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   ```
+
+### GitHub OAuth
+
+1. Go to GitHub Settings > [Developer settings > OAuth Apps](https://github.com/settings/developers)
+2. Click **New OAuth App**
+3. Fill in:
+   - **Application name**: `Task Manager`
+   - **Homepage URL**: `http://localhost:8080`
+   - **Authorization callback URL**: `http://localhost:8080/api/login/oauth2/code/github`
+4. Copy **Client ID** and **Client Secret**
+5. Add to `.env`:
+   ```
+   GITHUB_CLIENT_ID=your-client-id
+   GITHUB_CLIENT_SECRET=your-client-secret
+   ```
+
+#### GitHub Private Email Handling
+
+GitHub users with private email settings require special handling:
+
+- **Scope**: The application requests `user:email` scope (allows access to primary email)
+- **Email Resolution**:
+  1. Standard OAuth `/user` endpoint is called first
+  2. If email is null (private setting), backend calls GitHub's `/user/emails` endpoint
+  3. Backend retrieves the user's **primary verified email** from the secondary endpoint
+- **Error Handling**: If email cannot be retrieved after both attempts, authentication is rejected with a clear error message:
+  > "Unable to retrieve email from GitHub. Please ensure your email is verified and not private in GitHub settings."
+
+**To enable login with private email**: Users must either:
+- Make their email public in [GitHub email settings](https://github.com/settings/emails)
+- Or keep email private but ensure it's verified (backend will fetch it via secondary API)
+
+### Multi-Provider Linking
+
+Users can link multiple OAuth providers to a single account:
+- First login creates a user record with the provider
+- Subsequent logins with a different provider linking the same email address automatically link providers
+- User can authenticate with either Google or GitHub after linking
+
+---
+
+## Testing
+
+### Backend Tests
+```bash
+cd backend
+./gradlew test                    # Run all tests
+./gradlew test --tests "*GitHub*" # Test GitHub OAuth functionality
+```
+
+### Frontend Tests
+```bash
+cd ui
+npm run test        # Unit tests (Vitest)
+npx playwright test # E2E tests
+```
