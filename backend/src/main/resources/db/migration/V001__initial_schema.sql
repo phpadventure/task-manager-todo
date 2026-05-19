@@ -49,11 +49,5 @@ CREATE TABLE task (
     FOREIGN KEY (list_id) REFERENCES task_list(id),
     FOREIGN KEY (user_id) REFERENCES user(id),
     INDEX idx_list_id (list_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_status (status),
-    INDEX idx_priority (priority),
-    INDEX idx_due_date (due_date),
-    INDEX idx_user_status (user_id, status),
-    INDEX idx_due_date_status (due_date, status),
-    FULLTEXT INDEX ft_title_description (title, description)
+    INDEX idx_user_id (user_id)
 );

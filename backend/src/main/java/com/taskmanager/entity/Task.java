@@ -21,10 +21,7 @@ import jakarta.persistence.Table;
     name = "task",
     indexes = {
       @Index(name = "idx_user_id", columnList = "user_id"),
-      @Index(name = "idx_list_id", columnList = "list_id"),
-      @Index(name = "idx_status", columnList = "status"),
-      @Index(name = "idx_priority", columnList = "priority"),
-      @Index(name = "idx_due_date", columnList = "due_date")
+      @Index(name = "idx_list_id", columnList = "list_id")
     })
 public class Task {
 
