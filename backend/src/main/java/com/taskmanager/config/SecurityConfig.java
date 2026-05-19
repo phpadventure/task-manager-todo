@@ -21,9 +21,10 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/auth/me").permitAll()
-                .requestMatchers("/api/seed").permitAll()
+                .requestMatchers("/auth/me").permitAll()
+                .requestMatchers("/seed").permitAll()
                 .requestMatchers("/health").permitAll()
+                .requestMatchers("/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 .requestMatchers("/", "/index.html", "/*.js", "/*.css").permitAll()
                 .anyRequest().authenticated()
             )
