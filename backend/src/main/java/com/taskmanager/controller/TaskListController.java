@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.taskmanager.dto.CreateTaskListRequest;
+import com.taskmanager.dto.ErrorResponse;
 import com.taskmanager.dto.TaskListDTO;
 import com.taskmanager.dto.UpdateTaskListRequest;
 import com.taskmanager.security.CustomOAuth2User;
@@ -47,7 +48,10 @@ public class TaskListController {
           responseCode = "200",
           description = "Lists retrieved successfully",
           content = @Content(schema = @Schema(implementation = TaskListDTO.class))),
-      @ApiResponse(responseCode = "401", description = "User not authenticated")
+      @ApiResponse(
+          responseCode = "401",
+          description = "User not authenticated",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @GetMapping
   public ResponseEntity<List<TaskListDTO>> getAllLists() {
@@ -65,9 +69,18 @@ public class TaskListController {
           responseCode = "200",
           description = "List retrieved successfully",
           content = @Content(schema = @Schema(implementation = TaskListDTO.class))),
-      @ApiResponse(responseCode = "401", description = "User not authenticated"),
-      @ApiResponse(responseCode = "403", description = "User does not own this list"),
-      @ApiResponse(responseCode = "404", description = "List not found")
+      @ApiResponse(
+          responseCode = "401",
+          description = "User not authenticated",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "403",
+          description = "User does not own this list",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "404",
+          description = "List not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @GetMapping("/{id}")
   public ResponseEntity<TaskListDTO> getList(
@@ -87,8 +100,14 @@ public class TaskListController {
           responseCode = "201",
           description = "List created successfully",
           content = @Content(schema = @Schema(implementation = TaskListDTO.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request"),
-      @ApiResponse(responseCode = "401", description = "User not authenticated")
+      @ApiResponse(
+          responseCode = "400",
+          description = "Invalid request",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "401",
+          description = "User not authenticated",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @PostMapping
   public ResponseEntity<TaskListDTO> createList(
@@ -113,10 +132,22 @@ public class TaskListController {
           responseCode = "200",
           description = "List updated successfully",
           content = @Content(schema = @Schema(implementation = TaskListDTO.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request"),
-      @ApiResponse(responseCode = "401", description = "User not authenticated"),
-      @ApiResponse(responseCode = "403", description = "User does not own this list"),
-      @ApiResponse(responseCode = "404", description = "List not found")
+      @ApiResponse(
+          responseCode = "400",
+          description = "Invalid request",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "401",
+          description = "User not authenticated",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "403",
+          description = "User does not own this list",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "404",
+          description = "List not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @PutMapping("/{id}")
   public ResponseEntity<TaskListDTO> updateList(
@@ -134,10 +165,22 @@ public class TaskListController {
   )
   @ApiResponses(value = {
       @ApiResponse(responseCode = "204", description = "List deleted successfully"),
-      @ApiResponse(responseCode = "401", description = "User not authenticated"),
-      @ApiResponse(responseCode = "403", description = "User does not own this list"),
-      @ApiResponse(responseCode = "404", description = "List not found"),
-      @ApiResponse(responseCode = "409", description = "Cannot delete list with tasks")
+      @ApiResponse(
+          responseCode = "401",
+          description = "User not authenticated",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "403",
+          description = "User does not own this list",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "404",
+          description = "List not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(
+          responseCode = "409",
+          description = "Cannot delete list with tasks",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteList(

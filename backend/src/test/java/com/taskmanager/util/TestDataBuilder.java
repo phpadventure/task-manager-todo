@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import com.taskmanager.entity.Task;
 import com.taskmanager.entity.TaskList;
+import com.taskmanager.entity.TaskPriority;
+import com.taskmanager.entity.TaskStatus;
 import com.taskmanager.entity.User;
 import com.taskmanager.entity.UserAuthProvider;
 
@@ -64,6 +66,10 @@ public class TestDataBuilder {
     return createTestTaskList(UUID.randomUUID(), userId, title);
   }
 
+  public static TaskList createTestList(UUID userId, String title) {
+    return createTestTaskList(userId, title);
+  }
+
   public static Task createTestTask(UUID id, UUID listId, UUID userId, String title) {
     Task task = new Task();
     task.setId(id);
@@ -71,8 +77,8 @@ public class TestDataBuilder {
     task.setUserId(userId);
     task.setTitle(title);
     task.setDescription("Test task description");
-    task.setStatus("TO_DO");
-    task.setPriority("MEDIUM");
+    task.setStatus(TaskStatus.TO_DO);
+    task.setPriority(TaskPriority.MEDIUM);
     task.setDueDate(LocalDate.now().plusDays(7));
     task.setCreatedAt(Instant.now());
     task.setUpdatedAt(Instant.now());
@@ -83,21 +89,22 @@ public class TestDataBuilder {
     return createTestTask(UUID.randomUUID(), listId, userId, title);
   }
 
-  public static Task createTestTask(UUID listId, UUID userId, String title, String status) {
+  public static Task createTestTask(
+      UUID listId, UUID userId, String title, TaskStatus status) {
     Task task = createTestTask(listId, userId, title);
     task.setStatus(status);
     return task;
   }
 
   public static Task createTestTask(
-      UUID listId, UUID userId, String title, String status, String priority) {
+      UUID listId, UUID userId, String title, TaskStatus status, TaskPriority priority) {
     Task task = createTestTask(listId, userId, title, status);
     task.setPriority(priority);
     return task;
   }
 
   public static Task createTestTask(
-      UUID listId, UUID userId, String title, String status, String priority, LocalDate dueDate) {
+      UUID listId, UUID userId, String title, TaskStatus status, TaskPriority priority, LocalDate dueDate) {
     Task task = createTestTask(listId, userId, title, status, priority);
     task.setDueDate(dueDate);
     return task;

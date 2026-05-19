@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -65,10 +67,12 @@ public class Task {
   private String description;
 
   @Column(nullable = false)
-  private String status;
+  @Enumerated(EnumType.STRING)
+  private TaskStatus status;
 
   @Column(nullable = false)
-  private String priority;
+  @Enumerated(EnumType.STRING)
+  private TaskPriority priority;
 
   @Column(name = "due_date")
   private LocalDate dueDate;
@@ -135,19 +139,19 @@ public class Task {
     this.description = description;
   }
 
-  public String getStatus() {
+  public TaskStatus getStatus() {
     return status;
   }
 
-  public void setStatus(String status) {
+  public void setStatus(TaskStatus status) {
     this.status = status;
   }
 
-  public String getPriority() {
+  public TaskPriority getPriority() {
     return priority;
   }
 
-  public void setPriority(String priority) {
+  public void setPriority(TaskPriority priority) {
     this.priority = priority;
   }
 

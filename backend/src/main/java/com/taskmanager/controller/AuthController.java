@@ -1,5 +1,6 @@
 package com.taskmanager.controller;
 
+import com.taskmanager.dto.ErrorResponse;
 import com.taskmanager.dto.UserProfileResponse;
 import com.taskmanager.security.CustomOAuth2User;
 import com.taskmanager.service.UserService;
@@ -36,7 +37,8 @@ public class AuthController {
                 schema = @Schema(implementation = UserProfileResponse.class))),
         @ApiResponse(
             responseCode = "401",
-            description = "User not authenticated")
+            description = "User not authenticated",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getCurrentUser() {
