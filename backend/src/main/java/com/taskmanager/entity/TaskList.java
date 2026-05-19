@@ -1,7 +1,10 @@
 package com.taskmanager.entity;
 
+import java.sql.Types;
 import java.time.Instant;
 import java.util.UUID;
+
+import org.hibernate.annotations.JdbcTypeCode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,9 +24,11 @@ public class TaskList {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "CHAR(36)")
+  @JdbcTypeCode(Types.VARCHAR)
   private UUID id;
 
   @Column(name = "user_id", nullable = false, columnDefinition = "CHAR(36)")
+  @JdbcTypeCode(Types.VARCHAR)
   private UUID userId;
 
   @ManyToOne
@@ -38,7 +43,7 @@ public class TaskList {
   @Column(nullable = false)
   private String title;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
+  @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
   @Column(name = "updated_at", nullable = false)

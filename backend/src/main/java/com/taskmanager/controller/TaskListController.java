@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/lists")
+@RequestMapping("/lists")
 @RequiredArgsConstructor
 @Tag(name = "Lists", description = "Task list/project CRUD operations")
 public class TaskListController {

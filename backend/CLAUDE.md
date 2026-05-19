@@ -83,8 +83,11 @@ src/main/java/com/taskmanager/
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "CHAR(36)")
+  @JdbcTypeCode(Types.VARCHAR)
   private UUID id;
   ```
+
+  ALSO DO NOT FORGET ADD `@JdbcTypeCode(Types.VARCHAR)` TO ALL PLACE WHERE IN DB IS CHAR(36) BUT ENTITY FIELD IS UUID
 
 - **JSON serialization**: Automatically serialized as string by Jackson
   - ✅ `"id": "550e8400-e29b-41d4-a716-446655440000"`

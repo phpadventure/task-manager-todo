@@ -37,7 +37,6 @@ public class AuthService {
             user = existingUser.get();
         } else {
             user = new User();
-            user.setId(UUID.randomUUID());
             user.setEmail(oauthUserInfo.getEmail());
             user.setDisplayName(oauthUserInfo.getDisplayName());
             user.setAvatarUrl(oauthUserInfo.getAvatarUrl());
@@ -47,8 +46,8 @@ public class AuthService {
         }
 
         UserAuthProvider authProvider = new UserAuthProvider();
-        authProvider.setId(UUID.randomUUID());
         authProvider.setUser(user);
+        authProvider.setUserId(user.getId());
         authProvider.setProvider(oauthUserInfo.getProvider());
         authProvider.setProviderUserId(oauthUserInfo.getProviderUserId());
         authProvider.setCreatedAt(Instant.now());
@@ -67,8 +66,8 @@ public class AuthService {
         }
 
         UserAuthProvider authProvider = new UserAuthProvider();
-        authProvider.setId(UUID.randomUUID());
         authProvider.setUser(user);
+        authProvider.setUserId(user.getId());
         authProvider.setProvider(oauthUserInfo.getProvider());
         authProvider.setProviderUserId(oauthUserInfo.getProviderUserId());
         authProvider.setCreatedAt(Instant.now());

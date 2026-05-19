@@ -34,7 +34,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         info.setProvider(registrationId);
 
         if ("google".equals(registrationId)) {
-            info.setProviderUserId((String) attributes.get("sub"));
+            info.setProviderUserId((String) attributes.get("id"));
             info.setEmail((String) attributes.get("email"));
             info.setDisplayName((String) attributes.get("name"));
             info.setAvatarUrl((String) attributes.get("picture"));
