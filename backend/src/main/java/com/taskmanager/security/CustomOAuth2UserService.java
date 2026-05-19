@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.taskmanager.dto.OAuthUserInfo;
 import com.taskmanager.entity.User;
-import com.taskmanager.oauth.GitHubUserProvider;
 import com.taskmanager.oauth.OAuthProvider;
+import com.taskmanager.oauth.github.GitHubUserProvider;
 import com.taskmanager.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;

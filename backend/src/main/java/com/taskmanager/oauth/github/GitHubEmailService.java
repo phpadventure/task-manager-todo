@@ -1,4 +1,4 @@
-package com.taskmanager.oauth;
+package com.taskmanager.oauth.github;
 
 import java.util.Map;
 
