@@ -1,5 +1,9 @@
 package com.taskmanager.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+@JsonFormat(shape = JsonFormat.Shape.STRING)
 public enum DueDateFilter {
   OVERDUE("overdue"),
   TODAY("today"),
@@ -16,15 +20,20 @@ public enum DueDateFilter {
     return value;
   }
 
+  @JsonCreator
   public static DueDateFilter fromValue(String value) {
     if (value == null || value.isEmpty()) {
       return ALL;
     }
+    String lowerValue = value.toLowerCase();
     for (DueDateFilter filter : DueDateFilter.values()) {
-      if (filter.value.equals(value)) {
+      if (filter.value.equals(lowerValue)) {
         return filter;
       }
     }
-    return ALL;
+    throw new IllegalArgumentException(
+      String.format("Invalid due date filter: '%s'. Allowed: overdue, today, next_7_days, all", 
+        value)
+    );
   }
 }
