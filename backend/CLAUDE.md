@@ -439,7 +439,7 @@ public ResponseEntity<TaskResponse> getTask(@PathVariable UUID id) {
   Task task = taskService.findById(id)
     .orElseThrow(() -> new NotFoundException("Task not found"));
   
-  UUID currentUserId = getCurrentUserId(); // from SecurityContext
+  UUID currentUserId = securityContextService.getCurrentUserId(); // from SecurityContext
   if (!task.getUserId().equals(currentUserId)) {
     throw new UnauthorizedException("You don't have access to this task");
   }

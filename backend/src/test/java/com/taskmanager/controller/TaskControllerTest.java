@@ -28,6 +28,7 @@ import com.taskmanager.entity.TaskPriority;
 import com.taskmanager.entity.TaskStatus;
 import com.taskmanager.entity.User;
 import com.taskmanager.exception.ResourceNotFoundException;
+import com.taskmanager.exception.UnauthorizedException;
 import com.taskmanager.security.SecurityUser;
 import com.taskmanager.service.SecurityContextService;
 import com.taskmanager.service.TaskService;
@@ -116,12 +117,34 @@ class TaskControllerTest {
   }
 
   @Test
-  void testGetAllTasks_SearchQuery_ShouldReturnMatches() throws Exception {
+  void testSearchTasks_ValidQuery_ShouldReturnMatches() throws Exception {
     List<Task> tasks = List.of(task);
     when(taskService.searchTasks(userId, "Test")).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/tasks").param("q", "Test").principal(authPrincipal))
+        .perform(get("/api/tasks/search").param("q", "Test").principal(authPrincipal))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(1)));
+  }
+
+  @Test
+  void testGetOverdueTasks_ShouldReturnOverdueTasks() throws Exception {
+    List<Task> tasks = List.of(task);
+    when(taskService.getOverdueTasks(userId)).thenReturn(tasks);
+
+    mockMvc
+        .perform(get("/api/tasks/overdue").principal(authPrincipal))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(1)));
+  }
+
+  @Test
+  void testGetDueSoonTasks_ShouldReturnDueSoonTasks() throws Exception {
+    List<Task> tasks = List.of(task);
+    when(taskService.getDueSoonTasks(userId)).thenReturn(tasks);
+
+    mockMvc
+        .perform(get("/api/tasks/due-soon").principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)));
   }
@@ -132,7 +155,7 @@ class TaskControllerTest {
     when(taskService.getTasksByList(listId, userId)).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/tasks/lists/{listId}", listId).principal(authPrincipal))
+        .perform(get("/api/lists/{listId}/tasks", listId).principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)));
   }
@@ -143,28 +166,28 @@ class TaskControllerTest {
         .thenThrow(new ResourceNotFoundException("List", listId));
 
     mockMvc
-        .perform(get("/api/tasks/lists/{listId}", listId).principal(authPrincipal))
+        .perform(get("/api/lists/{listId}/tasks", listId).principal(authPrincipal))
         .andExpect(status().isNotFound());
   }
 
   @Test
-  void testGetTask_ValidTaskId_ShouldReturnOk() throws Exception {
-    when(taskService.getTask(taskId, userId)).thenReturn(task);
+  void testGetTaskInList_ValidIds_ShouldReturnOk() throws Exception {
+    when(taskService.getTaskInList(taskId, listId, userId)).thenReturn(task);
 
     mockMvc
-        .perform(get("/api/tasks/{taskId}", taskId).principal(authPrincipal))
+        .perform(get("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(taskId.toString()));
   }
 
   @Test
-  void testGetTask_TaskNotFound_ShouldReturnNotFound() throws Exception {
-    when(taskService.getTask(taskId, userId))
-        .thenThrow(new ResourceNotFoundException("Task", taskId));
+  void testGetTaskInList_TaskNotInList_ShouldReturnUnauthorized() throws Exception {
+    when(taskService.getTaskInList(taskId, listId, userId))
+        .thenThrow(new UnauthorizedException("Task does not belong to this list"));
 
     mockMvc
-        .perform(get("/api/tasks/{taskId}", taskId).principal(authPrincipal))
-        .andExpect(status().isNotFound());
+        .perform(get("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -178,7 +201,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            post("/api/tasks/lists/{listId}", listId)
+            post("/api/lists/{listId}/tasks", listId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request))
                 .principal(authPrincipal))
@@ -192,7 +215,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            post("/api/tasks/lists/{listId}", listId)
+            post("/api/lists/{listId}/tasks", listId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request))
                 .principal(authPrincipal))
@@ -209,23 +232,24 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            post("/api/tasks/lists/{listId}", listId)
+            post("/api/lists/{listId}/tasks", listId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isNotFound());
   }
 
   @Test
-  void testUpdateTask_ValidRequest_ShouldReturnOk() throws Exception {
+  void testUpdateTaskInList_ValidRequest_ShouldReturnOk() throws Exception {
     UpdateTaskRequest request = new UpdateTaskRequest();
     request.setTitle("Updated Task");
 
+    when(taskService.getTaskInList(taskId, listId, userId)).thenReturn(task);
     when(taskService.updateTask(eq(taskId), eq(userId), any(UpdateTaskRequest.class)))
         .thenReturn(task);
 
     mockMvc
         .perform(
-            put("/api/tasks/{taskId}", taskId)
+            put("/api/lists/{listId}/tasks/{taskId}", listId, taskId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request))
                 .principal(authPrincipal))
@@ -233,19 +257,20 @@ class TaskControllerTest {
   }
 
   @Test
-  void testUpdateTask_TaskNotFound_ShouldReturnNotFound() throws Exception {
+  void testUpdateTaskInList_TaskNotInList_ShouldReturnUnauthorized() throws Exception {
     UpdateTaskRequest request = new UpdateTaskRequest();
     request.setTitle("Updated Task");
 
-    when(taskService.updateTask(eq(taskId), eq(userId), any(UpdateTaskRequest.class)))
-        .thenThrow(new ResourceNotFoundException("Task", taskId));
+    when(taskService.getTaskInList(taskId, listId, userId))
+        .thenThrow(new UnauthorizedException("Task does not belong to this list"));
 
     mockMvc
         .perform(
-            put("/api/tasks/{taskId}", taskId)
+            put("/api/lists/{listId}/tasks/{taskId}", listId, taskId)
                 .contentType("application/json")
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isNotFound());
+                .content(objectMapper.writeValueAsString(request))
+                .principal(authPrincipal))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -262,24 +287,24 @@ class TaskControllerTest {
   }
 
   @Test
-  void testDeleteTask_ValidTaskId_ShouldReturnNoContent() throws Exception {
+  void testDeleteTaskInList_ValidIds_ShouldReturnNoContent() throws Exception {
+    when(taskService.getTaskInList(taskId, listId, userId)).thenReturn(task);
     doNothing().when(taskService).deleteTask(taskId, userId);
 
     mockMvc
-        .perform(delete("/api/tasks/{taskId}", taskId).principal(authPrincipal))
+        .perform(delete("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
         .andExpect(status().isNoContent());
 
     verify(taskService).deleteTask(taskId, userId);
   }
 
   @Test
-  void testDeleteTask_TaskNotFound_ShouldReturnNotFound() throws Exception {
-    doThrow(new ResourceNotFoundException("Task", taskId))
-        .when(taskService)
-        .deleteTask(taskId, userId);
+  void testDeleteTaskInList_TaskNotInList_ShouldReturnUnauthorized() throws Exception {
+    when(taskService.getTaskInList(taskId, listId, userId))
+        .thenThrow(new UnauthorizedException("Task does not belong to this list"));
 
     mockMvc
-        .perform(delete("/api/tasks/{taskId}", taskId).principal(authPrincipal))
-        .andExpect(status().isNotFound());
+        .perform(delete("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
+        .andExpect(status().isForbidden());
   }
 }

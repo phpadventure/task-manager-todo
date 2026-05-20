@@ -506,13 +506,19 @@ http.sessionManagement(session -> session
   - [x] `CreateTaskRequest.java` ✅
   - [x] `UpdateTaskRequest.java` ✅
 - [x] Create `TaskController.java` ✅
-  - GET /api/tasks (with query filters: status, priority, q)
-  - GET /api/lists/{listId}/tasks
-  - GET /api/tasks/{taskId}
-  - POST /api/lists/{listId}/tasks
-  - PUT /api/tasks/{taskId}
-  - PATCH /api/tasks/{taskId}/status
-  - DELETE /api/tasks/{taskId}
+  - **Nested (list-scoped)**:
+    - GET /api/lists/{listId}/tasks - Get all tasks in list
+    - GET /api/lists/{listId}/tasks/{taskId} - Get task in list
+    - POST /api/lists/{listId}/tasks - Create task in list
+    - PUT /api/lists/{listId}/tasks/{taskId} - Update task
+    - DELETE /api/lists/{listId}/tasks/{taskId} - Delete task
+  - **Global (user-wide)**:
+    - GET /api/tasks - Get all user's tasks
+    - GET /api/tasks?status={status}&priority={priority} - Filter tasks
+    - GET /api/tasks/search?q={query} - Search tasks
+    - GET /api/tasks/overdue - Get overdue tasks
+    - GET /api/tasks/due-soon - Get due-soon tasks
+    - PATCH /api/tasks/{taskId}/status - Quick status change
   - All endpoints documented with OpenAPI annotations
 
 **Files**: ✅

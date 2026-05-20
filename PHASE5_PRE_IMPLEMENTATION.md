@@ -99,23 +99,32 @@ Verify that enums (TaskStatus, TaskPriority) are properly validated on REST requ
 ## Task 4: Review and Improve Task List API Endpoint Design
 
 **Priority**: Medium  
-**Status**: Pending
+**Status**: ✅ COMPLETE
 
 ### Description
-Review the current task list endpoint to ensure it follows RESTful conventions. Currently using query parameters approach; evaluate if nested resource approach would be more appropriate.
+Redesigned task list endpoints to follow RESTful conventions using nested resource pattern instead of query parameters.
 
 ### Objectives
-- Check SPEC.md for intended API design (currently: `GET /api/tasks?list_id={id}&status={status}&...`)
-- Evaluate RESTful alternatives (e.g., `GET /api/lists/{listId}/tasks`)
-- Consider backward compatibility if endpoints are in use
-- Document design decision (why query params vs. nested resources)
-- Update if needed to improve clarity and consistency
+- ✅ Checked SPEC.md for intended API design
+- ✅ Evaluated and implemented RESTful nested resources (`GET /api/lists/{listId}/tasks`)
+- ✅ No backward compatibility concerns (app not in production)
+- ✅ Documented design decision in SPEC.md
+- ✅ Implemented consistent RESTful patterns across all endpoints
 
 ### Acceptance Criteria
-- API design rationale documented
-- Endpoints follow consistent RESTful patterns
-- Implementation matches SPEC.md requirements or updated SPEC.md reflects design
-- No breaking changes without migration plan
+- ✅ API design rationale documented in SPEC.md and BACKEND_PLAN.md
+- ✅ All endpoints follow RESTful nested resource conventions
+- ✅ SPEC.md updated to reflect new endpoint structure
+- ✅ No breaking changes (app not deployed)
+- ✅ All 81 tests passing
+- ✅ Due date filtering preserved on both nested and global endpoints
+- ✅ DueDateFilter enum created for type safety
+
+### Implementation Details
+- Nested endpoints: `/api/lists/{listId}/tasks`, `/api/lists/{listId}/tasks/{taskId}`
+- Global endpoints: `/api/tasks`, `/api/tasks/search`, `/api/tasks/overdue`, `/api/tasks/due-soon`
+- Query filters: `status`, `priority`, `dueDateFilter` (overdue, today, next_7_days, all)
+- TaskService: Added `getTaskInList()` for nested resource verification
 
 ---
 

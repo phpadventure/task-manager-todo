@@ -65,6 +65,14 @@ public class TaskService {
                 new ResourceNotFoundException("Task", taskId));
   }
 
+  public Task getTaskInList(UUID taskId, UUID listId, UUID userId) {
+    Task task = getTask(taskId, userId);
+    if (!task.getListId().equals(listId)) {
+      throw new UnauthorizedException("Task does not belong to this list");
+    }
+    return task;
+  }
+
   public List<Task> getTasksByList(UUID listId, UUID userId) {
     TaskList list =
         taskListRepository

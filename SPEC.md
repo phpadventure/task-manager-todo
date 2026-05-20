@@ -84,12 +84,25 @@ updated_at
 - `DELETE /api/lists/{id}` - Delete list (choose: cascade or block-if-not-empty)
 
 ### 5.3 Tasks
-- `GET /api/tasks?list_id={id}&status={status}&priority={priority}&due_date={filter}` - List tasks with filters
+
+**Nested (List-scoped) Endpoints**:
+- `GET /api/lists/{listId}/tasks` - List all tasks in a specific list (supports filters: status, priority, dueDateFilter)
+- `GET /api/lists/{listId}/tasks/{taskId}` - Get specific task in list
+- `POST /api/lists/{listId}/tasks` - Create task in list
+- `PUT /api/lists/{listId}/tasks/{taskId}` - Update task
+- `DELETE /api/lists/{listId}/tasks/{taskId}` - Delete task
+
+**Global (User-wide) Endpoints**:
+- `GET /api/tasks` - List all user's tasks (supports filters: status, priority, dueDateFilter)
 - `GET /api/tasks/search?q={query}` - Search tasks by title/description
-- `POST /api/tasks` - Create task
-- `PUT /api/tasks/{id}` - Update task
-- `PATCH /api/tasks/{id}/status` - Quick status change
-- `DELETE /api/tasks/{id}` - Delete task
+- `GET /api/tasks/overdue` - Get overdue tasks
+- `GET /api/tasks/due-soon` - Get due-soon tasks
+- `PATCH /api/tasks/{taskId}/status?status={status}` - Quick status change
+
+**Query Filters** (work with both nested and global endpoints):
+- `status`: Filter by task status (TO_DO, IN_PROGRESS, DONE)
+- `priority`: Filter by priority (LOW, MEDIUM, HIGH)
+- `dueDateFilter`: Filter by due date - values: `overdue`, `today`, `next_7_days`, `all` (default: `all`)
 
 ### 5.4 Sample Data
 - `POST /api/seed` - Populate database with sample data (or use Flyway seed script)
