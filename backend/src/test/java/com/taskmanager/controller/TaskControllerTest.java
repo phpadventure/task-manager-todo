@@ -41,6 +41,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultHandler;
 
 @WebMvcTest(controllers = TaskController.class)
 class TaskControllerTest {
@@ -300,5 +301,59 @@ class TaskControllerTest {
     mockMvc
         .perform(delete("/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void testCreateTask_InvalidDateFormat_ShouldReturnBadRequestWithFieldError()
+      throws Exception {
+    String requestBody = "{\"title\":\"Task\",\"dueDate\":\"2026-05-201\"}";
+
+    mockMvc
+        .perform(
+            post("/lists/{listId}/tasks", listId)
+                .contentType("application/json")
+                .content(requestBody)
+                .principal(authPrincipal))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Validation failed"))
+        .andExpect(jsonPath("$.details").exists())
+        .andExpect(jsonPath("$.details.dueDate").value("Invalid date format. Expected format: yyyy-MM-dd"));
+  }
+
+  @Test
+  void testUpdateTask_InvalidDateFormat_ShouldReturnBadRequestWithFieldError()
+      throws Exception {
+    String requestBody = "{\"title\":\"Updated\",\"dueDate\":\"2026/05/20\"}";
+
+    mockMvc
+        .perform(
+            put("/lists/{listId}/tasks/{taskId}", listId, taskId)
+                .contentType("application/json")
+                .content(requestBody)
+                .principal(authPrincipal))
+        .andDo(result -> System.out.println("UPDATE RESPONSE: " + result.getResponse().getContentAsString()))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Validation failed"))
+        .andExpect(jsonPath("$.details.dueDate")
+            .value("Invalid date format. Expected format: yyyy-MM-dd"));
+  }
+
+  @Test
+  void testCreateTask_InvalidEnumValue_ShouldReturnBadRequestWithAllowedValues()
+      throws Exception {
+    String requestBody = "{\"title\":\"Task\",\"priority\":\"INVALID_PRIORITY\"}";
+
+    mockMvc
+        .perform(
+            post("/lists/{listId}/tasks", listId)
+                .contentType("application/json")
+                .content(requestBody)
+                .principal(authPrincipal))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Validation failed"))
+        .andExpect(jsonPath("$.details.priority").exists())
+        .andExpect(
+            jsonPath("$.details.priority")
+                .value(org.hamcrest.Matchers.containsString("LOW")));
   }
 }

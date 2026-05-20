@@ -11,7 +11,6 @@ import com.taskmanager.entity.Task;
 import com.taskmanager.entity.TaskList;
 import com.taskmanager.entity.TaskPriority;
 import com.taskmanager.entity.TaskStatus;
-import com.taskmanager.exception.ConflictException;
 import com.taskmanager.exception.ResourceNotFoundException;
 import com.taskmanager.exception.UnauthorizedException;
 import com.taskmanager.repository.TaskListRepository;
