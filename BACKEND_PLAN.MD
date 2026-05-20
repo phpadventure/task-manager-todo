@@ -632,6 +632,34 @@ http.sessionManagement(session -> session
 
 **Goal**: Production-ready backend with complete documentation and verified test coverage.
 
+### 6.0 Authorization Refactoring (Priority 1 Polish Task)
+
+**Task**: Replace hardcoded authorization checks with `@Secured` annotation
+
+#### Description
+Refactor all hardcoded authorization checks throughout controllers and services to use Spring Security's declarative `@Secured` annotation for cleaner, more maintainable code.
+
+#### Objectives
+- Audit current authorization logic in all controllers and services
+- Identify all hardcoded permission checks (manual verification of user ownership)
+- Convert to `@Secured` annotation on methods
+- Enable `@EnableGlobalMethodSecurity` in SecurityConfig
+- Verify all authorization logic still functions correctly after refactoring
+
+#### Acceptance Criteria
+- All hardcoded authorization checks replaced with `@Secured`
+- Tests passing for all secured endpoints
+- Authorization still enforced correctly (no cross-user data leakage)
+- Code cleaner and more maintainable
+- Zero regression in existing functionality
+
+#### Rationale
+Currently, authorization is enforced through manual checks like `if (!task.getList().getUser().getId().equals(userId))`. This works but is error-prone and scattered throughout the codebase. Centralizing with `@Secured` makes it declarative, testable, and harder to accidentally bypass.
+
+**Status**: Ready to implement after Phase 5 MVP is stable.
+
+---
+
 ### 6.1 Environment Configuration
 - [ ] Create `.env.example` with all required variables:
   ```

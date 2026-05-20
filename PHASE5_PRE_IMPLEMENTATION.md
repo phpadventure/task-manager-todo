@@ -52,10 +52,10 @@ Database pruning behavior on Spring Boot startup has been debugged and fixed. Da
 ## Task 2: Refactor Authorization Checks to Use @Secured Annotation
 
 **Priority**: High  
-**Status**: Pending
+**Status**: 🔄 DEFERRED to Polish Phase
 
 ### Description
-Replace hardcoded authorization checks throughout the codebase with Spring Security's `@Secured` annotation for cleaner, declarative security.
+Replace hardcoded authorization checks throughout the codebase with Spring Security's `@Secured` annotation for cleaner, declarative security. **Deferred** — current authorization works correctly; this is a code quality improvement for post-MVP polish.
 
 ### Objectives
 - Audit current authorization logic in controllers and services
@@ -69,6 +69,9 @@ Replace hardcoded authorization checks throughout the codebase with Spring Secur
 - Tests passing for all secured endpoints
 - Authorization still enforced correctly (no cross-user data leakage)
 - Code cleaner and more maintainable
+
+### Note
+Moved to POLISH_PHASE.md for execution after Phase 5 MVP stabilizes. Current hardcoded checks are secure and functional; refactoring is deferred to reduce scope and risk before Phase 5 implementation.
 
 ---
 
