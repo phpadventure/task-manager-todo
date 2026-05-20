@@ -85,16 +85,76 @@ public class GlobalExceptionHandler {
       HttpMessageNotReadableException ex) {
     LOG.warn("Invalid request format: {}", ex.getMessage());
     String message = "Invalid request format";
+    Map<String, String> details = null;
+
     if (ex.getCause() != null && ex.getCause().getMessage() != null) {
       String cause = ex.getCause().getMessage();
       if (cause.contains("not one of the values accepted for Enum")) {
-        message = "Invalid enum value in request";
+        message = "Validation failed";
+        details = new HashMap<>();
+
+        // Extract field name and allowed values from error message
+        // Format: "Cannot deserialize value of type ... from String "LOW1":
+        // not one of the values accepted for Enum class ...: [LOW, MEDIUM, HIGH]"
+        try {
+          String fieldName = extractFieldName(ex);
+          String allowedValues = extractAllowedValues(cause);
+          String invalidValue = extractInvalidValue(cause);
+
+          if (fieldName != null && allowedValues != null && invalidValue != null) {
+            String errorMsg = "Invalid value: " + invalidValue + ". Allowed: " + allowedValues;
+            details.put(fieldName, errorMsg);
+          }
+        } catch (Exception e) {
+          LOG.debug("Could not parse enum error details", e);
+        }
       }
     }
+
     ErrorResponse response =
         new ErrorResponse(
-            message, Instant.now().toString(), HttpStatus.BAD_REQUEST.value());
+            message, details, Instant.now().toString(), HttpStatus.BAD_REQUEST.value());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
+  private String extractFieldName(HttpMessageNotReadableException ex) {
+    // Extract field name from error message
+    // Try to get from exception message or cause
+    Throwable cause = ex.getCause();
+    if (cause != null && cause.getMessage() != null) {
+      String msg = cause.getMessage();
+      // Look for pattern: from Object ["fieldName"]
+      int idx = msg.indexOf("from Object [\"");
+      if (idx >= 0) {
+        int endIdx = msg.indexOf("\"]", idx);
+        if (endIdx > idx) {
+          return msg.substring(idx + 14, endIdx);
+        }
+      }
+    }
+    return "unknown_field";
+  }
+
+  private String extractAllowedValues(String cause) {
+    // Extract allowed values: "[LOW, MEDIUM, HIGH]"
+    int startIdx = cause.lastIndexOf('[');
+    int endIdx = cause.lastIndexOf(']');
+    if (startIdx >= 0 && endIdx > startIdx) {
+      return cause.substring(startIdx, endIdx + 1);
+    }
+    return null;
+  }
+
+  private String extractInvalidValue(String cause) {
+    // Extract invalid value: "LOW1"
+    int startIdx = cause.indexOf('"');
+    if (startIdx >= 0) {
+      int endIdx = cause.indexOf('"', startIdx + 1);
+      if (endIdx > startIdx) {
+        return cause.substring(startIdx + 1, endIdx);
+      }
+    }
+    return null;
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

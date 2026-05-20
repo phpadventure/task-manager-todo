@@ -4,8 +4,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -24,7 +22,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.taskmanager.dto.CreateTaskRequest;
 import com.taskmanager.dto.UpdateTaskRequest;
 import com.taskmanager.entity.Task;
-import com.taskmanager.entity.TaskPriority;
 import com.taskmanager.entity.TaskStatus;
 import com.taskmanager.entity.User;
 import com.taskmanager.exception.ResourceNotFoundException;
@@ -39,11 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -99,7 +93,7 @@ class TaskControllerTest {
     when(taskService.getAllTasksForUser(userId)).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/tasks").principal(authPrincipal))
+        .perform(get("/tasks").principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)))
         .andExpect(jsonPath("$[0].id").value(taskId.toString()));
@@ -111,7 +105,7 @@ class TaskControllerTest {
     when(taskService.filterByStatus(userId, TaskStatus.TO_DO)).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/tasks").param("status", "TO_DO").principal(authPrincipal))
+        .perform(get("/tasks").param("status", "TO_DO").principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)));
   }
@@ -122,7 +116,7 @@ class TaskControllerTest {
     when(taskService.searchTasks(userId, "Test")).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/tasks/search").param("q", "Test").principal(authPrincipal))
+        .perform(get("/tasks/search").param("q", "Test").principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)));
   }
@@ -133,7 +127,7 @@ class TaskControllerTest {
     when(taskService.getOverdueTasks(userId)).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/tasks/overdue").principal(authPrincipal))
+        .perform(get("/tasks/overdue").principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)));
   }
@@ -144,7 +138,7 @@ class TaskControllerTest {
     when(taskService.getDueSoonTasks(userId)).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/tasks/due-soon").principal(authPrincipal))
+        .perform(get("/tasks/due-soon").principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)));
   }
@@ -155,7 +149,7 @@ class TaskControllerTest {
     when(taskService.getTasksByList(listId, userId)).thenReturn(tasks);
 
     mockMvc
-        .perform(get("/api/lists/{listId}/tasks", listId).principal(authPrincipal))
+        .perform(get("/lists/{listId}/tasks", listId).principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)));
   }
@@ -166,7 +160,7 @@ class TaskControllerTest {
         .thenThrow(new ResourceNotFoundException("List", listId));
 
     mockMvc
-        .perform(get("/api/lists/{listId}/tasks", listId).principal(authPrincipal))
+        .perform(get("/lists/{listId}/tasks", listId).principal(authPrincipal))
         .andExpect(status().isNotFound());
   }
 
@@ -175,7 +169,7 @@ class TaskControllerTest {
     when(taskService.getTaskInList(taskId, listId, userId)).thenReturn(task);
 
     mockMvc
-        .perform(get("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
+        .perform(get("/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(taskId.toString()));
   }
@@ -186,7 +180,7 @@ class TaskControllerTest {
         .thenThrow(new UnauthorizedException("Task does not belong to this list"));
 
     mockMvc
-        .perform(get("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
+        .perform(get("/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
         .andExpect(status().isForbidden());
   }
 
@@ -201,7 +195,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            post("/api/lists/{listId}/tasks", listId)
+            post("/lists/{listId}/tasks", listId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request))
                 .principal(authPrincipal))
@@ -215,7 +209,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            post("/api/lists/{listId}/tasks", listId)
+            post("/lists/{listId}/tasks", listId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request))
                 .principal(authPrincipal))
@@ -232,7 +226,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            post("/api/lists/{listId}/tasks", listId)
+            post("/lists/{listId}/tasks", listId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isNotFound());
@@ -249,7 +243,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            put("/api/lists/{listId}/tasks/{taskId}", listId, taskId)
+            put("/lists/{listId}/tasks/{taskId}", listId, taskId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request))
                 .principal(authPrincipal))
@@ -266,7 +260,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            put("/api/lists/{listId}/tasks/{taskId}", listId, taskId)
+            put("/lists/{listId}/tasks/{taskId}", listId, taskId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request))
                 .principal(authPrincipal))
@@ -280,7 +274,7 @@ class TaskControllerTest {
 
     mockMvc
         .perform(
-            patch("/api/tasks/{taskId}/status", taskId)
+            patch("/tasks/{taskId}/status", taskId)
                 .param("status", "DONE")
                 .principal(authPrincipal))
         .andExpect(status().isOk());
@@ -292,7 +286,7 @@ class TaskControllerTest {
     doNothing().when(taskService).deleteTask(taskId, userId);
 
     mockMvc
-        .perform(delete("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
+        .perform(delete("/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
         .andExpect(status().isNoContent());
 
     verify(taskService).deleteTask(taskId, userId);
@@ -304,7 +298,7 @@ class TaskControllerTest {
         .thenThrow(new UnauthorizedException("Task does not belong to this list"));
 
     mockMvc
-        .perform(delete("/api/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
+        .perform(delete("/lists/{listId}/tasks/{taskId}", listId, taskId).principal(authPrincipal))
         .andExpect(status().isForbidden());
   }
 }
