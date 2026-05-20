@@ -28,15 +28,17 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
   List<Task> findByUserIdAndPriority(UUID userId, TaskPriority priority);
 
   @Query(
-      "SELECT t FROM Task t WHERE t.userId = :userId AND t.status != 'DONE' "
+      "SELECT t FROM Task t WHERE t.userId = :userId AND t.status != :status "
           + "AND t.dueDate < CURRENT_DATE")
-  List<Task> findOverdueTasks(@Param("userId") UUID userId);
+  List<Task> findOverdueTasks(@Param("userId") UUID userId, @Param("status") TaskStatus status);
 
   @Query(
-      "SELECT t FROM Task t WHERE t.userId = :userId AND t.status != 'DONE' "
+      "SELECT t FROM Task t WHERE t.userId = :userId AND t.status != :status "
           + "AND t.dueDate >= CURRENT_DATE AND t.dueDate <= :dueSoonDate")
   List<Task> findDueSoonTasks(
-      @Param("userId") UUID userId, @Param("dueSoonDate") LocalDate dueSoonDate);
+      @Param("userId") UUID userId,
+      @Param("dueSoonDate") LocalDate dueSoonDate,
+      @Param("status") TaskStatus status);
 
   @Query(
       "SELECT t FROM Task t WHERE t.userId = :userId AND ("

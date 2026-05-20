@@ -29,6 +29,7 @@ import com.taskmanager.entity.TaskStatus;
 import com.taskmanager.entity.User;
 import com.taskmanager.exception.ResourceNotFoundException;
 import com.taskmanager.security.SecurityUser;
+import com.taskmanager.service.SecurityContextService;
 import com.taskmanager.service.TaskService;
 import com.taskmanager.util.TestDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,8 @@ class TaskControllerTest {
 
   @MockitoBean private TaskService taskService;
 
+  @MockitoBean private SecurityContextService securityContextService;
+
   private final ObjectMapper objectMapper =
       new ObjectMapper().registerModule(new JavaTimeModule());
 
@@ -80,15 +83,13 @@ class TaskControllerTest {
     task = TestDataBuilder.createTestTask(listId, userId, "Test Task");
     task.setId(taskId);
 
+    when(securityContextService.getCurrentUserId()).thenReturn(userId);
+
     User user = TestDataBuilder.createTestUser(userId, "test@example.com");
     SecurityUser securityUser = new SecurityUser(user);
     authPrincipal =
         new UsernamePasswordAuthenticationToken(
             securityUser, null, securityUser.getAuthorities());
-
-    SecurityContext securityContext = mock(SecurityContext.class);
-    when(securityContext.getAuthentication()).thenReturn(authPrincipal);
-    SecurityContextHolder.setContext(securityContext);
   }
 
   @Test

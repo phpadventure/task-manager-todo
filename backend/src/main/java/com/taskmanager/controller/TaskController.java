@@ -11,7 +11,7 @@ import com.taskmanager.dto.UpdateTaskRequest;
 import com.taskmanager.entity.Task;
 import com.taskmanager.entity.TaskPriority;
 import com.taskmanager.entity.TaskStatus;
-import com.taskmanager.security.SecurityUser;
+import com.taskmanager.service.SecurityContextService;
 import com.taskmanager.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TaskController {
 
   private final TaskService taskService;
+  private final SecurityContextService securityContextService;
 
   @Operation(
       summary = "Get all tasks for user",
@@ -69,7 +70,7 @@ public class TaskController {
           TaskPriority priority,
       @Parameter(description = "Search query for title/description")
       @RequestParam(required = false) String q) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
 
     List<Task> tasks;
     if (q != null && !q.isEmpty()) {
@@ -111,7 +112,7 @@ public class TaskController {
   @GetMapping("/lists/{listId}")
   public ResponseEntity<List<TaskDTO>> getTasksByList(
       @Parameter(description = "List ID") @PathVariable UUID listId) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     List<Task> tasks = taskService.getTasksByList(listId, userId);
     return ResponseEntity.ok(tasks.stream().map(TaskDTO::fromEntity).toList());
   }
@@ -135,7 +136,7 @@ public class TaskController {
   @GetMapping("/{taskId}")
   public ResponseEntity<TaskDTO> getTask(
       @Parameter(description = "Task ID") @PathVariable UUID taskId) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     Task task = taskService.getTask(taskId, userId);
     return ResponseEntity.ok(TaskDTO.fromEntity(task));
   }
@@ -164,7 +165,7 @@ public class TaskController {
   public ResponseEntity<TaskDTO> createTask(
       @Parameter(description = "List ID") @PathVariable UUID listId,
       @Valid @RequestBody CreateTaskRequest request) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     Task task = taskService.createTask(userId, listId, request);
     return ResponseEntity
         .created(URI.create("/api/tasks/" + task.getId()))
@@ -195,7 +196,7 @@ public class TaskController {
   public ResponseEntity<TaskDTO> updateTask(
       @Parameter(description = "Task ID") @PathVariable UUID taskId,
       @Valid @RequestBody UpdateTaskRequest request) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     Task task = taskService.updateTask(taskId, userId, request);
     return ResponseEntity.ok(TaskDTO.fromEntity(task));
   }
@@ -224,7 +225,7 @@ public class TaskController {
   public ResponseEntity<TaskDTO> updateTaskStatus(
       @Parameter(description = "Task ID") @PathVariable UUID taskId,
       @Parameter(description = "New status") @RequestParam TaskStatus status) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     Task task = taskService.updateTaskStatus(taskId, userId, status);
     return ResponseEntity.ok(TaskDTO.fromEntity(task));
   }
@@ -248,17 +249,8 @@ public class TaskController {
   @DeleteMapping("/{taskId}")
   public ResponseEntity<Void> deleteTask(
       @Parameter(description = "Task ID") @PathVariable UUID taskId) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     taskService.deleteTask(taskId, userId);
     return ResponseEntity.noContent().build();
-  }
-
-  private UUID getCurrentUserId() {
-    var principal = SecurityContextHolder.getContext()
-        .getAuthentication().getPrincipal();
-    if (principal instanceof SecurityUser securityUser) {
-      return securityUser.getId();
-    }
-    throw new IllegalStateException("User not authenticated");
   }
 }

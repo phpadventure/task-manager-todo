@@ -265,7 +265,7 @@ class TaskServiceTest {
   void testGetOverdueTasks_ShouldReturnTasks() {
     List<Task> tasks = List.of(task);
 
-    when(taskRepository.findOverdueTasks(userId)).thenReturn(tasks);
+    when(taskRepository.findOverdueTasks(userId, TaskStatus.DONE)).thenReturn(tasks);
 
     List<Task> result = taskService.getOverdueTasks(userId);
 
@@ -276,7 +276,7 @@ class TaskServiceTest {
   void testGetDueSoonTasks_ShouldReturnTasks() {
     List<Task> tasks = List.of(task);
 
-    when(taskRepository.findDueSoonTasks(any(UUID.class), any(LocalDate.class)))
+    when(taskRepository.findDueSoonTasks(any(UUID.class), any(LocalDate.class), any(TaskStatus.class)))
         .thenReturn(tasks);
 
     List<Task> result = taskService.getDueSoonTasks(userId);

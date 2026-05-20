@@ -150,11 +150,11 @@ public class TaskService {
   }
 
   public List<Task> getOverdueTasks(UUID userId) {
-    return taskRepository.findOverdueTasks(userId);
+    return taskRepository.findOverdueTasks(userId, TaskStatus.DONE);
   }
 
   public List<Task> getDueSoonTasks(UUID userId) {
     LocalDate dueSoonDate = LocalDate.now().plusDays(dueSoonDays);
-    return taskRepository.findDueSoonTasks(userId, dueSoonDate);
+    return taskRepository.findDueSoonTasks(userId, dueSoonDate, TaskStatus.DONE);
   }
 }

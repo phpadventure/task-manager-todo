@@ -32,6 +32,7 @@ public class Task {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "CHAR(36)")
+  @JdbcTypeCode(Types.VARCHAR)
   private UUID id;
 
   @Column(name = "list_id", nullable = false, columnDefinition = "CHAR(36)")

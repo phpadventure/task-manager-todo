@@ -8,8 +8,7 @@ import com.taskmanager.dto.CreateTaskListRequest;
 import com.taskmanager.dto.ErrorResponse;
 import com.taskmanager.dto.TaskListDTO;
 import com.taskmanager.dto.UpdateTaskListRequest;
-import com.taskmanager.security.CustomOAuth2User;
-import com.taskmanager.security.SecurityUser;
+import com.taskmanager.service.SecurityContextService;
 import com.taskmanager.service.TaskListService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,6 +37,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @Tag(name = "Lists", description = "Task list/project CRUD operations")
 public class TaskListController {
   private final TaskListService taskListService;
+  private final SecurityContextService securityContextService;
 
   @Operation(
       summary = "Get all lists for current user",
@@ -55,7 +55,7 @@ public class TaskListController {
   })
   @GetMapping
   public ResponseEntity<List<TaskListDTO>> getAllLists() {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     List<TaskListDTO> lists = taskListService.getListsByUser(userId);
     return ResponseEntity.ok(lists);
   }
@@ -86,7 +86,7 @@ public class TaskListController {
   public ResponseEntity<TaskListDTO> getList(
       @Parameter(description = "List ID") @PathVariable UUID id
   ) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     TaskListDTO list = taskListService.getListById(id, userId);
     return ResponseEntity.ok(list);
   }
@@ -113,7 +113,7 @@ public class TaskListController {
   public ResponseEntity<TaskListDTO> createList(
       @Valid @RequestBody CreateTaskListRequest request
   ) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     TaskListDTO created = taskListService.createList(userId, request.getTitle());
     URI location = ServletUriComponentsBuilder
         .fromCurrentRequest()
@@ -154,7 +154,7 @@ public class TaskListController {
       @Parameter(description = "List ID") @PathVariable UUID id,
       @Valid @RequestBody UpdateTaskListRequest request
   ) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     TaskListDTO updated = taskListService.updateList(id, userId, request.getTitle());
     return ResponseEntity.ok(updated);
   }
@@ -186,21 +186,8 @@ public class TaskListController {
   public ResponseEntity<Void> deleteList(
       @Parameter(description = "List ID") @PathVariable UUID id
   ) {
-    UUID userId = getCurrentUserId();
+    UUID userId = securityContextService.getCurrentUserId();
     taskListService.deleteList(id, userId);
     return ResponseEntity.noContent().build();
-  }
-
-  private UUID getCurrentUserId() {
-    var principal = SecurityContextHolder.getContext()
-        .getAuthentication().getPrincipal();
-
-    if (principal instanceof SecurityUser securityUser) {
-      return securityUser.getId();
-    } else if (principal instanceof CustomOAuth2User oAuth2User) {
-      return oAuth2User.getUser().getId();
-    }
-
-    throw new IllegalStateException("Unexpected principal type: " + principal.getClass());
   }
 }

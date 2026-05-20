@@ -22,6 +22,7 @@ import com.taskmanager.exception.ConflictException;
 import com.taskmanager.exception.ResourceNotFoundException;
 import com.taskmanager.exception.UnauthorizedException;
 import com.taskmanager.security.SecurityUser;
+import com.taskmanager.service.SecurityContextService;
 import com.taskmanager.service.TaskListService;
 import com.taskmanager.util.TestDataBuilder;
 import java.time.Instant;
@@ -62,26 +63,20 @@ class TaskListControllerTest {
   @MockitoBean
   private TaskListService taskListService;
 
+  @MockitoBean
+  private SecurityContextService securityContextService;
+
   private final ObjectMapper objectMapper =
       new ObjectMapper().registerModule(new JavaTimeModule());
 
   private UUID userId;
   private UUID listId;
-  private UsernamePasswordAuthenticationToken authPrincipal;
 
   @BeforeEach
   void setUp() {
     userId = UUID.randomUUID();
     listId = UUID.randomUUID();
-    User user = TestDataBuilder.createTestUser(userId, "test@example.com");
-    SecurityUser securityUser = new SecurityUser(user);
-    authPrincipal =
-        new UsernamePasswordAuthenticationToken(
-            securityUser, null, securityUser.getAuthorities());
-
-    SecurityContext securityContext = mock(SecurityContext.class);
-    when(securityContext.getAuthentication()).thenReturn(authPrincipal);
-    SecurityContextHolder.setContext(securityContext);
+    when(securityContextService.getCurrentUserId()).thenReturn(userId);
   }
 
   @Test
@@ -90,7 +85,7 @@ class TaskListControllerTest {
     when(taskListService.getListsByUser(userId)).thenReturn(List.of(list1));
 
     mockMvc.perform(
-            get("/lists").contentType(MediaType.APPLICATION_JSON).principal(authPrincipal))
+            get("/lists").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].title").value("List 1"));
   }
