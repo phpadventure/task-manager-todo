@@ -4,6 +4,29 @@ Backend guidelines for the Personal To-Do Manager API. Follow these conventions 
 
 ---
 
+###
+When creating any controller or test use @WebMvcTest. Also remember that in `backend/src/main/resources/application.properties` we have `server.servlet.context-path=/api`
+
+### 
+Error format is 
+`{
+  "error": "string",
+  "details": {
+    "additionalProp1": "string",
+    "additionalProp2": "string",
+    "additionalProp3": "string"
+  },
+  "timestamp": "string",
+  "status": <HttStatusCode>
+}`
+Try to follow it.
+Enhance `backend/src/main/java/com/taskmanager/config/GlobalExceptionHandler.java` if needed.
+
+For enums follow pattern to use method to create during Json serialization and deserialization to simplify validation and error handling.
+`@JsonCreator
+  public static ExampleEnum fromValue(String value) {`
+
+
 ## Flyway Migrations
 
 **Location**: `src/main/resources/db/migration/`

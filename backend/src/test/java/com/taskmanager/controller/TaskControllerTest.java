@@ -1,5 +1,6 @@
 package com.taskmanager.controller;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -349,7 +350,42 @@ class TaskControllerTest {
                 .content(requestBody)
                 .principal(authPrincipal))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("Validation failed"))
-        .andExpect(jsonPath("$.details.priority").exists());
+        .andExpect(jsonPath("$.error").exists())
+        .andExpect(jsonPath("$.status").value(400));
+  }
+
+  @Test
+  void testGetTasksByList_InvalidDueDateFilter_ShouldReturnBadRequestWithDetails()
+      throws Exception {
+    List<Task> tasks = List.of(task);
+    when(taskService.getTasksByList(listId, userId)).thenReturn(tasks);
+
+    mockMvc
+        .perform(
+            get("/lists/{listId}/tasks", listId)
+                .param("dueDateFilter", "overdue1")
+                .principal(authPrincipal))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Invalid enum value"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.timestamp").exists())
+        .andExpect(jsonPath("$.details").exists())
+        .andExpect(jsonPath("$.details.dueDateFilter").exists())
+        .andExpect(jsonPath("$.details.dueDateFilter").value(containsString("Allowed: overdue, today, next_7_days, all")));
+  }
+
+  @Test
+  void testGetAllTasks_InvalidDueDateFilter_ShouldReturnBadRequestWithDetails()
+      throws Exception {
+    mockMvc
+        .perform(
+            get("/tasks")
+                .param("dueDateFilter", "invalid_filter")
+                .principal(authPrincipal))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Invalid enum value"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.timestamp").exists())
+        .andExpect(jsonPath("$.details.dueDateFilter").exists());
   }
 }

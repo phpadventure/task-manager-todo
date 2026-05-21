@@ -2,6 +2,7 @@ package com.taskmanager.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.taskmanager.exception.InvalidEnumException;
 
 @JsonFormat(shape = JsonFormat.Shape.STRING)
 public enum DueDateFilter {
@@ -31,9 +32,6 @@ public enum DueDateFilter {
         return filter;
       }
     }
-    throw new IllegalArgumentException(
-      String.format("Invalid due date filter: '%s'. Allowed: overdue, today, next_7_days, all", 
-        value)
-    );
+    throw new InvalidEnumException("dueDateFilter", value, "overdue, today, next_7_days, all");
   }
 }
