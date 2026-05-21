@@ -119,7 +119,7 @@ class TaskNotificationHandlerTest {
     void testClientSubscribeMessage_UpdatesInterval() {
         handler.handleSubscribe(securityUser);
 
-        ClientSubscribeMessage message = new ClientSubscribeMessage("subscribe", 30000L);
+        ClientSubscribeMessage message = new ClientSubscribeMessage(30000L);
         handler.handleSubscribeMessage(message, securityUser);
 
         assertEquals(30000L, handler.getUserInterval(userId));
@@ -129,7 +129,7 @@ class TaskNotificationHandlerTest {
     void testClientSubscribeMessage_DefaultIntervalOnNullValue() {
         handler.handleSubscribe(securityUser);
 
-        ClientSubscribeMessage message = new ClientSubscribeMessage("subscribe", null);
+        ClientSubscribeMessage message = new ClientSubscribeMessage(null);
         handler.handleSubscribeMessage(message, securityUser);
 
         assertEquals(60000L, handler.getUserInterval(userId));
@@ -288,7 +288,7 @@ class TaskNotificationHandlerTest {
         assertEquals(60000L, handler.getUserInterval(userId));
         assertEquals(60000L, handler.getUserInterval(userId2));
 
-        handler.handleSubscribeMessage(new ClientSubscribeMessage("subscribe", 15000L), securityUser);
+        handler.handleSubscribeMessage(new ClientSubscribeMessage(15000L), securityUser);
         assertEquals(15000L, handler.getUserInterval(userId));
         assertEquals(60000L, handler.getUserInterval(userId2));
     }

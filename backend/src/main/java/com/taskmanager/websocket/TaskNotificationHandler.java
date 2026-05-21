@@ -13,12 +13,14 @@ import com.taskmanager.dto.websocket.NotificationMessage;
 import com.taskmanager.entity.Task;
 import com.taskmanager.security.SecurityUser;
 import com.taskmanager.service.TaskService;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @Controller
 public class TaskNotificationHandler {
@@ -28,6 +30,7 @@ public class TaskNotificationHandler {
     private final Map<UUID, Set<String>> sentNotifications =
             new ConcurrentHashMap<>();
     private final Map<UUID, Long> userIntervals = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastSentTime = new ConcurrentHashMap<>();
 
     public TaskNotificationHandler(TaskService taskService,
             SimpMessagingTemplate messagingTemplate) {
@@ -44,6 +47,7 @@ public class TaskNotificationHandler {
 
         List<NotificationMessage> initialBatch = getOverdueAndDueSoonNotifications(userId);
         trackSentNotifications(userId, initialBatch);
+        updateLastSentTime(userId, System.currentTimeMillis());
         return initialBatch;
     }
 
@@ -117,6 +121,14 @@ public class TaskNotificationHandler {
         );
     }
 
+    public void sendAndTrackNotification(UUID userId,
+            NotificationMessage notification) {
+        sendNotificationToUser(userId, notification);
+        Set<String> sent = sentNotifications.computeIfAbsent(userId,
+                k -> new HashSet<>());
+        sent.add(notification.getTaskId() + ":" + notification.getReason());
+    }
+
     public void clearSentNotifications(UUID userId) {
         sentNotifications.put(userId, new HashSet<>());
     }
@@ -128,5 +140,26 @@ public class TaskNotificationHandler {
     public void removeUser(UUID userId) {
         sentNotifications.remove(userId);
         userIntervals.remove(userId);
+        lastSentTime.remove(userId);
+    }
+
+    public Set<UUID> getConnectedUsers() {
+        return new HashSet<>(userIntervals.keySet());
+    }
+
+    public Long getLastSentTime(UUID userId) {
+        return lastSentTime.getOrDefault(userId, 0L);
+    }
+
+    public void updateLastSentTime(UUID userId, Long timestamp) {
+        lastSentTime.put(userId, timestamp);
+    }
+
+    @EventListener
+    public void handleWebSocketDisconnect(SessionDisconnectEvent event) {
+        if (event.getUser() != null && event.getUser() instanceof SecurityUser) {
+            UUID userId = ((SecurityUser) event.getUser()).getId();
+            removeUser(userId);
+        }
     }
 }

@@ -127,10 +127,16 @@ updated_at
 ### 7.1 Connection Flow
 1. Client connects to WebSocket endpoint: `ws://server/api/ws`
 2. Server sends initial batch of overdue + due-soon tasks
-3. Client can send `subscribe` message to customize interval
-4. Periodic checks run every N seconds (default: 60s, configurable)
+3. Client sends `subscribe` message with desired interval (default: 60000ms)
+4. Scheduler runs every 10 seconds, respects per-user interval for delivery
 
-### 7.2 Server → Client Messages
+### 7.2 Per-User Interval Tracking
+- **Scheduler**: Runs every 10 seconds (configurable via `app.notification.interval`)
+- **User Interval**: Each user specifies their desired notification interval (default: 60 seconds)
+- **Delivery Logic**: Server only sends new notifications when `time_since_last_sent >= user_interval`
+- **Deduplication**: Prevents resending same overdue/due-soon notification within same cycle
+
+### 7.3 Server → Client Messages
 ```json
 {
   "type": "notification",
@@ -138,18 +144,22 @@ updated_at
   "taskId": "task-uuid",
   "title": "Task title",
   "reason": "overdue" | "due-soon",
-  "due_date": "2026-05-20"
+  "dueDate": "2026-05-20",
+  "priority": "LOW" | "MEDIUM" | "HIGH",
+  "sentAt": "2026-05-21T10:30:00Z"
 }
 ```
 
-### 7.3 Client → Server Messages
+### 7.4 Client → Server Messages
+
+**Subscribe Message** (updates user's notification interval):
 ```json
 {
-  "type": "subscribe",
   "interval": 60000
 }
 ```
 
+**Acknowledgement Message**:
 ```json
 {
   "type": "ack",
@@ -157,9 +167,10 @@ updated_at
 }
 ```
 
-### 7.4 Notification Rules
+### 7.5 Notification Rules
 - **Overdue**: status ≠ DONE AND due_date < today
 - **Due Soon**: status ≠ DONE AND due_date within next 3 days (inclusive)
+- **Send Frequency**: Respects per-user interval (minimum time between notification batches)
 
 ## 8. UI Requirements
 

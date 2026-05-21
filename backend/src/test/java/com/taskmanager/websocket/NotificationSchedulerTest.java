@@ -11,16 +11,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.taskmanager.service.TaskService;
-import com.taskmanager.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationSchedulerTest {
 
     @Mock
     private TaskService taskService;
-
-    @Mock
-    private UserService userService;
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
@@ -31,7 +27,7 @@ class NotificationSchedulerTest {
     @BeforeEach
     void setUp() {
         handler = new TaskNotificationHandler(taskService, messagingTemplate);
-        scheduler = new NotificationScheduler(taskService, userService, handler);
+        scheduler = new NotificationScheduler(taskService, handler);
     }
 
     @Test
@@ -42,11 +38,6 @@ class NotificationSchedulerTest {
     @Test
     void testScheduler_HasTaskServiceInjected() {
         assertNotNull(taskService);
-    }
-
-    @Test
-    void testScheduler_HasUserServiceInjected() {
-        assertNotNull(userService);
     }
 
     @Test
@@ -68,13 +59,12 @@ class NotificationSchedulerTest {
     @Test
     void testScheduler_InstanceCreation() {
         TaskService taskServiceMock = mock(TaskService.class);
-        UserService userServiceMock = mock(UserService.class);
         SimpMessagingTemplate templateMock = mock(SimpMessagingTemplate.class);
         TaskNotificationHandler handlerMock = new TaskNotificationHandler(
                 taskServiceMock, templateMock
         );
         NotificationScheduler schedulerMock = new NotificationScheduler(
-                taskServiceMock, userServiceMock, handlerMock
+                taskServiceMock, handlerMock
         );
 
         assertNotNull(schedulerMock);
@@ -97,7 +87,6 @@ class NotificationSchedulerTest {
     @Test
     void testScheduler_ServiceFieldsNotNull() {
         assertNotNull(taskService);
-        assertNotNull(userService);
     }
 
     @Test
