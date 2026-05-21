@@ -13,6 +13,8 @@ import com.taskmanager.dto.websocket.NotificationMessage;
 import com.taskmanager.entity.Task;
 import com.taskmanager.security.SecurityUser;
 import com.taskmanager.service.TaskService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -24,6 +26,8 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @Controller
 public class TaskNotificationHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskNotificationHandler.class);
 
     private final TaskService taskService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -65,8 +69,8 @@ public class TaskNotificationHandler {
             @AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = ((SecurityUser) userDetails).getId();
         if (message.getNotificationId() != null) {
-            Set<String> acked = sentNotifications.computeIfAbsent(userId, k -> new HashSet<>());
-            acked.add("acked:" + message.getNotificationId());
+            LOGGER.info("User {} acknowledged notification with id {}", userId,
+                    message.getNotificationId());
         }
     }
 
