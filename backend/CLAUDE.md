@@ -5,6 +5,9 @@ Backend guidelines for the Personal To-Do Manager API. Follow these conventions 
 ---
 
 ###
+We use Spring boot 4 and Java 21. Add new dependency accoringly main libs.
+
+###
 When creating any controller or test use @WebMvcTest. Also remember that in `backend/src/main/resources/application.properties` we have `server.servlet.context-path=/api`
 
 ### 

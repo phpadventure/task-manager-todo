@@ -109,4 +109,73 @@ public class TestDataBuilder {
     task.setDueDate(dueDate);
     return task;
   }
+
+  public static TaskBuilder createTask(UUID userId) {
+    return new TaskBuilder(userId);
+  }
+
+  public static class TaskBuilder {
+    private final UUID userId;
+    private UUID id = UUID.randomUUID();
+    private UUID listId = UUID.randomUUID();
+    private String title = "Test Task";
+    private String description = "Test task description";
+    private TaskStatus status = TaskStatus.TO_DO;
+    private TaskPriority priority = TaskPriority.MEDIUM;
+    private LocalDate dueDate = LocalDate.now().plusDays(7);
+
+    public TaskBuilder(UUID userId) {
+      this.userId = userId;
+    }
+
+    public TaskBuilder id(UUID id) {
+      this.id = id;
+      return this;
+    }
+
+    public TaskBuilder listId(UUID listId) {
+      this.listId = listId;
+      return this;
+    }
+
+    public TaskBuilder title(String title) {
+      this.title = title;
+      return this;
+    }
+
+    public TaskBuilder description(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public TaskBuilder status(TaskStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public TaskBuilder priority(TaskPriority priority) {
+      this.priority = priority;
+      return this;
+    }
+
+    public TaskBuilder dueDate(LocalDate dueDate) {
+      this.dueDate = dueDate;
+      return this;
+    }
+
+    public Task build() {
+      Task task = new Task();
+      task.setId(id);
+      task.setListId(listId);
+      task.setUserId(userId);
+      task.setTitle(title);
+      task.setDescription(description);
+      task.setStatus(status);
+      task.setPriority(priority);
+      task.setDueDate(dueDate);
+      task.setCreatedAt(Instant.now());
+      task.setUpdatedAt(Instant.now());
+      return task;
+    }
+  }
 }
