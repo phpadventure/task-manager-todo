@@ -11,6 +11,8 @@ import com.taskmanager.dto.websocket.ClientAckMessage;
 import com.taskmanager.dto.websocket.ClientSubscribeMessage;
 import com.taskmanager.dto.websocket.NotificationMessage;
 import com.taskmanager.entity.Task;
+import com.taskmanager.entity.User;
+import com.taskmanager.security.CustomOAuth2User;
 import com.taskmanager.security.SecurityUser;
 import com.taskmanager.service.TaskService;
 import org.slf4j.Logger;
@@ -19,15 +21,15 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.security.core.Authentication;
 
 @Controller
 public class TaskNotificationHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskNotificationHandler.class);
+    private static final String NOTIFICATION_QUEUE = "/queue/notifications";
 
     private final TaskService taskService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -35,6 +37,9 @@ public class TaskNotificationHandler {
             new ConcurrentHashMap<>();
     private final Map<UUID, Long> userIntervals = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastSentTime = new ConcurrentHashMap<>();
+
+    // AS FOR MVP WE ASSUME ONLY ONE SESSION!!!! BUT USER CAN HAVE A SET OF SESSION
+    private final Map<UUID, String> userSessionMap = new ConcurrentHashMap<>(); 
 
     public TaskNotificationHandler(TaskService taskService,
             SimpMessagingTemplate messagingTemplate) {
@@ -44,10 +49,14 @@ public class TaskNotificationHandler {
 
     @SubscribeMapping("/notifications")
     public List<NotificationMessage> handleSubscribe(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID userId = ((SecurityUser) userDetails).getId();
+            Authentication authentication) {
+        User userDetails = ((CustomOAuth2User) authentication.getPrincipal()).getUser();
+        UUID userId = userDetails.getId();
         sentNotifications.put(userId, new HashSet<>());
         userIntervals.put(userId, 60000L);
+
+        String username = authentication.getName();
+        userSessionMap.put(userId, username);
 
         List<NotificationMessage> initialBatch = getOverdueAndDueSoonNotifications(userId);
         trackSentNotifications(userId, initialBatch);
@@ -57,8 +66,9 @@ public class TaskNotificationHandler {
 
     @MessageMapping("/subscribe")
     public void handleSubscribeMessage(ClientSubscribeMessage message,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID userId = ((SecurityUser) userDetails).getId();
+            Authentication authentication) {
+        User userDetails = ((CustomOAuth2User) authentication.getPrincipal()).getUser();
+        UUID userId = userDetails.getId();
         if (message.getInterval() != null && message.getInterval() > 0) {
             userIntervals.put(userId, message.getInterval());
         }
@@ -66,12 +76,16 @@ public class TaskNotificationHandler {
 
     @MessageMapping("/ack")
     public void handleAckMessage(ClientAckMessage message,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID userId = ((SecurityUser) userDetails).getId();
+            Authentication authentication) {
+        User userDetails = ((CustomOAuth2User) authentication.getPrincipal()).getUser();
+        UUID userId = userDetails.getId();
         if (message.getNotificationId() != null) {
             LOGGER.info("User {} acknowledged notification with id {}", userId,
                     message.getNotificationId());
+            Set<String> acked = sentNotifications.computeIfAbsent(userId, k -> new HashSet<>());
+            acked.add("acked:" + message.getNotificationId());
         }
+
     }
 
     private List<NotificationMessage> getOverdueAndDueSoonNotifications(UUID userId) {
@@ -118,9 +132,13 @@ public class TaskNotificationHandler {
     }
 
     public void sendNotificationToUser(UUID userId, NotificationMessage notification) {
+        if (!userSessionMap.containsKey(userId)) {
+            return;
+        }
+
         messagingTemplate.convertAndSendToUser(
-                userId.toString(),
-                "/queue/notifications",
+                userSessionMap.get(userId),
+                NOTIFICATION_QUEUE,
                 notification
         );
     }
@@ -145,6 +163,7 @@ public class TaskNotificationHandler {
         sentNotifications.remove(userId);
         userIntervals.remove(userId);
         lastSentTime.remove(userId);
+        userSessionMap.remove(userId);
     }
 
     public Set<UUID> getConnectedUsers() {

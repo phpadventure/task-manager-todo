@@ -49,23 +49,41 @@ POST http://localhost:8080/api/seed
 
 ### 3. WebSocket Client Tools
 
-**Option A: Browser Console (Simple)**
+**Option A: Browser Console with STOMP (Recommended)**
 ```javascript
-// Open DevTools Console and run:
-const ws = new WebSocket('ws://api.localhost:8080/api/ws');
+// Load STOMP library
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js';
+document.head.appendChild(script);
 
-ws.onopen = () => {
-  console.log('Connected');
-  ws.send(JSON.stringify({type: 'subscribe', interval: 10000}));
-};
+// Wait for library to load, then connect
+setTimeout(() => {
+    const ws = new WebSocket('ws://localhost:8080/api/ws');
+    const stompClient = Stomp.over(ws);
 
-ws.onmessage = (event) => {
-  console.log('Notification:', JSON.parse(event.data));
-};
+    stompClient.debug = (msg) => console.log('[STOMP DEBUG]:', msg);                                                                                                                                                 
+   
+    stompClient.connect({}, function(frame) {                                                                                                                                                                        
+      console.log('✅ STOMP Connected:', frame);                                                                                                                                                                   
 
-ws.onerror = (error) => {
-  console.error('Error:', error);
-};
+      // Only subscribe AFTER connection confirmed
+      console.log('📌 About to subscribe...');
+      const subscription = stompClient.subscribe('/app/notifications', function(msg) {
+        console.log('📨 Message received:', JSON.parse(msg.body));
+      });
+      console.log('📌 Subscription object:', subscription);
+    }, function(error) {
+      console.error('❌ Connection error:', error);
+    });
+
+
+    // LISTEN TO USER PRIVATE QUEUE
+   stompClient.subscribe('/user/queue/notifications', (message) => {
+      console.log("Notifications received:", JSON.parse(message.body));
+   });
+
+  }, 1000);
+
 ```
 
 **Option B: wscat CLI Tool**
@@ -90,6 +108,42 @@ ws.on('message', msg => console.log('Notification:', msg));
 ws.on('error', err => console.error('Error:', err));
 ```
 
+### STOMP Routing Explained
+
+**Path types in STOMP**:
+
+1. **`/app/*` destinations** (Client → Server commands only)
+   - Used for `@MessageMapping` handlers (e.g., `/app/subscribe`, `/app/ack`)
+   - Client SENDS: `stompClient.send('/app/subscribe', ...)`
+   - Server receives and processes the command
+   - ❌ NOT for receiving messages
+
+2. ** BROKER DESTINATIONS: `/queue/*` `/user/*`. Client should subscribe to get messages. Broker sends.
+
+3. **`/queue/*` destinations** (Handler → Broker → Client messaging)
+   - Used for public messages
+   - Used for `messagingTemplate.convertAndSend()`
+
+4. **`/user/*` prefix** (Spring's automatic per-user routing)
+   - Configured in `WebSocketConfig`: `config.setUserDestinationPrefix("/user")`
+   - Spring automatically adds the authenticated user's ID to the path
+   - Client subscribes: `stompClient.subscribe('/user/queue/notifications', ...)`
+   - Spring converts internally to: `/user/{authenticated-user-id}/queue/notifications`
+   - Broker routes back to specific user's session only
+   - **Purpose**: Each user only receives their own messages (isolation + security)
+   - Backend send: `messagingTemplate.convertAndSendToUser(userId, "/queue/notifications", msg)` -> client needs second subscription to `/user/queue/notifications` which will transformed by Spring in `/user/{authenticated-user-id}/queue/notifications`
+   - **Important**: Only `/user` is in broker's `enableSimpleBroker()`, so `/queue/*` routes to handlers first
+
+4. **`@SubscribeMapping` used to return response immediately. Inital data
+   - if called in method `messagingTemplate.convertAndSendToUser(userId, "/queue/notifications", msg)` will be sending response into channel also but user need to subscirbe for it additionaly. `@SubscribeMapping("/notifications")` it's initial request to get data.
+
+**Broker configuration**:
+```java
+config.enableSimpleBroker("/user");  // Only /user in broker
+```
+- `/user/*` destinations go to broker (for user-specific routing)
+- `/queue/*` destinations global
+
 ---
 
 ## Test Cases
@@ -101,13 +155,16 @@ ws.on('error', err => console.error('Error:', err));
 1. Start backend: `./gradlew bootRun`
 2. Login via OAuth (Google/GitHub) to establish session
 3. Open browser DevTools → Network tab
-4. Run JavaScript in console:
+4. Run JavaScript in console (see Option A above for full STOMP setup):
    ```javascript
-   const ws = new WebSocket('ws://api.localhost:8080/api/ws');
-   ws.onopen = () => console.log('✅ Connected');
-   ws.onerror = () => console.log('❌ Failed');
+   const ws = new WebSocket('ws://localhost:8080/api/ws');
+   const stompClient = Stomp.over(ws);
+   stompClient.connect({}, 
+     () => console.log('✅ Connected'),
+     (error) => console.log('❌ Failed:', error)
+   );
    ```
-5. Check Network tab for WebSocket (WS) connection
+5. Check Network tab for WebSocket (WS) connection with status "101 Switching Protocols"
 
 **Expected Result**:
 - ✅ WebSocket connection established
@@ -132,22 +189,21 @@ ws.on('error', err => console.error('Error:', err));
    - Task D: due_date = TODAY - 1 day, status = "DONE" (done tasks excluded)
 
 **Steps**:
-1. Connect to WebSocket
+1. Connect to WebSocket with STOMP client
 2. Within 1 second, you should receive 2 notifications (for Task A and B)
 3. Check console for notification payload:
    ```javascript
-   ws.onmessage = (event) => {
-     const notification = JSON.parse(event.data);
+   stompClient.subscribe('/user/queue/notifications', function(msg) {
+     const notification = JSON.parse(msg.body);
      console.log('✅ Received:', {
-       type: notification.type,              // "notification"
+       id: notification.id,                  // UUID
        taskId: notification.taskId,          // UUID
        title: notification.title,            // "Task A"
        reason: notification.reason,          // "overdue" or "due-soon"
        dueDate: notification.dueDate,        // "2026-05-18"
-       priority: notification.priority,      // "HIGH", "MEDIUM", "LOW"
-       sentAt: notification.sentAt           // ISO timestamp
+       priority: notification.priority       // "HIGH", "MEDIUM", "LOW"
      });
-   };
+   });
    ```
 
 **Expected Result**:
@@ -169,19 +225,17 @@ ws.on('error', err => console.error('Error:', err));
 **Goal**: Verify client can change polling interval dynamically
 
 **Steps**:
-1. Connect to WebSocket
+1. Connect to WebSocket with STOMP client (see Option A above)
 2. Send subscribe message with custom interval:
    ```javascript
-   ws.send(JSON.stringify({
-     type: 'subscribe',
+   stompClient.send('/app/subscribe', {}, JSON.stringify({
      interval: 5000  // 5 seconds instead of default 60s
    }));
    ```
 3. Wait and observe: should receive periodic notifications every ~5 seconds
 4. Change interval again:
    ```javascript
-   ws.send(JSON.stringify({
-     type: 'subscribe',
+   stompClient.send('/app/subscribe', {}, JSON.stringify({
      interval: 15000  // 15 seconds
    }));
    ```
@@ -204,16 +258,15 @@ ws.on('error', err => console.error('Error:', err));
 **Goal**: Verify client can acknowledge notifications
 
 **Steps**:
-1. Connect and receive initial notification batch
-2. Extract a `notificationId` from first notification
+1. Connect with STOMP and receive initial notification batch
+2. Extract a `id` from first notification payload
 3. Send acknowledge message:
    ```javascript
-   ws.send(JSON.stringify({
-     type: 'ack',
+   stompClient.send('/app/ack', {}, JSON.stringify({
      notificationId: 'uuid-from-notification'
    }));
    ```
-4. Verify acknowledgment response received
+4. Verify backend logs: `User [userId] acknowledged notification with id [id]`
 5. Verify subsequent periodic checks don't re-send same notification
 
 **Expected Result**:
@@ -259,10 +312,14 @@ ws.on('error', err => console.error('Error:', err));
 1. **Without Session**: Open new private/incognito browser window (no cookies)
 2. Run:
    ```javascript
-   const ws = new WebSocket('ws://api.localhost:8080/api/ws');
-   ws.onerror = () => console.log('Connection rejected');
+   const ws = new WebSocket('ws://localhost:8080/api/ws');
+   const stompClient = Stomp.over(ws);
+   stompClient.connect({},
+     () => console.log('❌ Connected (SECURITY ISSUE!)'),
+     (error) => console.log('✅ Connection rejected:', error)
+   );
    ```
-3. Attempt to connect should fail immediately
+3. Connection attempt should fail immediately with 401/403 error
 
 **Expected Result**:
 - ❌ Connection rejected (401 Unauthorized)

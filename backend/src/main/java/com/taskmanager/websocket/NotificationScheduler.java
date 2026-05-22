@@ -23,6 +23,7 @@ public class NotificationScheduler {
     private final TaskService taskService;
     private final TaskNotificationHandler notificationHandler;
 
+
     public NotificationScheduler(TaskService taskService,
             TaskNotificationHandler notificationHandler) {
         this.taskService = taskService;
