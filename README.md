@@ -259,6 +259,88 @@ Users can link multiple OAuth providers to a single account:
 
 ---
 
+## WebSocket Notifications
+
+### Connection
+
+Client connects via WebSocket to `/api/ws` using STOMP protocol:
+
+```javascript
+const client = new StompClient();
+client.connect({}, () => {
+  client.subscribe('/user/queue/notifications', (message) => {
+    const notification = JSON.parse(message.body);
+    console.log('Notification:', notification);
+  });
+});
+```
+
+### Subscribe Message
+
+After connecting, client sends subscription interval (milliseconds):
+
+```javascript
+client.send('/app/subscribe', {}, JSON.stringify({ interval: 60000 }));
+```
+
+- **interval**: Time in milliseconds between notification batches (default: 60000ms = 1 minute)
+- Scheduler runs every 10 seconds internally but respects per-user interval
+
+### Notification Message Format
+
+Server sends notifications to connected clients:
+
+```json
+{
+  "type": "notification",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "taskId": "550e8400-e29b-41d4-a716-446655440001",
+  "title": "Buy groceries",
+  "reason": "overdue",
+  "dueDate": "2026-05-20",
+  "priority": "HIGH",
+  "sentAt": "2026-05-21T10:30:00Z"
+}
+```
+
+**Fields**:
+- `reason`: "overdue" (due_date < today) or "due-soon" (due within 3 days)
+- `priority`: "LOW", "MEDIUM", or "HIGH"
+
+### Acknowledgement Message
+
+Client acknowledges receipt of notification:
+
+```javascript
+client.send('/app/ack', {}, JSON.stringify({
+  type: 'ack',
+  notificationId: '550e8400-e29b-41d4-a716-446655440000'
+}));
+```
+
+### Notification Rules
+
+Overdue & Due-Soon logic runs every 10 seconds (configurable):
+- **Overdue**: `status ≠ DONE AND due_date < today`
+- **Due Soon**: `status ≠ DONE AND due_date within next 3 days (inclusive)`
+
+Each user receives notifications based on their configured interval:
+- Default: 60 seconds (configurable via subscribe message)
+- Deduplication: Same task/reason not sent twice in same cycle
+
+### Configuration
+
+Backend properties (in `application.properties`):
+```properties
+# WebSocket CORS origins
+app.websocket.allowed-origins=http://app.localhost:5173,http://localhost:5173
+
+# Scheduler interval (ms) - runs every 10 seconds
+app.notification.interval=10000
+```
+
+---
+
 ## Testing
 
 ### Backend Tests
@@ -266,6 +348,7 @@ Users can link multiple OAuth providers to a single account:
 cd backend
 ./gradlew test                    # Run all tests
 ./gradlew test --tests "*GitHub*" # Test GitHub OAuth functionality
+./gradlew test --tests "*Notification*" # WebSocket notification tests
 ```
 
 ### Frontend Tests
