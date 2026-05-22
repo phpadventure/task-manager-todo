@@ -57,11 +57,11 @@ class TaskNotificationHandlerTest {
         user.setId(userId);
 
         customOAuth2User = mock(CustomOAuth2User.class);
-        when(customOAuth2User.getUser()).thenReturn(user);
+        lenient().when(customOAuth2User.getUser()).thenReturn(user);
 
         authentication = mock(Authentication.class);
-        when(authentication.getPrincipal()).thenReturn(customOAuth2User);
-        when(authentication.getName()).thenReturn("testUser");
+        lenient().when(authentication.getPrincipal()).thenReturn(customOAuth2User);
+        lenient().when(authentication.getName()).thenReturn("testUser");
 
         lenient().when(taskService.getOverdueTasks(any())).thenReturn(new ArrayList<>());
         lenient().when(taskService.getDueSoonTasks(any())).thenReturn(new ArrayList<>());
@@ -231,6 +231,9 @@ class TaskNotificationHandlerTest {
 
     @Test
     void testNotificationDTO_CreationSuccessful() {
+        TaskNotificationHandler testHandler = new TaskNotificationHandler(
+                taskService, messagingTemplate);
+
         UUID notifId = UUID.randomUUID();
         UUID taskId = UUID.randomUUID();
         LocalDate dueDate = LocalDate.now();
@@ -247,13 +250,16 @@ class TaskNotificationHandlerTest {
 
     @Test
     void testSendNotificationToUser_Executes() {
+        TaskNotificationHandler testHandler = new TaskNotificationHandler(
+                taskService, messagingTemplate);
+
         NotificationMessage notification = new NotificationMessage(
                 UUID.randomUUID(), UUID.randomUUID(), "Task", "overdue",
                 LocalDate.now(), TaskPriority.HIGH
         );
 
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(
-                () -> handler.sendNotificationToUser(userId, notification)
+                () -> testHandler.sendNotificationToUser(userId, notification)
         );
     }
 
