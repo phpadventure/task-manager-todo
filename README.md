@@ -201,6 +201,15 @@ npm run test        # Unit tests
 - Flyway automatically runs migrations on Spring Boot startup
 - Migrations are in `backend/src/main/resources/db/migration/`
 
+## API Documentation
+
+Complete API reference with examples for all endpoints:
+- **[API.md](./API.md)** - Full API documentation (Lists, Tasks, Query examples)
+- **Swagger UI** - Interactive API docs at http://localhost:8080/swagger-ui.html
+- **OpenAPI Spec** - Machine-readable spec at http://localhost:8080/api-docs
+
+---
+
 ## OAuth2 Authentication Setup
 
 ### Google OAuth
@@ -338,6 +347,11 @@ app.websocket.allowed-origins=http://app.localhost:5173,http://localhost:5173
 # Scheduler interval (ms) - runs every 10 seconds
 app.notification.interval=10000
 ```
+
+### Manual Testing
+
+For detailed manual testing procedures to verify WebSocket functionality:
+- **[backend/verification/PHASE5_MANUAL_TESTS.md](./backend/verification/PHASE5_MANUAL_TESTS.md)** - Step-by-step WebSocket verification guide
 
 ---
 
