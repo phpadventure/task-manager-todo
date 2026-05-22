@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
 
 import com.taskmanager.dto.websocket.ClientAckMessage;
 import com.taskmanager.dto.websocket.ClientSubscribeMessage;
@@ -27,7 +28,8 @@ import com.taskmanager.dto.websocket.NotificationMessage;
 import com.taskmanager.entity.Task;
 import com.taskmanager.entity.TaskPriority;
 import com.taskmanager.entity.TaskStatus;
-import com.taskmanager.security.SecurityUser;
+import com.taskmanager.entity.User;
+import com.taskmanager.security.CustomOAuth2User;
 import com.taskmanager.service.TaskService;
 import com.taskmanager.util.TestDataBuilder;
 
@@ -42,14 +44,25 @@ class TaskNotificationHandlerTest {
 
     private TaskNotificationHandler handler;
     private UUID userId;
-    private SecurityUser securityUser;
+    private Authentication authentication;
+    private User user;
+    private CustomOAuth2User customOAuth2User;
 
     @BeforeEach
     void setUp() {
         handler = new TaskNotificationHandler(taskService, messagingTemplate);
         userId = UUID.randomUUID();
-        securityUser = mock(SecurityUser.class);
-        lenient().when(securityUser.getId()).thenReturn(userId);
+
+        user = new User();
+        user.setId(userId);
+
+        customOAuth2User = mock(CustomOAuth2User.class);
+        when(customOAuth2User.getUser()).thenReturn(user);
+
+        authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(customOAuth2User);
+        when(authentication.getName()).thenReturn("testUser");
+
         lenient().when(taskService.getOverdueTasks(any())).thenReturn(new ArrayList<>());
         lenient().when(taskService.getDueSoonTasks(any())).thenReturn(new ArrayList<>());
     }
@@ -71,7 +84,7 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(List.of(overdueTask));
         when(taskService.getDueSoonTasks(userId)).thenReturn(List.of(dueSoonTask));
 
-        List<NotificationMessage> result = handler.handleSubscribe(securityUser);
+        List<NotificationMessage> result = handler.handleSubscribe(authentication);
 
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(n -> n.getReason().equals("overdue")));
@@ -83,7 +96,7 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(new ArrayList<>());
         when(taskService.getDueSoonTasks(userId)).thenReturn(new ArrayList<>());
 
-        List<NotificationMessage> result = handler.handleSubscribe(securityUser);
+        List<NotificationMessage> result = handler.handleSubscribe(authentication);
 
         assertTrue(result.isEmpty());
     }
@@ -108,7 +121,7 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(List.of(overdueTask));
         when(taskService.getDueSoonTasks(userId)).thenReturn(List.of(dueSoonTask1, dueSoonTask2));
 
-        List<NotificationMessage> result = handler.handleSubscribe(securityUser);
+        List<NotificationMessage> result = handler.handleSubscribe(authentication);
 
         assertEquals(3, result.size());
         assertEquals(1, result.stream().filter(n -> n.getReason().equals("overdue")).count());
@@ -117,20 +130,20 @@ class TaskNotificationHandlerTest {
 
     @Test
     void testClientSubscribeMessage_UpdatesInterval() {
-        handler.handleSubscribe(securityUser);
+        handler.handleSubscribe(authentication);
 
         ClientSubscribeMessage message = new ClientSubscribeMessage(30000L);
-        handler.handleSubscribeMessage(message, securityUser);
+        handler.handleSubscribeMessage(message, authentication);
 
         assertEquals(30000L, handler.getUserInterval(userId));
     }
 
     @Test
     void testClientSubscribeMessage_DefaultIntervalOnNullValue() {
-        handler.handleSubscribe(securityUser);
+        handler.handleSubscribe(authentication);
 
         ClientSubscribeMessage message = new ClientSubscribeMessage(null);
-        handler.handleSubscribeMessage(message, securityUser);
+        handler.handleSubscribeMessage(message, authentication);
 
         assertEquals(60000L, handler.getUserInterval(userId));
     }
@@ -140,12 +153,12 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(new ArrayList<>());
         when(taskService.getDueSoonTasks(userId)).thenReturn(new ArrayList<>());
 
-        handler.handleSubscribe(securityUser);
+        handler.handleSubscribe(authentication);
 
         UUID notificationId = UUID.randomUUID();
         ClientAckMessage message = new ClientAckMessage("ack", notificationId);
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(
-                () -> handler.handleAckMessage(message, securityUser)
+                () -> handler.handleAckMessage(message, authentication)
         );
     }
 
@@ -160,7 +173,7 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(List.of(task));
         when(taskService.getDueSoonTasks(userId)).thenReturn(new ArrayList<>());
 
-        List<NotificationMessage> result = handler.handleSubscribe(securityUser);
+        List<NotificationMessage> result = handler.handleSubscribe(authentication);
 
         assertFalse(result.isEmpty());
         NotificationMessage notification = result.get(0);
@@ -175,8 +188,15 @@ class TaskNotificationHandlerTest {
     @Test
     void testMultipleUsers_IsolatedNotifications() {
         UUID userId2 = UUID.randomUUID();
-        SecurityUser securityUser2 = mock(SecurityUser.class);
-        when(securityUser2.getId()).thenReturn(userId2);
+        User user2 = new User();
+        user2.setId(userId2);
+
+        CustomOAuth2User customOAuth2User2 = mock(CustomOAuth2User.class);
+        when(customOAuth2User2.getUser()).thenReturn(user2);
+
+        Authentication authentication2 = mock(Authentication.class);
+        when(authentication2.getPrincipal()).thenReturn(customOAuth2User2);
+        when(authentication2.getName()).thenReturn("testUser2");
 
         Task task1 = TestDataBuilder.createTask(userId).build();
         Task task2 = TestDataBuilder.createTask(userId2).build();
@@ -185,8 +205,8 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId2)).thenReturn(List.of(task2));
         when(taskService.getDueSoonTasks(any())).thenReturn(new ArrayList<>());
 
-        List<NotificationMessage> result1 = handler.handleSubscribe(securityUser);
-        List<NotificationMessage> result2 = handler.handleSubscribe(securityUser2);
+        List<NotificationMessage> result1 = handler.handleSubscribe(authentication);
+        List<NotificationMessage> result2 = handler.handleSubscribe(authentication2);
 
         assertEquals(1, result1.size());
         assertEquals(1, result2.size());
@@ -204,7 +224,7 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(new ArrayList<>());
         when(taskService.getDueSoonTasks(userId)).thenReturn(new ArrayList<>());
 
-        List<NotificationMessage> result = handler.handleSubscribe(securityUser);
+        List<NotificationMessage> result = handler.handleSubscribe(authentication);
 
         assertTrue(result.isEmpty());
     }
@@ -239,7 +259,7 @@ class TaskNotificationHandlerTest {
 
     @Test
     void testClearSentNotifications_ResetsTrackingForUser() {
-        handler.handleSubscribe(securityUser);
+        handler.handleSubscribe(authentication);
         handler.clearSentNotifications(userId);
 
         UUID taskId = UUID.randomUUID();
@@ -248,7 +268,7 @@ class TaskNotificationHandlerTest {
 
     @Test
     void testRemoveUser_CleansupUserState() {
-        handler.handleSubscribe(securityUser);
+        handler.handleSubscribe(authentication);
         handler.removeUser(userId);
 
         // After removal, user should get default interval on re-subscribe
@@ -267,7 +287,7 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(List.of(task));
         when(taskService.getDueSoonTasks(userId)).thenReturn(new ArrayList<>());
 
-        List<NotificationMessage> batch1 = handler.handleSubscribe(securityUser);
+        List<NotificationMessage> batch1 = handler.handleSubscribe(authentication);
         assertEquals(1, batch1.size());
         assertTrue(handler.hasAlreadySent(userId, taskId, "overdue"));
     }
@@ -275,20 +295,27 @@ class TaskNotificationHandlerTest {
     @Test
     void testMultipleSubscriptions_TrackedSeparately() {
         UUID userId2 = UUID.randomUUID();
-        SecurityUser user2 = mock(SecurityUser.class);
-        when(user2.getId()).thenReturn(userId2);
+        User user2 = new User();
+        user2.setId(userId2);
+
+        CustomOAuth2User customOAuth2User2 = mock(CustomOAuth2User.class);
+        when(customOAuth2User2.getUser()).thenReturn(user2);
+
+        Authentication authentication2 = mock(Authentication.class);
+        when(authentication2.getPrincipal()).thenReturn(customOAuth2User2);
+        when(authentication2.getName()).thenReturn("testUser2");
 
         when(taskService.getOverdueTasks(userId)).thenReturn(new ArrayList<>());
         when(taskService.getOverdueTasks(userId2)).thenReturn(new ArrayList<>());
         when(taskService.getDueSoonTasks(any())).thenReturn(new ArrayList<>());
 
-        handler.handleSubscribe(securityUser);
-        handler.handleSubscribe(user2);
+        handler.handleSubscribe(authentication);
+        handler.handleSubscribe(authentication2);
 
         assertEquals(60000L, handler.getUserInterval(userId));
         assertEquals(60000L, handler.getUserInterval(userId2));
 
-        handler.handleSubscribeMessage(new ClientSubscribeMessage(15000L), securityUser);
+        handler.handleSubscribeMessage(new ClientSubscribeMessage(15000L), authentication);
         assertEquals(15000L, handler.getUserInterval(userId));
         assertEquals(60000L, handler.getUserInterval(userId2));
     }
@@ -304,7 +331,7 @@ class TaskNotificationHandlerTest {
         when(taskService.getOverdueTasks(userId)).thenReturn(List.of(highPriorityTask));
         when(taskService.getDueSoonTasks(userId)).thenReturn(new ArrayList<>());
 
-        List<NotificationMessage> result = handler.handleSubscribe(securityUser);
+        List<NotificationMessage> result = handler.handleSubscribe(authentication);
 
         assertEquals(TaskPriority.HIGH, result.get(0).getPriority());
     }
