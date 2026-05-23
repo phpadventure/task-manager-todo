@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -300,6 +301,7 @@ public class TaskController {
           description = "Task or list not found",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
+  @PreAuthorize("@securityService.userOwnsTaskInList(#taskId, #listId)")
   @PutMapping("/lists/{listId}/tasks/{taskId}")
   public ResponseEntity<TaskDTO> updateTaskInList(
       @Parameter(description = "List ID") @PathVariable UUID listId,
@@ -327,6 +329,7 @@ public class TaskController {
           description = "Task or list not found",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
+  @PreAuthorize("@securityService.userOwnsTaskInList(#taskId, #listId)")
   @DeleteMapping("/lists/{listId}/tasks/{taskId}")
   public ResponseEntity<Void> deleteTaskInList(
       @Parameter(description = "List ID") @PathVariable UUID listId,
@@ -357,6 +360,7 @@ public class TaskController {
           description = "Task not found",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
+  @PreAuthorize("@securityService.userOwnsTask(#taskId)")
   @PatchMapping("/tasks/{taskId}/status")
   public ResponseEntity<TaskDTO> updateTaskStatus(
       @Parameter(description = "Task ID") @PathVariable UUID taskId,

@@ -23,7 +23,7 @@ class AuthControllerTest {
     @Mock
     private UserService userService;
 
-    private final AuthController authController = new AuthController(null);
+    private final AuthController authController = new AuthController();
 
     @Test
     void testGetCurrentUser_WithAuthenticatedUser_Returns200() {

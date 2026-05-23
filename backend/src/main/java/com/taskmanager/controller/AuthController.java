@@ -3,7 +3,6 @@ package com.taskmanager.controller;
 import com.taskmanager.dto.ErrorResponse;
 import com.taskmanager.dto.UserProfileResponse;
 import com.taskmanager.security.CustomOAuth2User;
-import com.taskmanager.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "OAuth2 login and profile endpoints")
 public class AuthController {
-    private final UserService userService;
 
     @Operation(
         summary = "Get current authenticated user",
