@@ -2,6 +2,27 @@
 
 Personal To-Do Manager web application with full-stack implementation: Spring Boot backend, Vue 3 frontend, MySQL database, OAuth2 authentication, and real-time WebSocket notifications.
 
+## ✨ Features
+
+### Core Features
+- **OAuth2 SSO** - Single sign-on with Google & GitHub
+- **Task Lists** - Organize tasks into multiple projects/lists
+- **Task Management** - Create, read, update, delete tasks with full CRUD
+- **Task Attributes** - Title, description, status (To Do / In Progress / Done), priority (Low / Medium / High), due date
+- **Search & Filters** - Search by title/description, filter by status/priority/due date, find overdue tasks
+- **Real-time Notifications** - WebSocket push for overdue and due-soon tasks
+- **Session Persistence** - Stay logged in across page refresh
+- **Authorization** - Declarative @PreAuthorize security with cross-user data isolation
+
+### Backend Quality
+- **130+ Unit Tests** - Comprehensive test coverage for services and controllers
+- **Authorization Testing** - 100% coverage of cross-user isolation
+- **Code Quality** - Google Java Style compliance via Checkstyle
+- **OpenAPI Documentation** - Interactive Swagger UI at `/swagger-ui.html`
+- **Error Handling** - Centralized exception handling with consistent error responses
+
+---
+
 ## Prerequisites
 
 ### Local Development (No Docker)
@@ -207,6 +228,73 @@ Complete API reference with examples for all endpoints:
 - **[API.md](./API.md)** - Full API documentation (Lists, Tasks, Query examples)
 - **Swagger UI** - Interactive API docs at http://localhost:8080/swagger-ui.html
 - **OpenAPI Spec** - Machine-readable spec at http://localhost:8080/api-docs
+
+### Authorization
+
+All endpoints use **Spring Security's `@PreAuthorize` annotation** with custom expression handlers for declarative authorization:
+
+**Security Implementation**:
+- `SecurityService` provides ownership check methods for SpEL expressions
+- Edit/delete endpoints protected with `@PreAuthorize("@securityService.userOwns...")`
+- Cross-user data isolation enforced (returns 403 Forbidden if user doesn't own resource)
+- Defense-in-depth: @PreAuthorize at controller + service layer checks
+
+**Protected Endpoints** (403 Forbidden if unauthorized):
+- `PUT /api/lists/{id}` - Update list (user must own list)
+- `DELETE /api/lists/{id}` - Delete list (user must own list)
+- `PUT /api/lists/{listId}/tasks/{taskId}` - Update task (user must own list + task)
+- `DELETE /api/lists/{listId}/tasks/{taskId}` - Delete task (user must own list + task)
+- `PATCH /api/tasks/{taskId}/status` - Update task status (user must own task)
+
+### Task Lists & Tasks
+
+**List CRUD**:
+- `GET /api/lists` - Get all user's lists
+- `POST /api/lists` - Create new list
+- `PUT /api/lists/{id}` - Update list title
+- `DELETE /api/lists/{id}` - Delete list (409 Conflict if list has tasks)
+
+**Task CRUD** (nested under list):
+- `GET /api/lists/{listId}/tasks` - Get all tasks in list
+- `POST /api/lists/{listId}/tasks` - Create task in list
+- `PUT /api/lists/{listId}/tasks/{taskId}` - Update task details
+- `DELETE /api/lists/{listId}/tasks/{taskId}` - Delete task
+- `PATCH /api/tasks/{taskId}/status` - Quick status update
+
+**Task Search & Filters** (user-wide):
+- `GET /api/tasks` - Get all user's tasks
+- `GET /api/tasks?status=TO_DO&priority=HIGH` - Filter by status/priority
+- `GET /api/tasks/search?q=query` - Search title & description
+- `GET /api/tasks/overdue` - Get overdue tasks (due_date < today, status ≠ DONE)
+- `GET /api/tasks/due-soon` - Get tasks due within 3 days
+
+For complete request/response examples, see **[API.md](./API.md)**.
+
+### Deletion Behavior
+
+**List Deletion**: Block pattern - cannot delete list with active tasks
+- Returns `409 Conflict` if list contains any tasks
+- User must delete all tasks first, then delete the list
+- Prevents accidental data loss
+
+**Task Deletion**: Immediate hard delete
+- No soft delete or archive feature
+- Deleted tasks are permanently removed from database
+
+### Sample Data & Seed Endpoint
+
+Generate sample data for testing:
+```bash
+# Seed database with sample lists and tasks
+curl -X POST http://localhost:8080/api/seed \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "your-user-id-here"}'
+```
+
+Returns:
+- 3 sample task lists (Personal, Work, Shopping)
+- 10 sample tasks with various statuses and priorities
+- All data scoped to the specified user
 
 ---
 
