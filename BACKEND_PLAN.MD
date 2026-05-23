@@ -281,44 +281,35 @@ This app uses **Spring Session** with HttpOnly cookies for authentication, not J
 - ✅ Works across tabs automatically
 - ✅ Logout just invalidates server session
 
-### Local Development Setup (Hosts File + Vite Proxy)
+### Local Development Setup (Vite Proxy + Simple Localhost)
 
-**Problem**: Frontend (localhost:5173) and backend (localhost:8080) are different origins.
+**Architecture**:
+- Frontend: `http://localhost:5173` (Vite dev server)
+- Backend: `http://localhost:8080` (Spring Boot)
+- Vite proxy handles `/api` requests and forwards cookies
 
-**Solution**: Use hosts file to make both same domain, Vite proxy to rewrite cookies.
+**How Session Cookies Work**:
+1. Backend runs on `localhost:8080` and handles OAuth flow
+2. Backend creates session and sends `Set-Cookie: JSESSIONID=xxx; Domain=localhost` in response
+3. Vite dev server receives the response from backend
+4. **Vite forwards the Set-Cookie header back to browser**
+5. Browser stores cookie as same-origin (both from localhost:5173 via Vite)
+6. Future API calls via Vite proxy automatically include the cookie ✅
 
-1. Edit `/etc/hosts`:
-   ```
-   127.0.0.1 app.localhost
-   127.0.0.1 api.localhost
-   ```
+**Startup**:
+```bash
+# Terminal 1: Backend on http://localhost:8080
+cd backend && ./gradlew bootRun
 
-2. Start backend on `http://api.localhost:8080`:
-   ```bash
-   cd backend && ./gradlew bootRun
-   ```
+# Terminal 2: Frontend on http://localhost:5173
+cd ui && npm run dev
+# Vite proxy is configured in vite.config.ts (see UI_PLAN.MD Phase 1)
+```
 
-3. Start frontend on `http://app.localhost:5173` (Vite proxy handles routing):
-   ```bash
-   cd ui && npm run dev
-   # Vite dev server proxies /api to http://api.localhost:8080
-   ```
-
-4. Configure backend cookie domain in `SecurityConfig.java`:
-   ```java
-   http.sessionManagement(session -> session
-     .sessionCookieConfig(config -> {
-       config.setDomain(".localhost");  // Covers both app.localhost & api.localhost
-       config.setPath("/");
-       config.setHttpOnly(true);
-       config.setSecure(false);  // Allow HTTP in dev
-     })
-   );
-   ```
-
-5. Vite config (UI_PLAN.MD handles this) already has:
-   - Proxy `/api` to `http://api.localhost:8080`
-   - Cookie domain rewrite to `.localhost`
+**Backend Cookie Configuration**:
+- Default `server.servlet.session.cookie.domain=localhost` (set in `application.properties`)
+- Works out-of-the-box, no custom SecurityConfig needed for local dev
+- HttpOnly + Secure cookies configured in `application-dev.properties`
 
 **Result**: Session cookies work across page refresh ✅
 
@@ -359,8 +350,8 @@ http.sessionManagement(session -> session
 ### OAuth Redirect URI Configuration
 
 **Local Development**:
-- OAuth provider redirect URI: `http://app.localhost:5173/oauth/callback`
-- Backend initiates OAuth login: `http://api.localhost:8080/oauth2/authorization/google`
+- OAuth provider redirect URI: `http://localhost:5173/oauth/callback` (or handled by backend redirect)
+- Backend initiates OAuth login: `http://localhost:8080/oauth2/authorization/google`
 
 **Docker (Production)**:
 - OAuth provider redirect URI: `http://localhost/oauth/callback`
@@ -369,13 +360,13 @@ http.sessionManagement(session -> session
 ### Testing Session Persistence
 
 **Local Dev Test**:
-1. Open `http://app.localhost:5173`
+1. Open `http://localhost:5173`
 2. Click "Login with Google/GitHub"
 3. Complete OAuth flow
 4. Verify `GET /api/auth/me` returns user profile
 5. Refresh page (Ctrl+R)
 6. User still authenticated, profile still visible ✅
-7. Check DevTools → Application → Cookies → session cookie present
+7. Check DevTools → Application → Cookies → session cookie (JSESSIONID) present
 
 ---
 
@@ -670,7 +661,7 @@ http.sessionManagement(session -> session
 ### 5.6 Configuration ✅
 **Properties** added to `application.properties`:
 ```properties
-app.websocket.allowed-origins=http://app.localhost:5173,http://localhost:5173,http://localhost:3000
+app.websocket.allowed-origins=http://localhost:5173,http://localhost,http://localhost:3000
 app.notification.interval=10000
 ```
 

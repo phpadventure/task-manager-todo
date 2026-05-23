@@ -12,13 +12,16 @@ Session-based cookies require same-origin. In **production Docker**, Nginx rever
 
 **Pattern**: `Nginx:80` → routes `/` to frontend, `/api` to backend, `/api/ws` to WebSocket.
 
-## Local Development (No Nginx)
+## Local Development (Vite Proxy - No Reverse Proxy)
 
-Local dev uses **Vite proxy + hosts file** (see UI_PLAN.MD):
-- Edit `/etc/hosts`: `127.0.0.1 app.localhost api.localhost`
-- Frontend: `http://app.localhost:5173`
-- Backend: `http://api.localhost:8080`
-- Vite config: proxy `/api` to `http://api.localhost:8080` with `cookieDomainRewrite: '.localhost'`
+Local dev uses **Vite proxy** to forward requests and cookies:
+- Frontend: `http://localhost:5173` (Vite dev server)
+- Backend: `http://localhost:8080` (Spring Boot)
+- Vite config: proxy `/api` to `http://localhost:8080` with `credentials: 'include'`
+- **No hosts file changes needed**
+- **No Nginx needed**
+
+**How it works**: Vite forwards both requests AND Set-Cookie headers from backend to browser, making cookies work as if same-origin.
 
 ## Docker Deployment
 
@@ -43,8 +46,8 @@ config.setSameSite("Lax");
 
 **application.properties** (configurable per environment):
 ```properties
-# Local dev (Vite proxy + hosts file)
-server.servlet.session.cookie.domain=.localhost
+# Local dev (Vite proxy)
+server.servlet.session.cookie.domain=localhost
 
 # Docker (single origin via Nginx)
 server.servlet.session.cookie.domain=localhost

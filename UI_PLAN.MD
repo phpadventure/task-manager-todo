@@ -22,14 +22,14 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] `playwright` (E2E testing)
 - [ ] Configure `vite.config.ts`:
   - [ ] API proxy for backend: `/api` → `http://localhost:8080/api` (see Session-Based Auth section)
-  - [ ] WebSocket proxy: `/api/ws` → `ws://localhost:8080/api/ws`
+  - [ ] **CRITICAL**: Add `credentials: 'include'` to proxy config for session cookies
+  - [ ] WebSocket proxy: `/api/ws` → `ws://localhost:8080/api/ws` (also with credentials)
   - [ ] Alias `@` for `src` directory
-  - [ ] **IMPORTANT**: Proxy with `credentials: 'include'` for session cookies
 - [ ] Configure `tsconfig.json` for Vue 3 + TypeScript
 - [ ] Setup Tailwind CSS configuration
 - [ ] Create `.env.example` with `VITE_API_URL` (backend base URL)
 - [ ] Create `.env.development` for local dev settings
-  - [ ] `VITE_API_URL=http://app.localhost:8080` (or environment-specific URL)
+  - [ ] `VITE_API_URL=http://localhost:8080` (or environment-specific URL)
 
 **Note**: No OAUTH_*_CLIENT_ID in frontend `.env`—OAuth redirects handled by backend (SecurityConfig redirects to provider).
 
@@ -165,7 +165,7 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 - [ ] Create `src/websocket/notificationService.ts`:
   - [ ] `connect()` - establish WebSocket connection to /api/ws
   - [ ] `disconnect()` - close connection
-  - [ ] `subscribe(interval)` - send `{ type: "subscribe", interval }`
+  - [ ] `subscribe(interval)` - send `{ interval }` (milliseconds) ⚠️ **NO type field** ⚠️
   - [ ] `acknowledge(notificationId)` - send `{ type: "ack", notificationId }`
   - [ ] Event listeners: onMessage, onError, onClose
   - [ ] Auto-reconnect logic with exponential backoff
@@ -173,8 +173,30 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 - [ ] Create `src/composables/useNotifications.ts`:
   - [ ] `connect()` hook to init WebSocket on app mount
   - [ ] `disconnect()` hook to cleanup
-  - [ ] Handle incoming notifications → add to notificationStore
+  - [ ] Handle incoming notifications (fields: type, id, taskId, title, reason, dueDate, priority, sentAt)
+  - [ ] Add notifications to notificationStore
   - [ ] Filter duplicates using seen notification IDs
+
+**Message Formats**:
+```typescript
+// Client → Server: Subscribe (CORRECTED - no type field)
+{ interval: 60000 }  // milliseconds
+
+// Client → Server: Acknowledge
+{ type: "ack", notificationId: "uuid" }
+
+// Server → Client: Notification
+{
+  type: "notification",
+  id: "uuid",
+  taskId: "task-uuid",
+  title: "Buy groceries",
+  reason: "overdue" | "due-soon",
+  dueDate: "2026-05-20",
+  priority: "LOW" | "MEDIUM" | "HIGH",
+  sentAt: "2026-05-21T10:30:00Z"
+}
+```
 
 **Files to Create**:
 - [ ] `ui/src/websocket/notificationService.ts`
@@ -265,8 +287,9 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Types: success, error, info, warning
 
 - [ ] Create `src/components/common/Badge.vue`
-  - [ ] Status badges (todo, in-progress, done)
-  - [ ] Priority badges (low, medium, high)
+  - [ ] Status badges: map `TO_DO` → "To Do", `IN_PROGRESS` → "In Progress", `DONE` → "Done"
+  - [ ] Priority badges: map `LOW` → "Low", `MEDIUM` → "Medium", `HIGH` → "High"
+  - [ ] Color coding: Status (gray/yellow/green), Priority (blue/orange/red)
 
 **Files to Create**:
 - [ ] `ui/src/components/common/Button.vue`
@@ -285,12 +308,22 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ### Authentication Components
 - [ ] Create `src/components/auth/LoginPage.vue`:
-  - [ ] "Continue with Google" button → redirects to `/oauth2/authorization/google`
-  - [ ] "Continue with GitHub" button → redirects to `/oauth2/authorization/github`
+  - [ ] "Continue with Google" button → redirects to `/api/oauth2/authorization/google`
+  - [ ] "Continue with GitHub" button → redirects to `/api/oauth2/authorization/github`
   - [ ] Centered layout with branding
-  - [ ] **No OAuth client IDs in frontend** (backend handles OAuth flow)
-  - [ ] After backend OAuth exchange, backend redirects back to app with session cookie
-  - [ ] Frontend detects user logged in via `GET /api/auth/me`
+  - [ ] **OAuth Flow (Backend-Driven)**:
+    1. User clicks button → browser navigates to backend OAuth endpoint
+    2. Backend redirects to Google/GitHub provider login page
+    3. User logs in with provider (Google/GitHub)
+    4. Provider redirects back to backend callback URL
+    5. Backend exchanges OAuth code for user info
+    6. Backend creates session + HttpOnly, Secure session cookie
+    7. Backend redirects back to frontend home page
+    8. Frontend detects redirect and calls `GET /api/auth/me` to check if logged in
+    9. If 200 OK + user data → user is authenticated (cookie valid)
+    10. If 401 Unauthorized → show login page again
+  - [ ] **No OAuth client IDs or tokens in frontend** (all OAuth details handled by backend)
+  - [ ] After OAuth completes, frontend detects user via `GET /api/auth/me`
 
 - [ ] Create `src/components/auth/UserMenu.vue`:
   - [ ] Display user avatar + name
@@ -344,21 +377,35 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 - [ ] Create `src/components/tasks/TaskFilterBar.vue`:
   - [ ] Search input (debounced)
-  - [ ] Status filter (multi-select)
-  - [ ] Priority filter (multi-select)
-  - [ ] Due date filter (dropdown: overdue, today, next 7 days, all)
+  - [ ] Status filter (multi-select):
+    - Options: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase enum values)
+    - Display labels: "To Do", "In Progress", "Done"
+  - [ ] Priority filter (multi-select):
+    - Options: `LOW`, `MEDIUM`, `HIGH` (uppercase enum values)
+    - Display labels: "Low", "Medium", "High"
+  - [ ] Due date filter (dropdown):
+    - Options: `overdue`, `today`, `next_7_days`, `all` (lowercase backend values)
+    - Display labels: "Overdue", "Today", "Next 7 Days", "All"
   - [ ] Clear filters button
 
 - [ ] Create `src/components/tasks/TaskStatusQuickChange.vue`:
   - [ ] Dropdown to change status inline
-  - [ ] Radio buttons for TO_DO, IN_PROGRESS, DONE
+  - [ ] Options: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase enum values from backend)
+  - [ ] Display labels: "To Do", "In Progress", "Done"
+  - [ ] Send PATCH request to `/api/tasks/{taskId}/status?status={newStatus}` with uppercase enum
 
 ### Notification Components
 - [ ] Create `src/components/notifications/NotificationToast.vue`:
-  - [ ] Display notification with task title, reason, due date
-  - [ ] Acknowledge button
-  - [ ] Auto-dismiss or manual close
-  - [ ] Stack multiple toasts
+  - [ ] Display notification with:
+    - Task title
+    - Reason badge ("Overdue" or "Due Soon" - maps from backend `reason` field)
+    - Due date (formatted as human-readable)
+    - Priority badge (color-coded: Low/Medium/High)
+  - [ ] Acknowledge button → sends `{ type: "ack", notificationId }` to WebSocket
+  - [ ] Auto-dismiss after 5 seconds (configurable)
+  - [ ] Manual close button
+  - [ ] Stack multiple toasts (new toasts appear at top or bottom)
+  - [ ] Map backend `reason` to UI text: `"overdue"` → "Overdue", `"due-soon"` → "Due Soon"
 
 **Files to Create**:
 - [ ] `ui/src/components/auth/LoginPage.vue`
@@ -439,15 +486,20 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] `validateTaskTitle(title)` - required, max 255 chars
   - [ ] `validateTaskDescription(desc)` - optional, max 5000 chars
   - [ ] `validateListTitle(title)` - required, max 255 chars
-  - [ ] `validateDueDate(date)` - must be today or future
+  - [ ] `validateDueDate(date)` - optional, must be today or future if provided
   - [ ] `getErrorMessage(field, error)` - user-friendly error messages
 
 - [ ] Create error handling in API calls:
   - [ ] Display error toasts on API failures
-  - [ ] Handle 401 Unauthorized → redirect to login
-  - [ ] Handle 403 Forbidden → show permission error
-  - [ ] Handle 404 Not Found → show "not found" message
-  - [ ] Handle 400 Bad Request → show validation errors
+  - [ ] Handle HTTP status codes:
+    - `400 Bad Request` → show validation errors from backend
+    - `401 Unauthorized` → redirect to login page, clear session
+    - `403 Forbidden` → show "You don't have permission to modify this resource"
+    - `404 Not Found` → show "Resource not found or has been deleted"
+    - `409 Conflict` → show "Cannot delete list with active tasks" (or relevant conflict message)
+    - `500 Server Error` → show "Server error, please try again"
+  - [ ] Auto-retry logic for transient failures (optional)
+  - [ ] Show error details in console for debugging
 
 **Files to Create**:
 - [ ] `ui/src/utils/validation.ts`
@@ -570,27 +622,39 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 - [ ] Update `README.md`:
   - [ ] Frontend setup: `npm install`, `npm run dev`
   - [ ] Environment variables `.env` setup
-  - [ ] OAuth callback URL configuration
+  - [ ] OAuth callback URL configuration (backend-driven flow)
   - [ ] Component architecture overview
   - [ ] Store structure documentation
   - [ ] API integration patterns
-  - [ ] WebSocket message format
+  - [ ] **Link to backend docs**: See `API.md` for complete endpoint reference
+  - [ ] WebSocket message format (subscribe/ack/notification)
+  - [ ] Notification rules (overdue, due-soon)
   - [ ] Testing instructions
+
+- [ ] Reference Backend Documentation:
+  - [ ] API Endpoints: See `/API.md` for full endpoint reference
+  - [ ] OAuth Setup: See main `README.md` → OAuth2 Authentication Setup section
+  - [ ] WebSocket Format: See main `README.md` → WebSocket Notifications section
+  - [ ] Task Enums:
+    - Status: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase)
+    - Priority: `LOW`, `MEDIUM`, `HIGH` (uppercase)
+  - [ ] Authorization: `@PreAuthorize` on edit/delete endpoints (returns 403 if unauthorized)
+  - [ ] Error Handling: See main `README.md` → Error responses section
 
 - [ ] Create `COMPONENT_GUIDE.md`:
   - [ ] Component props, slots, emits
   - [ ] Usage examples
   - [ ] Common patterns
+  - [ ] Enum mappings (TO_DO → "To Do", etc.)
 
 - [ ] Create `.env.example`:
-  - [ ] `VITE_API_URL`
-  - [ ] `VITE_OAUTH_GOOGLE_CLIENT_ID`
-  - [ ] `VITE_OAUTH_GITHUB_CLIENT_ID`
+  - [ ] `VITE_API_URL=http://localhost:8080` (or environment-specific)
 
 - [ ] Setup build and deployment:
   - [ ] Build production: `npm run build`
   - [ ] Optimize bundle size
   - [ ] Setup CI/CD for frontend (GitHub Actions)
+  - [ ] Docker setup (see `docker-compose.yml` for full-stack deployment)
 
 **Files to Create/Update**:
 - [ ] Update `README.md`
@@ -612,16 +676,8 @@ Frontend uses **session-based cookies** for authentication (not JWT). Browser au
 ### Local Development Setup (Hosts File + Vite Proxy)
 
 **Prerequisites**:
-1. Edit `/etc/hosts`:
-   ```
-   127.0.0.1 app.localhost
-   127.0.0.1 api.localhost
-   ```
-
-2. Backend must run on `http://api.localhost:8080`:
-   ```bash
-   cd backend && ./gradlew bootRun
-   ```
+1. Backend runs on `http://localhost:8080` (via Spring Boot on port 8080)
+2. Frontend runs on `http://localhost:5173` (via Vite dev server on port 5173)
 
 ### Vite Proxy Configuration
 
@@ -632,26 +688,27 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://api.localhost:8080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
-        cookieDomainRewrite: '.localhost',  // Rewrite cookie domain for same domain
-        credentials: 'include'
+        credentials: 'include'  // ⚠️ CRITICAL: Include session cookies with requests
       },
       '/api/ws': {
-        target: 'ws://api.localhost:8080',
+        target: 'ws://localhost:8080',
         ws: true,
         changeOrigin: true,
-        credentials: 'include'
+        credentials: 'include'  // ⚠️ CRITICAL: Include session cookies in WebSocket upgrade
       }
     }
   }
 });
 ```
 
+**Important**: Without `credentials: 'include'`, session cookies won't be sent with requests and won't persist across page refresh.
+
 **Result**:
-- Frontend on `http://app.localhost:5173`
-- Backend on `http://api.localhost:8080`
-- Session cookie domain: `.localhost` (covers both subdomains)
+- Frontend on `http://localhost:5173`
+- Backend on `http://localhost:8080`
+- Both on same `localhost` domain, cookies work automatically ✅
 - API requests automatically include session cookie ✅
 
 ### Axios Client Configuration
@@ -663,28 +720,42 @@ import axios from 'axios';
 
 export const apiClient = axios.create({
   baseURL: '/api',  // Relative path, Vite proxy handles routing
-  withCredentials: true,  // CRITICAL: send session cookies with requests
+  withCredentials: true,  // ⚠️ CRITICAL: send session cookies with ALL requests (GET, POST, etc.)
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// Add interceptor to handle 401 Unauthorized (session expired)
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // Session expired, redirect to login
+      window.location.href = '/auth';
+    }
+    return Promise.reject(error);
+  }
+);
 ```
+
+**Important**: `withCredentials: true` must be set for session cookies to work. Without it, cookies won't be sent with requests.
 
 ### Startup Commands
 
 ```bash
 # Terminal 1: Backend (must start first)
 cd backend && ./gradlew bootRun
-# Runs on http://api.localhost:8080
+# Runs on http://localhost:8080
 
 # Terminal 2: Frontend
 cd ui && npm install && npm run dev
-# Runs on http://app.localhost:5173
+# Runs on http://localhost:5173
 # Vite proxy handles /api routing to backend
 ```
 
 **Test Session Persistence**:
-1. Open `http://app.localhost:5173`
+1. Open `http://localhost:5173`
 2. Click "Login with Google/GitHub" → completes OAuth flow
 3. User profile displayed (via `GET /api/auth/me`)
 4. Refresh page (Ctrl+R)
@@ -706,21 +777,21 @@ In Docker, frontend and backend served through **Nginx reverse proxy** (single o
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | After login, page refresh shows 401 | Session cookie not sent | Check `withCredentials: true` in axios |
-| Session cookie not in DevTools | Different subdomain | Verify `/etc/hosts` has both `app.localhost` and `api.localhost` |
-| Cookie shows `localhost` instead of `.localhost` | Vite proxy not configured | Add `cookieDomainRewrite: '.localhost'` to vite.config.ts proxy |
-| CORS errors | Proxy not configured | Verify `vite.config.ts` has `/api` proxy to `http://api.localhost:8080` |
+| Session cookie not in DevTools | Vite proxy not forwarding cookies | Verify `credentials: 'include'` in vite.config.ts proxy config |
+| API call returns 401 after login | Cookie not being sent | Check `credentials: 'include'` in both Vite proxy AND axios withCredentials |
+| CORS errors | Proxy not configured | Verify `vite.config.ts` has `/api` and `/api/ws` proxy to `http://localhost:8080` |
 
 ---
 
 ## Local Development Verification
 
 - [ ] Install dependencies: `npm install`
-- [ ] Setup `/etc/hosts` with `127.0.0.1 app.localhost` and `127.0.0.1 api.localhost`
-- [ ] Create `.env.development` with `VITE_API_URL=http://api.localhost:8080`
-- [ ] Start dev server: `npm run dev` (runs on `http://app.localhost:5173`)
-- [ ] Browser opens to http://app.localhost:5173
+- [ ] Create `.env.development` with `VITE_API_URL=http://localhost:8080`
+- [ ] Start backend: `cd backend && ./gradlew bootRun` (runs on `http://localhost:8080`)
+- [ ] Start dev server: `npm run dev` (runs on `http://localhost:5173`)
+- [ ] Browser opens to http://localhost:5173
 - [ ] Vite hot reload works
-- [ ] API calls work with session cookie (check Network tab in DevTools)
+- [ ] API calls work with session cookie (check Network tab in DevTools, see JSESSIONID cookie)
 
 ### Manual Testing Checklist
 - [ ] Login with Google OAuth (or mock)

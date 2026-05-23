@@ -47,18 +47,64 @@ This app uses **Spring Session with HttpOnly cookies** (not JWT). Session cookie
 
 ---
 
+## How Session Cookies Work (JSESSIONID)
+
+This app uses **session-based authentication** instead of JWT tokens. Here's how it works:
+
+### Local Development (Vite Proxy)
+
+```
+Browser (localhost:5173)
+    ↓
+Vite Dev Server (localhost:5173)
+    ├─ Proxies /api requests to backend
+    └─ Forwards Set-Cookie headers to browser
+    ↓
+Backend (localhost:8080)
+    ├─ Handles OAuth login
+    ├─ Creates session server-side
+    └─ Sends Set-Cookie: JSESSIONID header
+    ↓
+Browser stores cookie
+    ├─ Future requests via Vite proxy include cookie
+    └─ User stays authenticated on page refresh ✅
+```
+
+**Key**: Vite proxy forwards cookies automatically (`credentials: 'include'`), making it work like same-origin.
+
+### Technical Note: Ports and Cookies
+
+While different ports (5173 vs 8080) are technically **different origins for CORS**, browsers historically **ignore ports for cookie storage**. However, SameSite policies (`Lax`, `Strict`, `None`) may block cookie transmission between different ports during cross-origin requests. This is why Vite proxy (acting as intermediary) or proper local subdomains (via `/etc/hosts`) are recommended for reliable session persistence.
+
+### Docker/Production (Nginx Reverse Proxy)
+
+```
+Browser (localhost)
+    ↓
+Nginx (localhost:80)
+    ├─ GET / → Vue static files
+    └─ /api/* → Backend (localhost:8080 internally)
+    ↓
+Backend
+    ├─ Handles OAuth login
+    ├─ Creates session server-side
+    └─ Sends Set-Cookie: JSESSIONID header
+    ↓
+Browser stores cookie
+    ├─ Single origin (localhost:80)
+    └─ User stays authenticated on page refresh ✅
+```
+
+**Key**: True same-origin (Nginx routes both frontend and backend), cookies work automatically.
+
+---
+
 ## Getting Started
 
 ### Option 1: Local Development (Recommended for feature work)
 
 **Setup** (one-time):
-1. Edit `/etc/hosts` and add:
-   ```
-   127.0.0.1 app.localhost
-   127.0.0.1 api.localhost
-   ```
-
-2. Start MySQL (if not already running):
+1. Start MySQL (if not already running):
    ```bash
    # macOS
    brew services start mysql
@@ -66,29 +112,46 @@ This app uses **Spring Session with HttpOnly cookies** (not JWT). Session cookie
    sudo systemctl start mysql
    ```
 
-3. Copy environment:
+2. Copy environment:
    ```bash
    cp .env.example .env
    ```
 
 **Startup** (each time):
 ```bash
-# Terminal 1: Backend on http://api.localhost:8080
+# Terminal 1: Backend on http://localhost:8080
 cd backend
 ./gradlew bootRun
 
-# Terminal 2: Frontend on http://app.localhost:5173
+# Terminal 2: Frontend on http://localhost:5173
 cd ui
 npm install  # First time only
 npm run dev
 ```
 
-**Access**: Open `http://app.localhost:5173` in browser
+**Access**: Open `http://localhost:5173` in browser
 
 **Session cookies work**:
-- Vite dev server proxies `/api` to backend
-- Cookie domain rewritten to `.localhost` (covers both subdomains)
+- Vite dev server proxies `/api` requests to backend (localhost:8080)
+- Vite forwards `Set-Cookie` headers from backend to browser
+- Browser stores cookies scoped to localhost
 - Page refresh: user stays logged in ✅
+
+**Alternative (Advanced)**: For strict cookie isolation without Vite proxy, configure local subdomains:
+```
+# Add to /etc/hosts:
+127.0.0.1 dev.local
+127.0.0.1 api.dev.local
+127.0.0.1 app.dev.local
+
+# Then use:
+# Backend: http://api.dev.local:8080
+# Frontend: http://app.dev.local:5173
+# Backend cookie domain: dev.local (not localhost)
+
+# This creates proper same-domain cookies without browser SameSite edge cases
+```
+Note: Not required for local dev with Vite proxy, only if you need production-like subdomain setup.
 
 ---
 
@@ -429,8 +492,8 @@ Each user receives notifications based on their configured interval:
 
 Backend properties (in `application.properties`):
 ```properties
-# WebSocket CORS origins
-app.websocket.allowed-origins=http://app.localhost:5173,http://localhost:5173
+# WebSocket CORS origins (for local dev and production)
+app.websocket.allowed-origins=http://localhost:5173,http://localhost
 
 # Scheduler interval (ms) - runs every 10 seconds
 app.notification.interval=10000
