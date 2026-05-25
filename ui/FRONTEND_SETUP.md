@@ -23,21 +23,26 @@ ui/
 ## Development Setup
 
 ### Prerequisites
+
 - Node.js >= 20 (or use nvm: `nvm install 20` then `nvm use 20`)
 - npm >= 8
 
 ### Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### Run Development Server
+
 ```bash
 npm run dev
 ```
+
 The app will be available at `http://localhost:5173`
 
 ### Build for Production
+
 ```bash
 npm run build
 ```
@@ -45,6 +50,7 @@ npm run build
 ## Testing
 
 ### Unit & Component Tests (Vitest)
+
 ```bash
 # Run tests once
 npm run test
@@ -57,6 +63,7 @@ npm run test src/components/TaskForm.spec.ts
 ```
 
 ### E2E Tests (Playwright)
+
 ```bash
 # Run E2E tests (requires app running or auto-starts via webServer)
 npm run test:e2e
@@ -75,36 +82,41 @@ npx playwright show-report
 
 ## Core Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| **vue** | Progressive framework |
-| **@vitejs/plugin-vue** | Vue support in Vite |
-| **tailwindcss** | Utility-first CSS framework |
-| **@headlessui/vue** | Unstyled accessible components |
-| **pinia** | State management |
-| **@tanstack/vue-query** | Server state & data fetching |
-| **@playwright/test** | E2E testing framework |
-| **vitest** | Unit testing framework |
+| Package                 | Purpose                        |
+| ----------------------- | ------------------------------ |
+| **vue**                 | Progressive framework          |
+| **@vitejs/plugin-vue**  | Vue support in Vite            |
+| **tailwindcss**         | Utility-first CSS framework    |
+| **@headlessui/vue**     | Unstyled accessible components |
+| **pinia**               | State management               |
+| **@tanstack/vue-query** | Server state & data fetching   |
+| **@playwright/test**    | E2E testing framework          |
+| **vitest**              | Unit testing framework         |
 
 ## Architecture
 
 ### State Management (Pinia)
+
 Stores for:
+
 - User authentication state
 - Task list management
 - UI state (modals, filters)
 
 ### Data Fetching (TanStack Query)
+
 - Handles API requests with caching
 - Automatic refetching & retries
 - Server state synchronization
 
 ### WebSocket Service
+
 - Real-time notifications for overdue/due-soon tasks
 - Message formats defined in README
 - Auto-reconnect on disconnect
 
 ### Components
+
 - **Sidebar**: Project/list navigation
 - **TaskList**: Display & filter tasks
 - **TaskForm**: Create/edit tasks
@@ -114,6 +126,7 @@ Stores for:
 ## OAuth Configuration
 
 ### Environment Variables (.env)
+
 ```
 VITE_API_BASE_URL=http://localhost:8080
 VITE_GOOGLE_CLIENT_ID=<your-client-id>
@@ -125,11 +138,13 @@ See OAuth skill docs for complete setup.
 ## WebSocket Message Format
 
 **Subscribe** (Client → Server):
+
 ```json
 { "type": "subscribe", "interval": 5000 }
 ```
 
 **Notification** (Server → Client):
+
 ```json
 {
   "type": "notification",
@@ -142,6 +157,7 @@ See OAuth skill docs for complete setup.
 ```
 
 **Acknowledge** (Client → Server):
+
 ```json
 { "type": "ack", "notificationId": "notif-123" }
 ```
@@ -153,15 +169,18 @@ Edit `tailwind.config.js` to customize colors, spacing, etc. Use Headless UI com
 ## Troubleshooting
 
 ### Vite Dev Server Not Starting
+
 ```bash
 npm run dev
 # If port 5173 is in use: npm run dev -- --port 3000
 ```
 
 ### Tests Fail with Node 16
+
 Upgrade Node: `nvm install 20 && nvm use 20`
 
 ### Hot Module Replacement (HMR) Not Working
+
 Clear cache: `rm -rf node_modules/.vite && npm run dev`
 
 ## Next Steps
