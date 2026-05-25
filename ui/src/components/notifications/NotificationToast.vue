@@ -89,7 +89,7 @@ const priorityLabel = (priority: string) => {
       <div class="flex-1">
         <h3 class="font-bold text-base line-clamp-2">{{ notification.title }}</h3>
       </div>
-      <button @click="handleClose" class="ml-2 text-base-400 hover:text-base-600 flex-shrink-0">
+      <button class="ml-2 text-base-400 hover:text-base-600 flex-shrink-0" @click="handleClose">
         ✕
       </button>
     </div>

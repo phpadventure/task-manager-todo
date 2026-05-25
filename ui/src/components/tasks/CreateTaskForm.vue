@@ -79,7 +79,7 @@ const onSubmit = handleSubmit(async (formData) => {
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
       <h2 class="text-xl font-bold mb-4">Create New Task</h2>
 
-      <form @submit="onSubmit" class="space-y-4">
+      <form class="space-y-4" @submit="onSubmit">
         <!-- Title -->
         <div>
           <Input
@@ -130,7 +130,7 @@ const onSubmit = handleSubmit(async (formData) => {
 
         <!-- Actions -->
         <div class="flex gap-2 justify-end pt-4">
-          <Button type="button" variant="secondary" @click="emit('close')" :disabled="isCreating">
+          <Button type="button" variant="secondary" :disabled="isCreating" @click="emit('close')">
             Cancel
           </Button>
           <Button type="submit" variant="primary" :disabled="!canSubmit" :loading="isCreating">

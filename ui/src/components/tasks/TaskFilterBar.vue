@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useTaskStore } from '@/stores/taskStore';
 import Button from '@/components/common/Button.vue';
-import Input from '@/components/common/Input.vue';
 
 const taskStore = useTaskStore();
 
@@ -93,86 +92,262 @@ const clearFilters = () => {
 </script>
 
 <template>
-  <div class="bg-base-100 border-b border-base-300 p-4">
-    <div class="space-y-4">
-      <!-- Search -->
-      <div>
-        <Input
+  <div class="bg-white border-b border-gray-200 lg:border-none">
+    <!-- Search Bar -->
+    <div
+      class="px-4 md:px-6 py-4 bg-gradient-to-r from-blue-50 via-white to-indigo-50 border-b border-gray-100"
+    >
+      <div class="flex items-center gap-3">
+        <svg
+          class="w-5 h-5 text-gray-400 flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+        <input
           type="text"
-          placeholder="Search tasks..."
           :value="searchQuery"
+          placeholder="Search tasks by title or description..."
+          class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
           @input="(e) => updateSearch((e.target as HTMLInputElement).value)"
         />
       </div>
+    </div>
 
-      <!-- Status Filters -->
-      <div>
-        <label class="block text-sm font-medium mb-2">Status</label>
-        <div class="flex flex-wrap gap-2">
-          <label
-            v-for="option in statusOptions"
-            :key="option.value"
-            class="flex items-center gap-2 cursor-pointer"
+    <!-- Filters Section -->
+    <div class="px-4 md:px-6 py-4">
+      <!-- Desktop Grid Layout -->
+      <div class="hidden md:grid grid-cols-3 gap-8">
+        <!-- Status Filters -->
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2"
           >
-            <input
-              type="checkbox"
-              :checked="selectedStatuses.includes(option.value)"
-              @change="toggleStatus(option.value)"
-              class="checkbox checkbox-sm"
-            />
-            <span class="text-sm">{{ option.label }}</span>
-          </label>
+            <svg
+              class="w-4 h-4 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4"
+              />
+            </svg>
+            Status
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="option in statusOptions"
+              :key="option.value"
+              :class="[
+                'px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
+                selectedStatuses.includes(option.value)
+                  ? 'bg-blue-600 text-white shadow-lg hover:shadow-xl hover:bg-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-150 border border-gray-200 hover:border-gray-300',
+              ]"
+              @click="toggleStatus(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Priority Filters -->
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2"
+          >
+            <svg
+              class="w-4 h-4 text-orange-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
+            Priority
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="option in priorityOptions"
+              :key="option.value"
+              :class="[
+                'px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
+                selectedPriorities.includes(option.value)
+                  ? 'bg-orange-600 text-white shadow-lg hover:shadow-xl hover:bg-orange-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-150 border border-gray-200 hover:border-gray-300',
+              ]"
+              @click="togglePriority(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Due Date Filter -->
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            Due Date
+          </p>
+          <select
+            :value="selectedDueDate"
+            class="w-full px-4 py-2.5 text-sm bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer shadow-sm font-medium"
+            @change="updateDueDate(($event.target as HTMLSelectElement).value)"
+          >
+            <option v-for="option in dueDateOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
         </div>
       </div>
 
-      <!-- Priority Filters -->
-      <div>
-        <label class="block text-sm font-medium mb-2">Priority</label>
-        <div class="flex flex-wrap gap-2">
-          <label
-            v-for="option in priorityOptions"
-            :key="option.value"
-            class="flex items-center gap-2 cursor-pointer"
+      <!-- Mobile Collapsible Filters -->
+      <div class="md:hidden space-y-4">
+        <!-- Status -->
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2.5 flex items-center gap-2"
           >
-            <input
-              type="checkbox"
-              :checked="selectedPriorities.includes(option.value)"
-              @change="togglePriority(option.value)"
-              class="checkbox checkbox-sm"
-            />
-            <span class="text-sm">{{ option.label }}</span>
-          </label>
+            <svg
+              class="w-4 h-4 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4"
+              />
+            </svg>
+            Status
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="option in statusOptions"
+              :key="option.value"
+              :class="[
+                'px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200',
+                selectedStatuses.includes(option.value)
+                  ? 'bg-blue-600 text-white shadow-md hover:shadow-lg hover:bg-blue-700'
+                  : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-150',
+              ]"
+              @click="toggleStatus(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Priority -->
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2.5 flex items-center gap-2"
+          >
+            <svg
+              class="w-4 h-4 text-orange-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
+            Priority
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="option in priorityOptions"
+              :key="option.value"
+              :class="[
+                'px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200',
+                selectedPriorities.includes(option.value)
+                  ? 'bg-orange-600 text-white shadow-md hover:shadow-lg hover:bg-orange-700'
+                  : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-150',
+              ]"
+              @click="togglePriority(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Due Date -->
+        <div>
+          <p
+            class="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2.5 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            Due Date
+          </p>
+          <select
+            :value="selectedDueDate"
+            class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer shadow-sm font-medium"
+            @change="updateDueDate(($event.target as HTMLSelectElement).value)"
+          >
+            <option v-for="option in dueDateOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
         </div>
       </div>
 
-      <!-- Due Date Filter -->
-      <div>
-        <label class="block text-sm font-medium mb-2">Due Date</label>
-        <select
-          :value="selectedDueDate"
-          @change="updateDueDate(($event.target as HTMLSelectElement).value)"
-          class="select select-bordered select-sm w-full"
-        >
-          <option v-for="option in dueDateOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex items-center justify-between pt-2">
-        <span v-if="activeFilterCount > 0" class="badge badge-primary"
-          >{{ activeFilterCount }} active</span
-        >
-        <span v-else class="text-sm text-base-500">No filters applied</span>
+      <!-- Filter Status & Clear -->
+      <div
+        v-if="activeFilterCount > 0"
+        class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100"
+      >
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-blue-600"></div>
+          <span class="text-sm font-medium text-gray-700">
+            {{ activeFilterCount }} filter<span v-if="activeFilterCount !== 1">s</span> active
+          </span>
+        </div>
         <Button
-          v-if="activeFilterCount > 0"
           type="button"
           variant="ghost"
           size="sm"
+          class="text-xs hover:text-gray-900"
           @click="clearFilters"
         >
-          Clear Filters
+          ✕ Clear all
         </Button>
       </div>
     </div>

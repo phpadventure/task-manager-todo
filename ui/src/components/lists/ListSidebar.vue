@@ -34,29 +34,29 @@ const toggleModal = () => {
 </script>
 
 <template>
-  <aside class="w-64 bg-base-200 border-r border-base-300 h-full flex flex-col">
-    <!-- Header -->
-    <div class="p-4 border-b border-base-300">
-      <h1 class="text-lg font-bold text-base-900">My Lists</h1>
+  <div class="h-full bg-white flex flex-col">
+    <!-- Header (hidden on mobile since it's in MainLayout) -->
+    <div class="hidden lg:block p-4 md:p-5 border-b border-gray-200">
+      <h1 class="text-lg font-bold text-gray-900">My Lists</h1>
     </div>
 
     <!-- Lists -->
     <div class="flex-1 overflow-y-auto">
-      <div v-if="isLoading" class="p-4 text-center text-sm text-base-500">Loading lists...</div>
-      <div v-else-if="listStore.lists.length === 0" class="p-4 text-center text-sm text-base-500">
+      <div v-if="isLoading" class="p-4 text-center text-sm text-gray-500">Loading lists...</div>
+      <div v-else-if="listStore.lists.length === 0" class="p-4 text-center text-sm text-gray-500">
         No lists yet. Create one to get started!
       </div>
-      <nav v-else class="p-2 space-y-1">
+      <nav v-else class="p-3 space-y-1">
         <button
           v-for="list in listStore.lists"
           :key="list.id"
-          @click="selectList(list.id)"
           :class="[
-            'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+            'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-150',
             selectedListId === list.id
-              ? 'bg-primary text-primary-content'
-              : 'text-base-700 hover:bg-base-300',
+              ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
+              : 'text-gray-700 hover:bg-gray-100',
           ]"
+          @click="selectList(list.id)"
         >
           {{ list.title }}
         </button>
@@ -64,7 +64,7 @@ const toggleModal = () => {
     </div>
 
     <!-- Create Button -->
-    <div class="p-4 border-t border-base-300">
+    <div class="p-3 border-t border-gray-200">
       <Button type="button" variant="primary" class="w-full" @click="toggleModal">
         + New List
       </Button>
@@ -72,5 +72,5 @@ const toggleModal = () => {
 
     <!-- Modal -->
     <CreateListModal :is-open="isModalOpen" @close="isModalOpen = false" />
-  </aside>
+  </div>
 </template>

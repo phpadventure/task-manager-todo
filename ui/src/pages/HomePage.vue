@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useListStore } from '@/stores/listStore';
+import { useTasks } from '@/composables/useTasks';
 import MainLayout from '@/layouts/MainLayout.vue';
 import ListSidebar from '@/components/lists/ListSidebar.vue';
 import TaskFilterBar from '@/components/tasks/TaskFilterBar.vue';
@@ -9,11 +10,24 @@ import CreateListModal from '@/components/lists/CreateListModal.vue';
 import CreateTaskForm from '@/components/tasks/CreateTaskForm.vue';
 
 const listStore = useListStore();
+const { fetchTasksByList } = useTasks();
 
 const isCreateListOpen = ref(false);
 const isCreateTaskOpen = ref(false);
 
 const selectedListId = computed(() => listStore.selectedListId);
+
+onMounted(() => {
+  if (selectedListId.value) {
+    fetchTasksByList(selectedListId.value);
+  }
+});
+
+watch(selectedListId, (newListId) => {
+  if (newListId) {
+    fetchTasksByList(newListId);
+  }
+});
 </script>
 
 <template>

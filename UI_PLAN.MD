@@ -13,26 +13,26 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 1: Project Setup & Configuration
 
-- [ ] Initialize Vite + Vue 3 project with TypeScript
-- [ ] Install dependencies: `npm install`
-  - [ ] `@tanstack/vue-query` (data fetching)
-  - [ ] `pinia` (state management)
-  - [ ] `tailwindcss` + `@headlessui/vue` (UI)
-  - [ ] `axios` (HTTP client with credentials: 'include' for cookies)
-  - [ ] `ws` (WebSocket client)
-  - [ ] `vitest`, `@vue/test-utils` (testing)
-  - [ ] `playwright` (E2E testing)
-- [ ] Configure `vite.config.ts`:
-  - [ ] API proxy for backend: `/api` → `http://localhost:8080/api` with `credentials: 'include'` and `changeOrigin: true`
-  - [ ] **CRITICAL**: Add `credentials: 'include'` to proxy config for session cookies
-  - [ ] WebSocket proxy: `/api/ws` → `ws://localhost:8080/api/ws` with `credentials: 'include'` and `changeOrigin: true`
-  - [ ] Alias `@` for `src` directory
-  - [ ] Rewrite cookie domain to `.localhost` for same-domain cookies (optional, for Docker compatibility)
-- [ ] Configure `tsconfig.json` for Vue 3 + TypeScript
-- [ ] Setup Tailwind CSS configuration
-- [ ] Create `.env.example` with `VITE_API_URL` (backend base URL)
-- [ ] Create `.env.development` for local dev settings
-  - [ ] `VITE_API_URL=http://localhost:8080` (or environment-specific URL)
+- [x] Initialize Vite + Vue 3 project with TypeScript
+- [x] Install dependencies: `npm install`
+  - [x] `@tanstack/vue-query` (data fetching)
+  - [x] `pinia` (state management)
+  - [x] `tailwindcss` + `@headlessui/vue` (UI)
+  - [x] `axios` (HTTP client with credentials: 'include' for cookies)
+  - [x] `ws` (WebSocket client)
+  - [x] `vitest`, `@vue/test-utils` (testing)
+  - [x] `playwright` (E2E testing)
+- [x] Configure `vite.config.ts`:
+  - [x] API proxy for backend: `/api` → `http://localhost:8080/api` with `credentials: 'include'` and `changeOrigin: true`
+  - [x] **CRITICAL**: Add `credentials: 'include'` to proxy config for session cookies
+  - [x] WebSocket proxy: `/api/ws` → `ws://localhost:8080/api/ws` with `credentials: 'include'` and `changeOrigin: true`
+  - [x] Alias `@` for `src` directory
+  - [x] Rewrite cookie domain to `.localhost` for same-domain cookies (optional, for Docker compatibility)
+- [x] Configure `tsconfig.json` for Vue 3 + TypeScript
+- [x] Setup Tailwind CSS configuration
+- [x] Create `.env.example` with `VITE_API_URL` (backend base URL)
+- [x] Create `.env.development` for local dev settings
+  - [x] `VITE_API_URL=http://localhost:8080` (or environment-specific URL)
 
 **Note**: No OAUTH_*_CLIENT_ID in frontend `.env`—OAuth redirects handled by backend (SecurityConfig redirects to provider).
 
@@ -51,11 +51,11 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 2: Global Styles & Layout Structure
 
-- [ ] Create `src/styles/globals.css` with Tailwind imports and global utilities
-- [ ] Create `src/layouts/MainLayout.vue` (sidebar + main content area)
-- [ ] Create `src/layouts/AuthLayout.vue` (centered auth page)
-- [ ] Setup responsive breakpoints (320px, 768px, 1440px)
-- [ ] Create reusable CSS utilities for common patterns
+- [x] Create `src/styles/globals.css` with Tailwind imports and global utilities
+- [x] Create `src/layouts/MainLayout.vue` (sidebar + main content area)
+- [x] Create `src/layouts/AuthLayout.vue` (centered auth page)
+- [x] Setup responsive breakpoints (320px, 768px, 1440px)
+- [x] Create reusable CSS utilities for common patterns
 
 **Files to Create**:
 - [ ] `ui/src/styles/globals.css`
@@ -67,45 +67,45 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 3: State Management with Pinia
 
-- [ ] Create `src/stores/authStore.ts`:
-  - [ ] `user` state (id, email, displayName, avatarUrl)
-  - [ ] `isAuthenticated` flag
-  - [ ] `loading` state for login
-  - [ ] `currentUser()` getter
-  - [ ] `setUser(user)` action
-  - [ ] `logout()` action
-  - [ ] `fetchCurrentUser()` async action
+- [x] Create `src/stores/authStore.ts`:
+  - [x] `user` state (id, email, displayName, avatarUrl)
+  - [x] `isAuthenticated` flag
+  - [x] `loading` state for login
+  - [x] `currentUser()` getter
+  - [x] `setUser(user)` action
+  - [x] `logout()` action
+  - [x] `fetchCurrentUser()` async action
 
-- [ ] Create `src/stores/listStore.ts`:
-  - [ ] `lists` array
-  - [ ] `selectedListId` state
-  - [ ] `loading`, `error` states
-  - [ ] `getListById(id)` getter
-  - [ ] `setLists(lists)` action
-  - [ ] `setSelectedList(id)` action
-  - [ ] `addList(list)` action
-  - [ ] `updateList(id, list)` action
-  - [ ] `deleteList(id)` action
+- [x] Create `src/stores/listStore.ts`:
+  - [x] `lists` array
+  - [x] `selectedListId` state
+  - [x] `loading`, `error` states
+  - [x] `getListById(id)` getter
+  - [x] `setLists(lists)` action
+  - [x] `setSelectedList(id)` action
+  - [x] `addList(list)` action
+  - [x] `updateList(id, list)` action
+  - [x] `deleteList(id)` action
 
-- [ ] Create `src/stores/taskStore.ts`:
-  - [ ] `tasks` array
-  - [ ] `filters` state (status, priority, dueDate, searchQuery)
-  - [ ] `loading`, `error` states
-  - [ ] `getTasksByListId(listId)` getter with filter logic
-  - [ ] `getTaskById(id)` getter
-  - [ ] `setTasks(tasks)` action
-  - [ ] `setFilters(filters)` action
-  - [ ] `addTask(task)` action
-  - [ ] `updateTask(id, task)` action
-  - [ ] `deleteTask(id)` action
-  - [ ] `clearFilters()` action
+- [x] Create `src/stores/taskStore.ts`:
+  - [x] `tasks` array
+  - [x] `filters` state (status, priority, dueDate, searchQuery)
+  - [x] `loading`, `error` states
+  - [x] `getTasksByListId(listId)` getter with filter logic
+  - [x] `getTaskById(id)` getter
+  - [x] `setTasks(tasks)` action
+  - [x] `setFilters(filters)` action
+  - [x] `addTask(task)` action
+  - [x] `updateTask(id, task)` action
+  - [x] `deleteTask(id)` action
+  - [x] `clearFilters()` action
 
-- [ ] Create `src/stores/notificationStore.ts`:
-  - [ ] `notifications` array with id, taskId, title, reason, due_date
-  - [ ] `addNotification(notification)` action
-  - [ ] `removeNotification(id)` action
-  - [ ] `acknowledgeNotification(id)` action
-  - [ ] Auto-dismiss after 5 seconds
+- [x] Create `src/stores/notificationStore.ts`:
+  - [x] `notifications` array with id, taskId, title, reason, due_date
+  - [x] `addNotification(notification)` action
+  - [x] `removeNotification(id)` action
+  - [x] `acknowledgeNotification(id)` action
+  - [x] Auto-dismiss after 5 seconds
 
 **Files to Create**:
 - [ ] `ui/src/stores/authStore.ts`
@@ -117,41 +117,41 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 4: API Client & Utilities
 
-- [ ] Create `src/api/client.ts`:
-  - [ ] Axios instance with base URL from env
-  - [ ] **CRITICAL**: Set `withCredentials: true` for session cookies
-  - [ ] Request/response interceptors
-  - [ ] Error handling and status code mapping
-  - [ ] Handle 401 Unauthorized → redirect to login page
+- [x] Create `src/api/client.ts`:
+  - [x] Axios instance with base URL from env
+  - [x] **CRITICAL**: Set `withCredentials: true` for session cookies
+  - [x] Request/response interceptors
+  - [x] Error handling and status code mapping
+  - [x] Handle 401 Unauthorized → redirect to login page
 
-- [ ] Create `src/api/authApi.ts`:
-  - [ ] `getCurrentUser()` - GET /api/auth/me
-  - [ ] `logout()` - POST /logout
+- [x] Create `src/api/authApi.ts`:
+  - [x] `getCurrentUser()` - GET /api/auth/me
+  - [x] `logout()` - POST /logout
 
-- [ ] Create `src/api/listApi.ts`:
-  - [ ] `getLists()` - GET /api/lists
-  - [ ] `createList(title)` - POST /api/lists
-  - [ ] `updateList(id, title)` - PUT /api/lists/{id}
-  - [ ] `deleteList(id)` - DELETE /api/lists/{id}
+- [x] Create `src/api/listApi.ts`:
+  - [x] `getLists()` - GET /api/lists
+  - [x] `createList(title)` - POST /api/lists
+  - [x] `updateList(id, title)` - PUT /api/lists/{id}
+  - [x] `deleteList(id)` - DELETE /api/lists/{id}
 
-- [ ] Create `src/api/taskApi.ts`:
-  - [ ] `getTasks(listId, filters)` - GET /api/tasks with query params
-  - [ ] `searchTasks(query)` - GET /api/tasks/search?q={query}
-  - [ ] `createTask(data)` - POST /api/tasks
-  - [ ] `updateTask(id, data)` - PUT /api/tasks/{id}
-  - [ ] `updateTaskStatus(id, status)` - PATCH /api/tasks/{id}/status
-  - [ ] `deleteTask(id)` - DELETE /api/tasks/{id}
+- [x] Create `src/api/taskApi.ts`:
+  - [x] `getTasks(listId, filters)` - GET /api/tasks with query params
+  - [x] `searchTasks(query)` - GET /api/tasks/search?q={query}
+  - [x] `createTask(data)` - POST /api/tasks
+  - [x] `updateTask(id, data)` - PUT /api/tasks/{id}
+  - [x] `updateTaskStatus(id, status)` - PATCH /api/tasks/{id}/status
+  - [x] `deleteTask(id)` - DELETE /api/tasks/{id}
 
-- [ ] Create `src/utils/dateUtils.ts`:
-  - [ ] `formatDate(date)` - display format
-  - [ ] `isOverdue(dueDate)` - check if overdue
-  - [ ] `isDueSoon(dueDate)` - check if due within 3 days
-  - [ ] `getDueDateLabel(dueDate)` - return "Overdue", "Today", "Tomorrow", etc.
+- [x] Create `src/utils/dateUtils.ts`:
+  - [x] `formatDate(date)` - display format
+  - [x] `isOverdue(dueDate)` - check if overdue
+  - [x] `isDueSoon(dueDate)` - check if due within 3 days
+  - [x] `getDueDateLabel(dueDate)` - return "Overdue", "Today", "Tomorrow", etc.
 
-- [ ] Create `src/utils/filterUtils.ts`:
-  - [ ] `getDefaultFilters()` - initial filter state
-  - [ ] `buildQueryParams(filters)` - convert filters to API query string
-  - [ ] `validateFilters(filters)` - check valid status/priority values
+- [x] Create `src/utils/filterUtils.ts`:
+  - [x] `getDefaultFilters()` - initial filter state
+  - [x] `buildQueryParams(filters)` - convert filters to API query string
+  - [x] `validateFilters(filters)` - check valid status/priority values
 
 **Files to Create**:
 - [ ] `ui/src/api/client.ts`
@@ -165,20 +165,20 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 5: WebSocket Integration
 
-- [ ] Create `src/websocket/notificationService.ts`:
-  - [ ] `connect()` - establish WebSocket connection to /api/ws
-  - [ ] `disconnect()` - close connection
-  - [ ] `subscribe(interval)` - send subscribe message with ONLY `interval` field (milliseconds)
-  - [ ] `acknowledge(notificationId)` - send `{ type: "ack", notificationId }`
-  - [ ] Event listeners: onMessage, onError, onClose
-  - [ ] Auto-reconnect logic with exponential backoff
+- [x] Create `src/websocket/notificationService.ts`:
+  - [x] `connect()` - establish WebSocket connection to /api/ws
+  - [x] `disconnect()` - close connection
+  - [x] `subscribe(interval)` - send subscribe message with ONLY `interval` field (milliseconds)
+  - [x] `acknowledge(notificationId)` - send `{ type: "ack", notificationId }`
+  - [x] Event listeners: onMessage, onError, onClose
+  - [x] Auto-reconnect logic with exponential backoff
 
-- [ ] Create `src/composables/useNotifications.ts`:
-  - [ ] `connect()` hook to init WebSocket on app mount
-  - [ ] `disconnect()` hook to cleanup
-  - [ ] Handle incoming notifications (fields: type, id, taskId, title, reason, dueDate, priority, sentAt)
-  - [ ] Add notifications to notificationStore
-  - [ ] Filter duplicates using seen notification IDs
+- [x] Create `src/composables/useNotifications.ts`:
+  - [x] `connect()` hook to init WebSocket on app mount
+  - [x] `disconnect()` hook to cleanup
+  - [x] Handle incoming notifications (fields: type, id, taskId, title, reason, dueDate, priority, sentAt)
+  - [x] Add notifications to notificationStore
+  - [x] Filter duplicates using seen notification IDs
 
 **Message Formats** (Backend-Confirmed):
 ```typescript
@@ -216,35 +216,35 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 6: Composables & Reusable Logic
 
-- [ ] Create `src/composables/useAuth.ts`:
-  - [ ] `user` ref from authStore
-  - [ ] `isAuthenticated` computed
-  - [ ] `login()` - redirect to OAuth
-  - [ ] `logout()` - clear auth
-  - [ ] `getCurrentUser()` - fetch from API
+- [x] Create `src/composables/useAuth.ts`:
+  - [x] `user` ref from authStore
+  - [x] `isAuthenticated` computed
+  - [x] `login()` - redirect to OAuth
+  - [x] `logout()` - clear auth
+  - [x] `getCurrentUser()` - fetch from API
 
-- [ ] Create `src/composables/useLists.ts`:
-  - [ ] Query wrapper for `getLists()`
-  - [ ] `createList(title)` mutation
-  - [ ] `updateList(id, title)` mutation
-  - [ ] `deleteList(id)` mutation
-  - [ ] Error handling
+- [x] Create `src/composables/useLists.ts`:
+  - [x] Query wrapper for `getLists()`
+  - [x] `createList(title)` mutation
+  - [x] `updateList(id, title)` mutation
+  - [x] `deleteList(id)` mutation
+  - [x] Error handling
 
-- [ ] Create `src/composables/useTasks.ts`:
-  - [ ] Query for `getTasks(listId, filters)`
-  - [ ] Query for `searchTasks(query)`
-  - [ ] `createTask()`, `updateTask()`, `deleteTask()` mutations
-  - [ ] `updateTaskStatus()` mutation
-  - [ ] Refetch logic after mutations
+- [x] Create `src/composables/useTasks.ts`:
+  - [x] Query for `getTasks(listId, filters)`
+  - [x] Query for `searchTasks(query)`
+  - [x] `createTask()`, `updateTask()`, `deleteTask()` mutations
+  - [x] `updateTaskStatus()` mutation
+  - [x] Refetch logic after mutations
 
-- [ ] Create `src/composables/useForm.ts`:
-  - [ ] Form state management with validation
-  - [ ] `handleSubmit()` wrapper
-  - [ ] Error display helpers
+- [x] Create `src/composables/useForm.ts`:
+  - [x] Form state management with validation
+  - [x] `handleSubmit()` wrapper
+  - [x] Error display helpers
 
-- [ ] Create `src/composables/useLocalStorage.ts`:
-  - [ ] Persist filter preferences
-  - [ ] Persist selected list ID
+- [x] Create `src/composables/useLocalStorage.ts`:
+  - [x] Persist filter preferences
+  - [x] Persist selected list ID
 
 **Files to Create**:
 - [ ] `ui/src/composables/useAuth.ts`
@@ -258,20 +258,20 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 ## Phase 7: Reusable UI Components
 
 ### Base Components (Headless UI wrappers)
-- [ ] Create `src/components/common/Button.vue`
-  - [ ] Variants: primary, secondary, danger, ghost
-  - [ ] States: loading, disabled
-  - [ ] Sizes: sm, md, lg
+- [x] Create `src/components/common/Button.vue`
+  - [x] Variants: primary, secondary, danger, ghost
+  - [x] States: loading, disabled
+  - [x] Sizes: sm, md, lg
 
-- [ ] Create `src/components/common/Input.vue`
-  - [ ] Text, email, date, number types
-  - [ ] Error state and message
-  - [ ] Label and placeholder
+- [x] Create `src/components/common/Input.vue`
+  - [x] Text, email, date, number types
+  - [x] Error state and message
+  - [x] Label and placeholder
 
-- [ ] Create `src/components/common/Select.vue`
-  - [ ] Dropdown with options
-  - [ ] Multi-select variant
-  - [ ] Error state
+- [x] Create `src/components/common/Select.vue`
+  - [x] Dropdown with options
+  - [x] Multi-select variant
+  - [x] Error state
 
 - [ ] Create `src/components/common/Modal.vue`
   - [ ] Header, body, footer slots
@@ -296,16 +296,16 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Auto-dismiss
   - [ ] Types: success, error, info, warning
 
-- [ ] Create `src/components/common/Badge.vue`
-  - [ ] Status badge mapping (use exact enum values):
+- [x] Create `src/components/common/Badge.vue`
+  - [x] Status badge mapping (use exact enum values):
     - `TO_DO` → display "To Do" (gray)
     - `IN_PROGRESS` → display "In Progress" (yellow)
     - `DONE` → display "Done" (green)
-  - [ ] Priority badge mapping (use exact enum values):
+  - [x] Priority badge mapping (use exact enum values):
     - `LOW` → display "Low" (blue)
     - `MEDIUM` → display "Medium" (orange)
     - `HIGH` → display "High" (red)
-  - [ ] Color coding consistent across app
+  - [x] Color coding consistent across app
 
 **Files to Create**:
 - [ ] `ui/src/components/common/Button.vue`
@@ -323,13 +323,13 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 ## Phase 8: Feature Components
 
 ### Authentication Components
-- [ ] Create `src/components/auth/LoginPage.vue`:
-  - [ ] Render two buttons:
+- [x] Create `src/components/auth/LoginPage.vue`:
+  - [x] Render two buttons:
     - "Continue with Google" → redirects to `/api/oauth2/authorization/google` (backend initiates OAuth flow)
     - "Continue with GitHub" → redirects to `/api/oauth2/authorization/github` (backend initiates OAuth flow)
-  - [ ] Centered layout with branding
+  - [x] Centered layout with branding
   
-  - [ ] **OAuth Flow (Backend-Driven - Step-by-Step)**:
+  - [x] **OAuth Flow (Backend-Driven - Step-by-Step)**:
     1. User clicks button → browser navigates to backend OAuth endpoint
     2. Backend redirects to Google/GitHub provider login page
     3. User logs in with provider credentials
@@ -338,15 +338,15 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
     6. Backend creates session + HttpOnly, Secure, SameSite=Lax session cookie
     7. Backend redirects to success page (e.g., `/success` or `/api/oauth-success`)
     
-  - [ ] **Frontend After OAuth Redirect** (Vite proxy handles redirect):
+  - [x] **Frontend After OAuth Redirect** (Vite proxy handles redirect):
     1. Vite proxy receives redirect to success page
     2. Frontend detects user was redirected (can check via URL or session check)
     3. Frontend calls `GET /api/auth/me` to verify logged in
     4. If 200 OK + user data → user is authenticated, navigate to home
     5. If 401 Unauthorized → user not logged in, show login page
   
-  - [ ] **No OAuth client IDs or tokens in frontend** (all OAuth details and provider credentials handled server-side)
-  - [ ] Session persistence: Vite proxy + backend CORS allow session cookie with `/api` requests
+  - [x] **No OAuth client IDs or tokens in frontend** (all OAuth details and provider credentials handled server-side)
+  - [x] Session persistence: Vite proxy + backend CORS allow session cookie with `/api` requests
 
 - [ ] Create `src/components/auth/UserMenu.vue`:
   - [ ] Display user avatar + name
@@ -354,11 +354,11 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Responsive mobile menu
 
 ### List/Project Components
-- [ ] Create `src/components/lists/ListSidebar.vue`:
-  - [ ] Display all user's lists
-  - [ ] Active list highlight
-  - [ ] Add new list button
-  - [ ] Collapsible on mobile
+- [x] Create `src/components/lists/ListSidebar.vue`:
+  - [x] Display all user's lists
+  - [x] Active list highlight
+  - [x] Add new list button
+  - [x] Collapsible on mobile
   - [ ] Edit/delete list actions
 
 - [ ] Create `src/components/lists/CreateListModal.vue`:
@@ -372,12 +372,12 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Submit/cancel buttons
 
 ### Task Components
-- [ ] Create `src/components/tasks/TaskList.vue`:
-  - [ ] Display tasks as table or cards
-  - [ ] Render title, description, status, priority, due_date
+- [x] Create `src/components/tasks/TaskList.vue`:
+  - [x] Display tasks as table or cards
+  - [x] Render title, description, status, priority, due_date
   - [ ] Quick status change buttons
   - [ ] Edit/delete actions
-  - [ ] Empty state
+  - [x] Empty state
 
 - [ ] Create `src/components/tasks/TaskItem.vue`:
   - [ ] Individual task display
@@ -398,18 +398,18 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Delete confirmation
   - [ ] Submit/cancel buttons
 
-- [ ] Create `src/components/tasks/TaskFilterBar.vue`:
-  - [ ] Search input (debounced)
-  - [ ] Status filter (multi-select):
+- [x] Create `src/components/tasks/TaskFilterBar.vue`:
+  - [x] Search input (debounced)
+  - [x] Status filter (multi-select):
     - Use enum values: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase - matches backend exactly)
     - Display labels: "To Do", "In Progress", "Done"
-  - [ ] Priority filter (multi-select):
+  - [x] Priority filter (multi-select):
     - Use enum values: `LOW`, `MEDIUM`, `HIGH` (uppercase - matches backend exactly)
     - Display labels: "Low", "Medium", "High"
-  - [ ] Due date filter (dropdown):
+  - [x] Due date filter (dropdown):
     - Options: `overdue`, `today`, `next_7_days`, `all` (lowercase backend values)
     - Display labels: "Overdue", "Today", "Next 7 Days", "All"
-  - [ ] Clear filters button
+  - [x] Clear filters button
 
 - [ ] Create `src/components/tasks/TaskStatusQuickChange.vue`:
   - [ ] Dropdown to change status inline
@@ -418,17 +418,17 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Send PATCH request to `/api/tasks/{taskId}/status?status={newStatus}` with uppercase enum value
 
 ### Notification Components
-- [ ] Create `src/components/notifications/NotificationToast.vue`:
-  - [ ] Display notification card with:
+- [x] Create `src/components/notifications/NotificationToast.vue`:
+  - [x] Display notification card with:
     - Task title (from backend notification)
     - Reason badge mapping: `"overdue"` → "Overdue", `"due-soon"` → "Due Soon"
     - Due date (formatted human-readable, e.g., "May 20, 2026")
     - Priority badge (color-coded: Low=blue, Medium=orange, High=red)
-  - [ ] Acknowledge button → sends `{ type: "ack", notificationId }` to WebSocket
-  - [ ] Manual close button (alternative to auto-dismiss)
-  - [ ] Auto-dismiss after 5 seconds (user can override by hovering)
-  - [ ] Stack multiple toasts (newer toasts appear at top/bottom - configurable)
-  - [ ] Fade-in/fade-out animations for UX
+  - [x] Acknowledge button → sends `{ type: "ack", notificationId }` to WebSocket
+  - [x] Manual close button (alternative to auto-dismiss)
+  - [x] Auto-dismiss after 5 seconds (user can override by hovering)
+  - [x] Stack multiple toasts (newer toasts appear at top/bottom - configurable)
+  - [x] Fade-in/fade-out animations for UX
 
 **Files to Create**:
 - [ ] `ui/src/components/auth/LoginPage.vue`
@@ -448,18 +448,18 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 9: Pages/Views
 
-- [ ] Create `src/pages/AuthPage.vue`:
-  - [ ] Render `LoginPage` component
-  - [ ] Redirect to home if already authenticated
-  - [ ] Handle OAuth callback
+- [x] Create `src/pages/AuthPage.vue`:
+  - [x] Render `LoginPage` component
+  - [x] Redirect to home if already authenticated
+  - [x] Handle OAuth callback
 
-- [ ] Create `src/pages/HomePage.vue`:
-  - [ ] Layout: sidebar + main content
-  - [ ] List sidebar showing all lists
-  - [ ] Main area with task list or empty state
-  - [ ] Render task list + filter bar
-  - [ ] Create/edit task modals
-  - [ ] Load initial data on mount
+- [x] Create `src/pages/HomePage.vue`:
+  - [x] Layout: sidebar + main content
+  - [x] List sidebar showing all lists
+  - [x] Main area with task list or empty state
+  - [x] Render task list + filter bar
+  - [x] Create/edit task modals
+  - [x] Load initial data on mount
 
 - [ ] Create `src/pages/TaskDetailPage.vue` (optional):
   - [ ] Full task detail view
@@ -476,24 +476,24 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 10: Routing & Main App
 
-- [ ] Create `src/router/index.ts`:
-  - [ ] Define routes: /, /auth, /home
-  - [ ] Meta guards for authentication
-  - [ ] Redirect unauthenticated users to /auth
-  - [ ] Redirect authenticated users from /auth to /home
+- [x] Create `src/router/index.ts`:
+  - [x] Define routes: /, /auth, /home
+  - [x] Meta guards for authentication
+  - [x] Redirect unauthenticated users to /auth
+  - [x] Redirect authenticated users from /auth to /home
 
-- [ ] Create `src/App.vue`:
-  - [ ] Root component with router-view
-  - [ ] Global notification toast container
-  - [ ] Loading overlay for app-level loading
+- [x] Create `src/App.vue`:
+  - [x] Root component with router-view
+  - [x] Global notification toast container
+  - [x] Loading overlay for app-level loading
 
-- [ ] Create `src/main.ts`:
-  - [ ] Initialize Vue app
-  - [ ] Setup Pinia
-  - [ ] Setup Vue Query (TanStack Query)
-  - [ ] Setup router
-  - [ ] Setup WebSocket notifications
-  - [ ] Mount to DOM
+- [x] Create `src/main.ts`:
+  - [x] Initialize Vue app
+  - [x] Setup Pinia
+  - [x] Setup Vue Query (TanStack Query)
+  - [x] Setup router
+  - [x] Setup WebSocket notifications
+  - [x] Mount to DOM
 
 **Files to Create**:
 - [ ] `ui/src/router/index.ts`

@@ -36,7 +36,7 @@ const router = createRouter({
 
 let initialCheckDone = false;
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
   const authStore = useAuthStore();
   const { fetchCurrentUser } = useAuth();
 
@@ -55,15 +55,11 @@ router.beforeEach(async (to, from, next) => {
 
   // If auth page and already logged in, go to home
   if (isAuthPage && authStore.isAuthenticated) {
-    next('/');
+    return '/';
   }
   // If page requires auth but not logged in, go to auth
-  else if (requiresAuth && !authStore.isAuthenticated) {
-    next('/auth');
-  }
-  // Otherwise, allow the navigation
-  else {
-    next();
+  if (requiresAuth && !authStore.isAuthenticated) {
+    return '/auth';
   }
 });
 
