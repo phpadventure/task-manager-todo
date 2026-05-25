@@ -13,7 +13,7 @@
 
 ---
 
-## Local Development: How It Works
+## Local Development: How It Works (With CORS)
 
 ### Architecture
 
@@ -28,19 +28,22 @@
 │ ├─ Serves Vue app                                        │
 │ ├─ Proxies /api/* to backend                             │
 │ └─ Forwards Set-Cookie headers back to browser           │
+│ └─ Backend CORS allows localhost:5173                    │
 └──────────────────────────────────────────────────────────┘
                       ↓ (redirected to OAuth)
 ┌──────────────────────────────────────────────────────────┐
 │ Backend (localhost:8080)                                 │
 │ ├─ Handles OAuth with Google/GitHub                      │
 │ ├─ Creates session (stored in memory/database)           │
-│ └─ Sends response with Set-Cookie: JSESSIONID=xyz        │
+│ ├─ Sends response with Set-Cookie: JSESSIONID=xyz        │
+│ └─ Sends CORS headers: Allow-Origin=localhost:5173 ✅    │
 └──────────────────────────────────────────────────────────┘
                       ↓ (response flows back through Vite)
 ┌──────────────────────────────────────────────────────────┐
 │ Browser Receives                                         │
 │ ├─ Response from Vite (same origin as page)              │
 │ ├─ Vite included Set-Cookie header                       │
+│ ├─ Browser sees CORS headers (validates cross-origin)    │
 │ └─ Browser stores JSESSIONID cookie                      │
 └──────────────────────────────────────────────────────────┘
                       ↓ (user clicks a button in app)
@@ -49,23 +52,25 @@
 │ ├─ Browser includes JSESSIONID cookie (automatically)    │
 │ ├─ Vite proxy forwards cookie to backend                 │
 │ ├─ Backend receives request WITH session cookie         │
+│ ├─ Backend CORS check passes (cookie allowed)           │
 │ └─ Backend: "Session exists, user is authenticated" ✅   │
 └──────────────────────────────────────────────────────────┘
 ```
 
-### Why This Works
+### Why This Works (Now With CORS)
 
-**Vite Proxy Magic**:
-1. Browser requests `/api/auth/me`
+**Vite Proxy + Backend CORS**:
+1. Browser requests `/api/auth/me` (via Vite proxy)
 2. Vite proxy intercepts (same origin as browser)
-3. Vite forwards to `http://localhost:8080/api/auth/me`
-4. Backend responds with Set-Cookie header
-5. **Vite includes Set-Cookie in response** ← This is the key!
-6. Browser sees Set-Cookie from Vite (same origin)
-7. Browser stores cookie normally
-8. Next request: Browser includes cookie in request
-9. Vite forwards cookie to backend
-10. Backend receives authenticated request ✅
+3. Vite forwards to `http://localhost:8080/api/auth/me` with `credentials: include`
+4. Backend receives request, checks CORS (localhost:5173 is allowed ✅)
+5. Backend responds with Set-Cookie header + CORS headers
+6. **Vite includes Set-Cookie in response** ← Key!
+7. Browser sees Set-Cookie from Vite (same origin)
+8. Browser stores cookie normally (CORS headers validate)
+9. Next request: Browser includes cookie in request
+10. Vite forwards cookie to backend (with credentials)
+11. Backend receives authenticated request ✅
 
 ### Critical Config
 
@@ -74,7 +79,8 @@
 proxy: {
   '/api': {
     target: 'http://localhost:8080',
-    credentials: 'include'  // ← This tells Vite to forward cookies
+    changeOrigin: true,
+    credentials: 'include'  // ← Tells Vite to forward cookies
   }
 }
 ```
@@ -82,11 +88,29 @@ proxy: {
 **Axios config** (ui/src/api/client.ts):
 ```typescript
 axios.create({
-  withCredentials: true  // ← This tells axios to include cookies
+  baseURL: '/api',              // ← Relative URL so Vite proxy intercepts
+  withCredentials: true         // ← Tells axios to include cookies
 })
 ```
 
-### No Setup Required
+**Backend CORS config** (backend/src/main/java/com/taskmanager/config/SecurityConfig.java):
+```java
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+  CorsConfiguration configuration = new CorsConfiguration();
+  configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
+  configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+  configuration.setAllowedHeaders(Arrays.asList("*"));
+  configuration.setAllowCredentials(true);  // ← CRITICAL: Allow credentials with CORS
+  configuration.setMaxAge(3600L);
+  
+  UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+  source.registerCorsConfiguration("/**", configuration);
+  return source;
+}
+```
+
+### Setup Required
 
 ✅ Just run:
 ```bash
@@ -97,9 +121,56 @@ cd backend && ./gradlew bootRun  # http://localhost:8080
 cd ui && npm run dev  # http://localhost:5173
 ```
 
-- No `/etc/hosts` edits
-- No subdomain setup
-- Vite handles everything automatically
+**Configuration already in place**:
+- ✅ Vite proxy configured with `credentials: 'include'`
+- ✅ Axios baseURL set to `/api` (relative, so proxy intercepts)
+- ✅ Backend CORS enabled via SecurityConfig
+- ✅ No `/etc/hosts` edits needed
+- ✅ No subdomain setup needed
+
+---
+
+## Why CORS Was Necessary (Lessons Learned)
+
+### Initial Attempt: Vite Proxy Alone
+
+**Theory**: Vite proxy would fully handle cookies, so we didn't need CORS on the backend.
+
+**Problem**: Despite Vite proxying requests, browsers still enforced CORS policy:
+```
+Error: Access to XMLHttpRequest at 'http://localhost:8080/api/auth/me' 
+from origin 'http://localhost:5173' has been blocked by CORS policy: 
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+### Why CORS Was Still Needed
+
+Even with Vite proxy, the browser's Same-Origin Policy still applies in several scenarios:
+
+1. **Absolute vs Relative URLs**: 
+   - If axios uses `baseURL: 'http://localhost:8080/api'` (absolute), it bypasses Vite proxy entirely
+   - Browser makes direct request to port 8080 → CORS error
+   - **Fix**: Use `baseURL: '/api'` (relative) so Vite proxy intercepts
+
+2. **Browser Pre-flight Requests**:
+   - Complex requests (with credentials, certain headers) trigger CORS preflight (OPTIONS)
+   - Browser makes OPTIONS request to check if cross-origin is allowed
+   - Vite proxy might not handle preflight perfectly
+   - **Fix**: Backend CORS config responds to OPTIONS with allow headers
+
+3. **Defense in Depth**:
+   - CORS acts as explicit permission from backend that cross-origin requests are OK
+   - Cookies with `credentials: true` require explicit `Access-Control-Allow-Credentials: true`
+   - **Fix**: Backend CORS sets `allowCredentials(true)`
+
+### The Complete Solution
+
+**Three-layer approach**:
+1. **Vite proxy** → Forwards requests server-side (hides cross-origin from first layer)
+2. **Backend CORS** → Explicitly allows localhost:5173 + credentials
+3. **Axios/Vite credentials** → Both configured to include cookies
+
+**Result**: Vite proxy handles most requests transparently, CORS acts as security layer for edge cases + credentials.
 
 ---
 

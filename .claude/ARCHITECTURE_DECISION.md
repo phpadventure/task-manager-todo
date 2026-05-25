@@ -54,40 +54,52 @@ app.localhost:5173  vs  api.localhost:8080
 
 **Problem**: Requires `/etc/hosts` edits, confusing for new developers.
 
-### Our Solution (Vite Proxy)
+### Our Solution (Vite Proxy + Backend CORS)
 
-**Vite dev server is a proxy that sits between browser and backend**:
+**Vite dev server is a proxy that sits between browser and backend, backend allows CORS**:
 
 ```
 Browser (localhost:5173)
-  ├─ Requests /api/auth/me
+  ├─ Requests /api/auth/me (via Vite)
   ├─ Vite intercepts (same origin as browser)
   ├─ Vite forwards to backend (localhost:8080)
-  ├─ Backend responds with Set-Cookie header
+  ├─ Backend CORS check: "Is localhost:5173 allowed?" → YES ✅
+  ├─ Backend responds with Set-Cookie + CORS headers
   ├─ **Vite FORWARDS the Set-Cookie to browser**
   ├─ Browser sees Set-Cookie from Vite (same origin!)
+  ├─ Browser sees CORS headers allow the request
   ├─ Browser stores cookie
   └─ Result: Cookie sent on next request ✅
 ```
 
-**Key insight**: Vite is **transparent proxy** that acts like the backend from browser's perspective.
+**Key insight**: Vite is **transparent proxy** that acts like the backend from browser's perspective, CORS acts as explicit permission layer.
 
 ---
 
-## Why We Chose Vite Proxy
+## Why We Chose Vite Proxy + Backend CORS
 
 ### Advantages
 
 ✅ **No manual setup**: No `/etc/hosts` edits, no subdomain confusion  
 ✅ **Simpler for new developers**: Just run 2 commands, it works  
 ✅ **Vite built-in feature**: Already configured in `vite.config.ts`  
+✅ **Defense-in-depth**: CORS adds explicit permission layer  
 ✅ **Clear documentation**: Easy to explain how cookies work  
 ✅ **Same for local + Docker**: Both forward/proxy cookies, just differently  
+✅ **Handles edge cases**: CORS preflight requests properly handled  
+
+### Why CORS Was Necessary
+
+Initial Vite-only approach failed because:
+- Browsers enforce CORS even with proxied requests
+- CORS preflight (OPTIONS) requests weren't being handled
+- Cookies with credentials require explicit `Access-Control-Allow-Credentials: true`
+- Defense-in-depth: Backend should explicitly allow frontend origins
 
 ### Disadvantages
 
 ❌ Not "true" same-origin (Vite is intermediary)  
-❌ Requires understanding Vite proxy behavior  
+❌ Requires understanding Vite proxy + CORS interaction  
 ❌ Vite only for development (but that's the point)  
 
 ---
@@ -262,14 +274,18 @@ Browser (localhost:5173)
 
 ## Conclusion
 
-**Decision**: Use Vite proxy for local dev (no subdomains), Nginx for Docker.
+**Decision**: Use Vite proxy + Backend CORS for local dev (no subdomains), Nginx for Docker.
 
 **Reasoning**:
-- Simplest local dev experience (no manual setup)
+- Simplest local dev experience (no manual setup, no `/etc/hosts` edits)
 - Clear documentation (see SESSION_COOKIES_EXPLANATION.md)
-- Same cookie forwarding concept applies both locally and in Docker
+- Same cookie forwarding + CORS concept applies both locally and in Docker
 - No confusion with subdomain prefixes
+- CORS provides explicit permission + defense-in-depth layer
+- Handles preflight requests and credential requirements properly
 
-**Trade-off**: Local dev isn't "true" same-origin, but Vite proxy makes it work perfectly.
+**Trade-off**: Local dev isn't "true" same-origin, but Vite proxy + CORS makes it work reliably.
 
 **Result**: All developers start with: `cd backend && ./gradlew bootRun` + `cd ui && npm run dev`, and it just works ✅
+
+**Learning**: Vite proxy alone was insufficient—CORS must be explicitly configured on the backend for proper cross-origin credential handling.

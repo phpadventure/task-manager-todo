@@ -1,9 +1,3 @@
----
-name: Reverse Proxy Pattern for Session Auth (Docker Only)
-description: Nginx reverse proxy required for production Docker deployment to serve frontend and backend through single origin
-type: reference
----
-
 # Reverse Proxy Pattern for Session Auth (Docker Only)
 
 ## Rule
@@ -12,16 +6,30 @@ Session-based cookies require same-origin. In **production Docker**, Nginx rever
 
 **Pattern**: `Nginx:80` → routes `/` to frontend, `/api` to backend, `/api/ws` to WebSocket.
 
-## Local Development (Vite Proxy - No Reverse Proxy)
+## Local Development (Vite Proxy + Backend CORS)
 
-Local dev uses **Vite proxy** to forward requests and cookies:
+Local dev uses **Vite proxy + Backend CORS** to forward requests and cookies:
 - Frontend: `http://localhost:5173` (Vite dev server)
 - Backend: `http://localhost:8080` (Spring Boot)
-- Vite config: proxy `/api` to `http://localhost:8080` with `credentials: 'include'`
+- Vite config: proxy `/api` to `http://localhost:8080` with `credentials: 'include'` and `changeOrigin: true`
+- Axios baseURL: `/api` (relative, so Vite intercepts)
+- Backend CORS: Allow origin `http://localhost:5173` with `allowCredentials: true`
 - **No hosts file changes needed**
 - **No Nginx needed**
 
-**How it works**: Vite forwards both requests AND Set-Cookie headers from backend to browser, making cookies work as if same-origin.
+**How it works**: 
+1. Vite proxy intercepts `/api` requests from browser (same origin from browser's perspective)
+2. Vite forwards to backend with `credentials: 'include'`
+3. Backend CORS validates origin `localhost:5173` is allowed
+4. Backend sends Set-Cookie + CORS headers
+5. Vite forwards response to browser (as same-origin)
+6. Browser stores cookie (CORS headers validate cross-origin)
+7. Future requests automatically include cookie ✅
+
+**Why CORS is needed**: Even with Vite proxy, browser enforces CORS policy. Explicit backend CORS config is necessary for:
+- Handling CORS preflight (OPTIONS) requests
+- Validating credentials are allowed with `Access-Control-Allow-Credentials: true`
+- Explicit permission from backend for cross-origin requests
 
 ## Docker Deployment
 

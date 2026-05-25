@@ -51,30 +51,38 @@ This app uses **Spring Session with HttpOnly cookies** (not JWT). Session cookie
 
 This app uses **session-based authentication** instead of JWT tokens. Here's how it works:
 
-### Local Development (Vite Proxy)
+### Local Development (Vite Proxy + Backend CORS)
 
 ```
 Browser (localhost:5173)
     ↓
 Vite Dev Server (localhost:5173)
     ├─ Proxies /api requests to backend
+    ├─ Uses relative baseURL (/api) to intercept
     └─ Forwards Set-Cookie headers to browser
     ↓
 Backend (localhost:8080)
     ├─ Handles OAuth login
+    ├─ CORS validates: localhost:5173 is allowed ✅
     ├─ Creates session server-side
-    └─ Sends Set-Cookie: JSESSIONID header
+    ├─ Sends Set-Cookie: JSESSIONID header
+    └─ Sends CORS headers: Access-Control-Allow-Origin, Access-Control-Allow-Credentials
     ↓
 Browser stores cookie
     ├─ Future requests via Vite proxy include cookie
+    ├─ CORS headers validate cross-origin is allowed
     └─ User stays authenticated on page refresh ✅
 ```
 
-**Key**: Vite proxy forwards cookies automatically (`credentials: 'include'`), making it work like same-origin.
+**Key**: Vite proxy forwards cookies automatically (`credentials: 'include'`), Backend CORS explicitly allows it.
 
-### Technical Note: Ports and Cookies
+### Why Both Vite Proxy AND CORS Are Needed
 
-While different ports (5173 vs 8080) are technically **different origins for CORS**, browsers historically **ignore ports for cookie storage**. However, SameSite policies (`Lax`, `Strict`, `None`) may block cookie transmission between different ports during cross-origin requests. This is why Vite proxy (acting as intermediary) or proper local subdomains (via `/etc/hosts`) are recommended for reliable session persistence.
+- **Vite Proxy**: Forwards requests server-side, hides cross-origin from initial layer
+- **Backend CORS**: Explicitly allows frontend origin + credentials, handles preflight requests
+- **Together**: Enable reliable cookie persistence across different ports
+
+**Technical Note**: Different ports (5173 vs 8080) are different origins for CORS, requiring explicit `Access-Control-Allow-Origin` header. Vite proxy handles the forwarding, but browser still enforces CORS policy—hence the backend must allow it.
 
 ### Docker/Production (Nginx Reverse Proxy)
 
@@ -132,10 +140,16 @@ npm run dev
 **Access**: Open `http://localhost:5173` in browser
 
 **Session cookies work**:
-- Vite dev server proxies `/api` requests to backend (localhost:8080)
+- Vite dev server proxies `/api` requests to backend (localhost:8080) with `credentials: 'include'`
+- Backend CORS configuration allows origin localhost:5173 with `allowCredentials: true`
 - Vite forwards `Set-Cookie` headers from backend to browser
-- Browser stores cookies scoped to localhost
+- Browser stores cookies scoped to localhost (CORS headers validate cross-origin)
 - Page refresh: user stays logged in ✅
+
+**Configuration required** (already in place):
+- ✅ `vite.config.js` proxy with `credentials: 'include'`
+- ✅ `ui/src/api/client.ts` baseURL set to `/api` (relative, so proxy intercepts)
+- ✅ `backend/src/main/java/com/taskmanager/config/SecurityConfig.java` CORS allows localhost:5173
 
 **Alternative (Advanced)**: For strict cookie isolation without Vite proxy, configure local subdomains:
 ```

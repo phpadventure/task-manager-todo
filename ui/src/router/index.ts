@@ -9,6 +9,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false },
   },
   {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/pages/AuthPage.vue'),
+    meta: { requiresAuth: false },
+  },
+  {
     path: '/',
     name: 'Home',
     component: () => import('@/pages/HomePage.vue'),
@@ -24,12 +30,18 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const requiresAuth = to.meta.requiresAuth as boolean;
+  const isAuthPage = to.path === '/auth' || to.path === '/login';
 
-  if (requiresAuth && !authStore.isAuthenticated) {
-    next('/auth');
-  } else if (to.path === '/auth' && authStore.isAuthenticated) {
+  // If auth page and already logged in, go to home
+  if (isAuthPage && authStore.isAuthenticated) {
     next('/');
-  } else {
+  }
+  // If page requires auth but not logged in, go to auth
+  else if (requiresAuth && !authStore.isAuthenticated) {
+    next('/auth');
+  }
+  // Otherwise, allow the navigation
+  else {
     next();
   }
 });
