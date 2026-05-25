@@ -7,6 +7,8 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 **Tech Stack**: Vue 3, Vite, Tailwind CSS, Headless UI (or shadcn), TanStack Query (Vue Query), Pinia, WebSocket API, Vitest, @vue/test-utils, Playwright
 
+*** local backend api running at `http://localhost:8080/api/` and openapi is available at http://localhost:8080/api/api-docs ***
+
 ---
 
 ## Phase 1: Project Setup & Configuration
