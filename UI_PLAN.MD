@@ -23,10 +23,11 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] `vitest`, `@vue/test-utils` (testing)
   - [ ] `playwright` (E2E testing)
 - [ ] Configure `vite.config.ts`:
-  - [ ] API proxy for backend: `/api` → `http://localhost:8080/api` (see Session-Based Auth section)
+  - [ ] API proxy for backend: `/api` → `http://localhost:8080/api` with `credentials: 'include'` and `changeOrigin: true`
   - [ ] **CRITICAL**: Add `credentials: 'include'` to proxy config for session cookies
-  - [ ] WebSocket proxy: `/api/ws` → `ws://localhost:8080/api/ws` (also with credentials)
+  - [ ] WebSocket proxy: `/api/ws` → `ws://localhost:8080/api/ws` with `credentials: 'include'` and `changeOrigin: true`
   - [ ] Alias `@` for `src` directory
+  - [ ] Rewrite cookie domain to `.localhost` for same-domain cookies (optional, for Docker compatibility)
 - [ ] Configure `tsconfig.json` for Vue 3 + TypeScript
 - [ ] Setup Tailwind CSS configuration
 - [ ] Create `.env.example` with `VITE_API_URL` (backend base URL)
@@ -167,7 +168,7 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 - [ ] Create `src/websocket/notificationService.ts`:
   - [ ] `connect()` - establish WebSocket connection to /api/ws
   - [ ] `disconnect()` - close connection
-  - [ ] `subscribe(interval)` - send `{ interval }` (milliseconds) ⚠️ **NO type field** ⚠️
+  - [ ] `subscribe(interval)` - send subscribe message with ONLY `interval` field (milliseconds)
   - [ ] `acknowledge(notificationId)` - send `{ type: "ack", notificationId }`
   - [ ] Event listeners: onMessage, onError, onClose
   - [ ] Auto-reconnect logic with exponential backoff
@@ -179,13 +180,18 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Add notifications to notificationStore
   - [ ] Filter duplicates using seen notification IDs
 
-**Message Formats**:
+**Message Formats** (Backend-Confirmed):
 ```typescript
-// Client → Server: Subscribe (CORRECTED - no type field)
-{ interval: 60000 }  // milliseconds
+// Client → Server: Subscribe (⚠️ NO type field - backend expects ONLY interval)
+{ 
+  interval: 60000  // milliseconds
+}
 
 // Client → Server: Acknowledge
-{ type: "ack", notificationId: "uuid" }
+{ 
+  type: "ack", 
+  notificationId: "uuid" 
+}
 
 // Server → Client: Notification
 {
@@ -199,6 +205,8 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   sentAt: "2026-05-21T10:30:00Z"
 }
 ```
+
+**Critical Note**: Subscribe message ONLY contains `interval` field. Do NOT add `type` field.
 
 **Files to Create**:
 - [ ] `ui/src/websocket/notificationService.ts`
@@ -289,9 +297,15 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Types: success, error, info, warning
 
 - [ ] Create `src/components/common/Badge.vue`
-  - [ ] Status badges: map `TO_DO` → "To Do", `IN_PROGRESS` → "In Progress", `DONE` → "Done"
-  - [ ] Priority badges: map `LOW` → "Low", `MEDIUM` → "Medium", `HIGH` → "High"
-  - [ ] Color coding: Status (gray/yellow/green), Priority (blue/orange/red)
+  - [ ] Status badge mapping (use exact enum values):
+    - `TO_DO` → display "To Do" (gray)
+    - `IN_PROGRESS` → display "In Progress" (yellow)
+    - `DONE` → display "Done" (green)
+  - [ ] Priority badge mapping (use exact enum values):
+    - `LOW` → display "Low" (blue)
+    - `MEDIUM` → display "Medium" (orange)
+    - `HIGH` → display "High" (red)
+  - [ ] Color coding consistent across app
 
 **Files to Create**:
 - [ ] `ui/src/components/common/Button.vue`
@@ -310,22 +324,29 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ### Authentication Components
 - [ ] Create `src/components/auth/LoginPage.vue`:
-  - [ ] "Continue with Google" button → redirects to `/api/oauth2/authorization/google`
-  - [ ] "Continue with GitHub" button → redirects to `/api/oauth2/authorization/github`
+  - [ ] Render two buttons:
+    - "Continue with Google" → redirects to `/api/oauth2/authorization/google` (backend initiates OAuth flow)
+    - "Continue with GitHub" → redirects to `/api/oauth2/authorization/github` (backend initiates OAuth flow)
   - [ ] Centered layout with branding
-  - [ ] **OAuth Flow (Backend-Driven)**:
+  
+  - [ ] **OAuth Flow (Backend-Driven - Step-by-Step)**:
     1. User clicks button → browser navigates to backend OAuth endpoint
     2. Backend redirects to Google/GitHub provider login page
-    3. User logs in with provider (Google/GitHub)
-    4. Provider redirects back to backend callback URL
-    5. Backend exchanges OAuth code for user info
-    6. Backend creates session + HttpOnly, Secure session cookie
-    7. Backend redirects back to frontend home page
-    8. Frontend detects redirect and calls `GET /api/auth/me` to check if logged in
-    9. If 200 OK + user data → user is authenticated (cookie valid)
-    10. If 401 Unauthorized → show login page again
-  - [ ] **No OAuth client IDs or tokens in frontend** (all OAuth details handled by backend)
-  - [ ] After OAuth completes, frontend detects user via `GET /api/auth/me`
+    3. User logs in with provider credentials
+    4. Provider redirects to backend callback URL with authorization code
+    5. Backend exchanges OAuth code for user info (using provider API)
+    6. Backend creates session + HttpOnly, Secure, SameSite=Lax session cookie
+    7. Backend redirects to success page (e.g., `/success` or `/api/oauth-success`)
+    
+  - [ ] **Frontend After OAuth Redirect** (Vite proxy handles redirect):
+    1. Vite proxy receives redirect to success page
+    2. Frontend detects user was redirected (can check via URL or session check)
+    3. Frontend calls `GET /api/auth/me` to verify logged in
+    4. If 200 OK + user data → user is authenticated, navigate to home
+    5. If 401 Unauthorized → user not logged in, show login page
+  
+  - [ ] **No OAuth client IDs or tokens in frontend** (all OAuth details and provider credentials handled server-side)
+  - [ ] Session persistence: Vite proxy + backend CORS allow session cookie with `/api` requests
 
 - [ ] Create `src/components/auth/UserMenu.vue`:
   - [ ] Display user avatar + name
@@ -380,10 +401,10 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 - [ ] Create `src/components/tasks/TaskFilterBar.vue`:
   - [ ] Search input (debounced)
   - [ ] Status filter (multi-select):
-    - Options: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase enum values)
+    - Use enum values: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase - matches backend exactly)
     - Display labels: "To Do", "In Progress", "Done"
   - [ ] Priority filter (multi-select):
-    - Options: `LOW`, `MEDIUM`, `HIGH` (uppercase enum values)
+    - Use enum values: `LOW`, `MEDIUM`, `HIGH` (uppercase - matches backend exactly)
     - Display labels: "Low", "Medium", "High"
   - [ ] Due date filter (dropdown):
     - Options: `overdue`, `today`, `next_7_days`, `all` (lowercase backend values)
@@ -392,22 +413,22 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 - [ ] Create `src/components/tasks/TaskStatusQuickChange.vue`:
   - [ ] Dropdown to change status inline
-  - [ ] Options: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase enum values from backend)
+  - [ ] Use exact enum values: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase - must match backend enums)
   - [ ] Display labels: "To Do", "In Progress", "Done"
-  - [ ] Send PATCH request to `/api/tasks/{taskId}/status?status={newStatus}` with uppercase enum
+  - [ ] Send PATCH request to `/api/tasks/{taskId}/status?status={newStatus}` with uppercase enum value
 
 ### Notification Components
 - [ ] Create `src/components/notifications/NotificationToast.vue`:
-  - [ ] Display notification with:
-    - Task title
-    - Reason badge ("Overdue" or "Due Soon" - maps from backend `reason` field)
-    - Due date (formatted as human-readable)
-    - Priority badge (color-coded: Low/Medium/High)
+  - [ ] Display notification card with:
+    - Task title (from backend notification)
+    - Reason badge mapping: `"overdue"` → "Overdue", `"due-soon"` → "Due Soon"
+    - Due date (formatted human-readable, e.g., "May 20, 2026")
+    - Priority badge (color-coded: Low=blue, Medium=orange, High=red)
   - [ ] Acknowledge button → sends `{ type: "ack", notificationId }` to WebSocket
-  - [ ] Auto-dismiss after 5 seconds (configurable)
-  - [ ] Manual close button
-  - [ ] Stack multiple toasts (new toasts appear at top or bottom)
-  - [ ] Map backend `reason` to UI text: `"overdue"` → "Overdue", `"due-soon"` → "Due Soon"
+  - [ ] Manual close button (alternative to auto-dismiss)
+  - [ ] Auto-dismiss after 5 seconds (user can override by hovering)
+  - [ ] Stack multiple toasts (newer toasts appear at top/bottom - configurable)
+  - [ ] Fade-in/fade-out animations for UX
 
 **Files to Create**:
 - [ ] `ui/src/components/auth/LoginPage.vue`
@@ -491,17 +512,17 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] `validateDueDate(date)` - optional, must be today or future if provided
   - [ ] `getErrorMessage(field, error)` - user-friendly error messages
 
-- [ ] Create error handling in API calls:
-  - [ ] Display error toasts on API failures
+- [ ] Create error handling in API calls (add to `src/api/client.ts`):
+  - [ ] Display error toasts on API failures (use Toast component)
   - [ ] Handle HTTP status codes:
-    - `400 Bad Request` → show validation errors from backend
-    - `401 Unauthorized` → redirect to login page, clear session
+    - `400 Bad Request` → show validation error from backend response body
+    - `401 Unauthorized` → clear session, redirect to login page, show "Session expired"
     - `403 Forbidden` → show "You don't have permission to modify this resource"
     - `404 Not Found` → show "Resource not found or has been deleted"
-    - `409 Conflict` → show "Cannot delete list with active tasks" (or relevant conflict message)
+    - `409 Conflict` → show conflict-specific message (e.g., "Cannot delete list with active tasks")
     - `500 Server Error` → show "Server error, please try again"
-  - [ ] Auto-retry logic for transient failures (optional)
-  - [ ] Show error details in console for debugging
+  - [ ] Auto-retry logic for transient failures (5xx errors, optional exponential backoff)
+  - [ ] Log error details to console for debugging (development mode)
 
 **Files to Create**:
 - [ ] `ui/src/utils/validation.ts`
@@ -623,25 +644,23 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 - [ ] Update `README.md`:
   - [ ] Frontend setup: `npm install`, `npm run dev`
-  - [ ] Environment variables `.env` setup
-  - [ ] OAuth callback URL configuration (backend-driven flow)
+  - [ ] Environment variables `.env` setup (Vite proxy configuration)
+  - [ ] OAuth callback URL configuration (backend redirects to success page)
   - [ ] Component architecture overview
-  - [ ] Store structure documentation
+  - [ ] Store structure documentation (Pinia + TanStack Query)
   - [ ] API integration patterns
-  - [ ] **Link to backend docs**: See `API.md` for complete endpoint reference
-  - [ ] WebSocket message format (subscribe/ack/notification)
+  - [ ] **Backend Documentation References**:
+    - [ ] API Endpoints: See `/API.md` for complete endpoint reference
+    - [ ] OAuth Setup: See main `README.md` → OAuth2 Authentication Setup section
+    - [ ] WebSocket Format: See main `README.md` → WebSocket Notifications section
+    - [ ] Task Enums: Status (`TO_DO`, `IN_PROGRESS`, `DONE`), Priority (`LOW`, `MEDIUM`, `HIGH`) - uppercase
+    - [ ] Authorization: `@PreAuthorize` on edit/delete endpoints (returns 403 if unauthorized)
+    - [ ] Error Handling: See main `README.md` → Error responses section
+  - [ ] WebSocket message formats (subscribe message has NO type field, only interval)
   - [ ] Notification rules (overdue, due-soon)
-  - [ ] Testing instructions
-
-- [ ] Reference Backend Documentation:
-  - [ ] API Endpoints: See `/API.md` for full endpoint reference
-  - [ ] OAuth Setup: See main `README.md` → OAuth2 Authentication Setup section
-  - [ ] WebSocket Format: See main `README.md` → WebSocket Notifications section
-  - [ ] Task Enums:
-    - Status: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase)
-    - Priority: `LOW`, `MEDIUM`, `HIGH` (uppercase)
-  - [ ] Authorization: `@PreAuthorize` on edit/delete endpoints (returns 403 if unauthorized)
-  - [ ] Error Handling: See main `README.md` → Error responses section
+  - [ ] Testing instructions (unit, component, E2E)
+  - [ ] Vite proxy configuration for local development
+  - [ ] Session-based auth with HttpOnly cookies
 
 - [ ] Create `COMPONENT_GUIDE.md`:
   - [ ] Component props, slots, emits

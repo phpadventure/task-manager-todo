@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/composables/useAuth';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -20,6 +21,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/pages/HomePage.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/home',
+    name: 'HomeAlias',
+    component: () => import('@/pages/HomePage.vue'),
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({
@@ -27,8 +34,22 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+let initialCheckDone = false;
+
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
+  const { fetchCurrentUser } = useAuth();
+
+  // On first navigation, fetch current user to validate session
+  if (!initialCheckDone) {
+    try {
+      await fetchCurrentUser();
+    } catch (error) {
+      // Session invalid or error - user stays logged out
+    }
+    initialCheckDone = true;
+  }
+
   const requiresAuth = to.meta.requiresAuth as boolean;
   const isAuthPage = to.path === '/auth' || to.path === '/login';
 

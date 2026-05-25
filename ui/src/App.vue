@@ -1,17 +1,40 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuth } from '@/composables/useAuth';
+import { useNotifications } from '@/composables/useNotifications';
+import NotificationToast from '@/components/notifications/NotificationToast.vue';
 
+const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 const { fetchCurrentUser } = useAuth();
+const { connect } = useNotifications();
 
 onMounted(async () => {
   // Check if user is logged in on app start
-  // If 401, fetchCurrentUser silently handles it (user stays null)
-  // Router guard will then redirect to /auth if needed
   await fetchCurrentUser();
+
+  // If authenticated, connect to WebSocket for notifications
+  if (authStore.isAuthenticated) {
+    connect();
+  }
 });
 </script>
 
 <template>
-  <RouterView />
+  <div id="app">
+    <!-- Router view -->
+    <RouterView />
+
+    <!-- Global Notification Container (fixed position, top-right) -->
+    <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+      <NotificationToast
+        v-for="notif in notificationStore.notifications"
+        :key="notif.id"
+        :notification="notif"
+        @acknowledge="notificationStore.acknowledgeNotification(notif.id)"
+      />
+    </div>
+  </div>
 </template>

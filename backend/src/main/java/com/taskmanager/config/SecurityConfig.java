@@ -1,6 +1,7 @@
 package com.taskmanager.config;
 
 import com.taskmanager.security.CustomOAuth2UserService;
+import com.taskmanager.security.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CustomOAuth2UserService oAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -55,7 +57,7 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(endpoint -> endpoint.userService(oAuth2UserService))
-                .defaultSuccessUrl("/", true)
+                .successHandler(oAuth2SuccessHandler)
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/")
