@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, nextTick } from 'vue';
 import { useForm } from '@/composables/useForm';
 import { useTasks } from '@/composables/useTasks';
 import { validateTaskTitle, validateTaskDescription, validateDueDate } from '@/utils/validation';
@@ -41,17 +41,35 @@ const priorityOptions = [
 
 const showDeleteConfirm = ref(false);
 
+const populateForm = async () => {
+  await nextTick();
+  setValues({
+    title: props.title || '',
+    description: props.description || '',
+    dueDate: props.dueDate || '',
+    priority: props.priority || 'MEDIUM',
+  });
+};
+
+onMounted(() => {
+  populateForm();
+});
+
 watch(
   () => props.isOpen,
   (isOpen) => {
     if (isOpen) {
-      setValues({
-        title: props.title || '',
-        description: props.description || '',
-        dueDate: props.dueDate || '',
-        priority: props.priority || 'MEDIUM',
-      });
+      populateForm();
       showDeleteConfirm.value = false;
+    }
+  }
+);
+
+watch(
+  () => [props.title, props.description, props.dueDate, props.priority],
+  () => {
+    if (props.isOpen) {
+      populateForm();
     }
   }
 );

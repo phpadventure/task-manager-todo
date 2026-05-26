@@ -78,7 +78,7 @@ const applyFilters = () => {
     searchQuery: searchQuery.value,
     status: selectedStatuses.value.length > 0 ? selectedStatuses.value : undefined,
     priority: selectedPriorities.value.length > 0 ? selectedPriorities.value : undefined,
-    dueDate: selectedDueDate.value !== 'all' ? (selectedDueDate.value as any) : undefined,
+    dueDateFilter: selectedDueDate.value !== 'all' ? (selectedDueDate.value as any) : 'all',
   });
 };
 

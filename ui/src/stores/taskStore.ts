@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { isOverdue, isToday } from '@/utils/dateUtils';
 
 export type TaskStatus = 'TO_DO' | 'IN_PROGRESS' | 'DONE';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -41,6 +42,36 @@ export const useTaskStore = defineStore('task', () => {
 
     if (filters.value.priority?.length) {
       filtered = filtered.filter((t) => filters.value.priority?.includes(t.priority));
+    }
+
+    if (filters.value.dueDateFilter && filters.value.dueDateFilter !== 'all') {
+      filtered = filtered.filter((t) => {
+        if (!t.dueDate) return false;
+        if (t.status === 'DONE') return false;
+
+        if (filters.value.dueDateFilter === 'overdue') {
+          return isOverdue(t.dueDate);
+        }
+
+        if (filters.value.dueDateFilter === 'today') {
+          return isToday(t.dueDate);
+        }
+
+        if (filters.value.dueDateFilter === 'next_7_days') {
+          const due = new Date(t.dueDate);
+          const today = new Date();
+          const in7Days = new Date(today);
+          in7Days.setDate(in7Days.getDate() + 7);
+
+          due.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+          in7Days.setHours(0, 0, 0, 0);
+
+          return due >= today && due <= in7Days;
+        }
+
+        return true;
+      });
     }
 
     if (filters.value.searchQuery) {

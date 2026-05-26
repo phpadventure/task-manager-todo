@@ -107,11 +107,18 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] `acknowledgeNotification(id)` action
   - [x] Auto-dismiss after 5 seconds
 
+- [x] Create `src/stores/settingsStore.ts` (NEW):
+  - [x] `notificationInterval` state (milliseconds, default 60000)
+  - [x] `setNotificationInterval(interval)` action
+  - [x] `loadSettings()` action
+  - [x] localStorage persistence for user preferences
+
 **Files to Create**:
 - [x] `ui/src/stores/authStore.ts`
 - [x] `ui/src/stores/listStore.ts`
 - [x] `ui/src/stores/taskStore.ts`
 - [x] `ui/src/stores/notificationStore.ts`
+- [x] `ui/src/stores/settingsStore.ts` (NEW)
 
 ---
 
