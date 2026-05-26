@@ -87,11 +87,11 @@ Browser stores cookie
 ### Docker/Production (Nginx Reverse Proxy)
 
 ```
-Browser (localhost)
+Browser (localhost:8000)
     ↓
-Nginx (localhost:80)
+Nginx (localhost:8000)
     ├─ GET / → Vue static files
-    └─ /api/* → Backend (localhost:8080 internally)
+    └─ /api/* → Backend (backend:8080 internally)
     ↓
 Backend
     ├─ Handles OAuth login
@@ -99,11 +99,11 @@ Backend
     └─ Sends Set-Cookie: JSESSIONID header
     ↓
 Browser stores cookie
-    ├─ Single origin (localhost:80)
+    ├─ Single origin (localhost:8000)
     └─ User stays authenticated on page refresh ✅
 ```
 
-**Key**: True same-origin (Nginx routes both frontend and backend), cookies work automatically.
+**Key**: True same-origin (Nginx routes both frontend and backend on single port 8000), cookies work automatically.
 
 ---
 
@@ -183,14 +183,14 @@ docker-compose up -d
 docker-compose ps
 ```
 
-**Access**: `http://localhost` (via Nginx reverse proxy)
+**Access**: `http://localhost:8000` (via Nginx reverse proxy)
 
 **Architecture**:
-- **Nginx** (localhost:80) — Reverse proxy, routes to frontend & backend
+- **Nginx** (localhost:8000) — Reverse proxy on port 8000, routes to frontend & backend
 - **Frontend** (Nginx service) — Vue SPA static files served by Nginx
-- **Backend** (localhost:8080, internal) — Spring Boot API, accessible via Nginx proxy
-- **MySQL** (localhost:3306, internal) — Database
-- Single origin for all client requests (`http://localhost`)
+- **Backend** (backend:8080, internal) — Spring Boot API, accessible via Nginx proxy
+- **MySQL** (mysql:3306, internal) — Database
+- Single origin for all client requests (`http://localhost:8000`)
 
 **View logs**:
 ```bash
@@ -249,14 +249,14 @@ task-manager-nginx      Up
 
 ### Test Application Access (Docker)
 ```bash
-# Main app (via Nginx single origin)
-curl http://localhost
+# Main app (via Nginx on port 8000)
+curl http://localhost:8000
 
 # API health check (via Nginx proxy)
-curl http://localhost/api/actuator/health
+curl http://localhost:8000/api/health
 
 # Backend direct (if port 8080 is exposed, optional for debugging)
-curl http://localhost:8080/api/actuator/health
+curl http://localhost:8080/api/health
 ```
 
 ### Test MySQL Connectivity from Backend
