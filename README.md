@@ -441,11 +441,26 @@ Client connects via WebSocket to `/api/ws` using STOMP protocol:
 
 ```javascript
 const client = new StompClient();
+
+
 client.connect({}, () => {
+  console.log('STOMP Connected:', frame);                          
+
+  // Only subscribe AFTER connection confirmed
+  console.log('📌 About to subscribe...');
+  // THIS IS REQUIRED STEP 1.
+  const subscription = stompClient.subscribe('/app/notifications', function(msg) {
+    console.log('📨 Message received:', JSON.parse(msg.body));
+  });
+  console.log('📌 Subscription object:', subscription);
+
+  
   client.subscribe('/user/queue/notifications', (message) => {
     const notification = JSON.parse(message.body);
     console.log('Notification:', notification);
   });
+}, function(error) {
+  console.error('❌ Connection error:', error);
 });
 ```
 

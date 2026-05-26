@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuth } from '@/composables/useAuth';
@@ -9,7 +9,7 @@ import NotificationToast from '@/components/notifications/NotificationToast.vue'
 const authStore = useAuthStore();
 const notificationStore = useNotificationStore();
 const { fetchCurrentUser } = useAuth();
-const { connect } = useNotifications();
+const { connect, disconnect, acknowledge } = useNotifications();
 
 onMounted(async () => {
   // Check if user is logged in on app start
@@ -19,6 +19,10 @@ onMounted(async () => {
   if (authStore.isAuthenticated) {
     connect();
   }
+});
+
+onUnmounted(() => {
+  disconnect();
 });
 </script>
 
@@ -33,7 +37,8 @@ onMounted(async () => {
         v-for="notif in notificationStore.notifications"
         :key="notif.id"
         :notification="notif"
-        @acknowledge="notificationStore.acknowledgeNotification(notif.id)"
+        @acknowledge="acknowledge(notif.id)"
+        @dismiss="notificationStore.removeNotification(notif.id)"
       />
     </div>
   </div>

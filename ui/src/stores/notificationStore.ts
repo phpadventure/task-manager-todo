@@ -16,10 +16,6 @@ export const useNotificationStore = defineStore('notification', () => {
 
   const addNotification = (notification: Notification) => {
     notifications.value.push(notification);
-
-    setTimeout(() => {
-      removeNotification(notification.id);
-    }, 5000);
   };
 
   const removeNotification = (id: string) => {

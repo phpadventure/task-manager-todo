@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Badge from '@/components/common/Badge.vue';
 import Button from '@/components/common/Button.vue';
 import { getDueDateLabel } from '@/utils/dateUtils';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 interface Notification {
   id: string;
@@ -18,19 +19,28 @@ interface Props {
   notification: Notification;
 }
 
-withDefaults(defineProps<Props>(), {});
+const props = withDefaults(defineProps<Props>(), {});
 
 const emit = defineEmits<{
   acknowledge: [];
+  dismiss: [];
 }>();
 
+const settingsStore = useSettingsStore();
 const isVisible = ref(true);
 let dismissTimer: NodeJS.Timeout;
 
 onMounted(() => {
+  // eslint-disable-next-line no-undef
+  console.log('[Toast] Rendering notification:', {
+    title: props.notification.title,
+    dueDate: props.notification.dueDate,
+    reason: props.notification.reason,
+    id: props.notification.id,
+  });
   dismissTimer = setTimeout(() => {
     isVisible.value = false;
-  }, 5000);
+  }, settingsStore.toastDismissTime);
 });
 
 onUnmounted(() => {
@@ -45,6 +55,7 @@ const handleAcknowledge = () => {
 };
 
 const handleClose = () => {
+  emit('dismiss');
   isVisible.value = false;
 };
 
@@ -82,19 +93,26 @@ const priorityLabel = (priority: string) => {
 <template>
   <div
     v-if="isVisible"
-    class="bg-white rounded-lg shadow-lg border border-base-300 p-4 max-w-sm w-full animate-slide-in"
+    class="relative bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm w-full animate-slide-in"
+    :class="{
+      'border-l-red-500': notification.reason === 'overdue',
+      'border-l-amber-500': notification.reason === 'due-soon',
+    }"
   >
-    <!-- Header with close -->
-    <div class="flex items-start justify-between mb-2">
-      <div class="flex-1">
-        <h3 class="font-bold text-base line-clamp-2">{{ notification.title }}</h3>
-      </div>
-      <button class="ml-2 text-base-400 hover:text-base-600 flex-shrink-0" @click="handleClose">
-        ✕
-      </button>
-    </div>
+    <!-- Task Title (Prominent - FIRST) -->
+    <h3 class="font-bold text-base text-gray-900 mb-3 pr-7 break-words">
+      {{ notification.title || 'Untitled Task' }}
+    </h3>
 
-    <!-- Task Info -->
+    <!-- Close button -->
+    <button
+      class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl leading-none"
+      @click="handleClose"
+    >
+      ✕
+    </button>
+
+    <!-- Reason & Priority Badges -->
     <div class="flex flex-wrap gap-2 mb-3">
       <Badge :type="reasonBadgeType(notification.reason)">
         {{ reasonLabel(notification.reason) }}
@@ -104,17 +122,22 @@ const priorityLabel = (priority: string) => {
       </Badge>
     </div>
 
-    <!-- Due Date -->
-    <p class="text-sm text-base-600 mb-3">
-      Due: <span class="font-medium">{{ getDueDateLabel(notification.dueDate) }}</span>
-    </p>
+    <!-- Due Date Info -->
+    <div class="mb-4 p-2 bg-gray-50 rounded text-sm">
+      <p class="text-gray-700">
+        <span class="font-medium">Due:</span>
+        <span class="text-gray-900 font-semibold">{{ getDueDateLabel(notification.dueDate) }}</span>
+      </p>
+    </div>
 
     <!-- Actions -->
     <div class="flex gap-2">
       <Button type="button" variant="primary" size="sm" class="flex-1" @click="handleAcknowledge">
         Got it
       </Button>
-      <Button type="button" variant="ghost" size="sm" @click="handleClose"> Dismiss </Button>
+      <Button type="button" variant="ghost" size="sm" class="flex-1" @click="handleClose">
+        Dismiss
+      </Button>
     </div>
   </div>
 </template>

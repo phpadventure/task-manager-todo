@@ -1,4 +1,3 @@
-import { onMounted, onUnmounted } from 'vue';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { NotificationService } from '@/websocket/notificationService';
@@ -12,33 +11,45 @@ export const useNotifications = () => {
 
   const connect = async () => {
     const wsUrl = import.meta.env.VITE_WS_URL || '/api/ws';
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const fullUrl = wsUrl.startsWith('ws') ? wsUrl : `${protocol}//${window.location.host}${wsUrl}`;
-
-    notificationService = new NotificationService(fullUrl);
+    console.log('[WS] Connecting to:', wsUrl);
+    notificationService = new NotificationService(wsUrl);
 
     try {
       await notificationService.connect();
+      console.log('[WS] STOMP connection established');
 
       notificationService.onMessage((notification) => {
+        console.log('[WS] Received notification:', notification);
+        console.log('[WS] Title:', notification.title, 'DueDate:', notification.dueDate);
         if (!seenNotificationIds.has(notification.id)) {
           seenNotificationIds.add(notification.id);
           notificationStore.addNotification(notification);
+          console.log('[WS] Notification added to store:', {
+            id: notification.id,
+            title: notification.title,
+            dueDate: notification.dueDate,
+            reason: notification.reason,
+            priority: notification.priority,
+          });
+        } else {
+          console.log('[WS] Duplicate notification ignored:', notification.id);
         }
       });
 
       notificationService.onError((error) => {
-        console.error('WebSocket error:', error);
+        console.error('[WS] Error:', error);
       });
 
       notificationService.onClose(() => {
-        console.log('WebSocket closed, will attempt reconnect');
+        console.log('[WS] Connection closed, will attempt reconnect');
       });
 
       settingsStore.loadSettings();
-      notificationService.subscribe(settingsStore.notificationInterval);
+      const interval = settingsStore.notificationInterval;
+      console.log('[WS] Sending subscribe message with interval:', interval);
+      notificationService.subscribe(interval);
     } catch (error) {
-      console.error('Failed to connect WebSocket:', error);
+      console.error('[WS] Failed to connect:', error);
     }
   };
 
@@ -62,14 +73,6 @@ export const useNotifications = () => {
       notificationService.subscribe(newInterval);
     }
   };
-
-  onMounted(() => {
-    connect();
-  });
-
-  onUnmounted(() => {
-    disconnect();
-  });
 
   return {
     connect,

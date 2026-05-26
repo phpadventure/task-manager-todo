@@ -170,54 +170,83 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ---
 
-## Phase 5: WebSocket Integration
+## Phase 5: WebSocket Integration ✅ COMPLETE (STOMP Protocol)
 
 - [x] Create `src/websocket/notificationService.ts`:
-  - [x] `connect()` - establish WebSocket connection to /api/ws
+  - [x] STOMP client over raw WebSocket (native browser API)
+  - [x] `connect()` - establish STOMP connection to `/api/ws`
+  - [x] Subscribe to `/app/notifications` (initial batch on connect) 
+  - [x] Subscribe to `/user/queue/notifications` (ongoing messages)
   - [x] `disconnect()` - close connection
-  - [x] `subscribe(interval)` - send subscribe message with ONLY `interval` field (milliseconds)
-  - [x] `acknowledge(notificationId)` - send `{ type: "ack", notificationId }`
+  - [x] `subscribe(interval)` - send message to `/app/subscribe` with interval (milliseconds)
+  - [x] `acknowledge(notificationId)` - send message to `/app/ack` with notificationId
   - [x] Event listeners: onMessage, onError, onClose
   - [x] Auto-reconnect logic with exponential backoff
+  - [x] Install: `@stomp/stompjs` only (no SockJS, uses native WebSocket)
 
 - [x] Create `src/composables/useNotifications.ts`:
-  - [x] `connect()` hook to init WebSocket on app mount
-  - [x] `disconnect()` hook to cleanup
-  - [x] Handle incoming notifications (fields: type, id, taskId, title, reason, dueDate, priority, sentAt)
+  - [x] `connect()` - init STOMP connection on demand (called from App.vue after auth check)
+  - [x] `disconnect()` - cleanup on app unmount
+  - [x] Handle incoming notifications (all subscriptions)
   - [x] Add notifications to notificationStore
   - [x] Filter duplicates using seen notification IDs
+  - [x] Load settings (default 60s interval)
 
-**Message Formats** (Backend-Confirmed):
+**STOMP Message Flow** (Backend-Driven):
 ```typescript
-// Client → Server: Subscribe (⚠️ NO type field - backend expects ONLY interval)
-{ 
-  interval: 60000  // milliseconds
-}
+// Step 1: Client connects (STOMP over raw WebSocket)
+stompClient = new Client({ 
+  brokerURL: 'ws://localhost:5173/api/ws'  // Raw WebSocket URL
+})
+stompClient.activate()
 
-// Client → Server: Acknowledge
-{ 
-  type: "ack", 
-  notificationId: "uuid" 
-}
+// Step 2: Server sends initial batch
+stompClient.subscribe('/app/notifications', (msg) => {
+  notification = JSON.parse(msg.body)  // Initial overdue/due-soon tasks
+})
+
+// Step 3: Server sends ongoing messages
+stompClient.subscribe('/user/queue/notifications', (msg) => {
+  notification = JSON.parse(msg.body)  // Periodic updates
+})
+
+// Step 4: Client sends subscription with interval
+stompClient.publish({
+  destination: '/app/subscribe',
+  body: JSON.stringify({ interval: 60000 })
+})
+
+// Step 5: Client acknowledges notification
+stompClient.publish({
+  destination: '/app/ack',
+  body: JSON.stringify({ type: 'ack', notificationId: 'uuid' })
+})
 
 // Server → Client: Notification
 {
-  type: "notification",
-  id: "uuid",
-  taskId: "task-uuid",
-  title: "Buy groceries",
-  reason: "overdue" | "due-soon",
-  dueDate: "2026-05-20",
-  priority: "LOW" | "MEDIUM" | "HIGH",
-  sentAt: "2026-05-21T10:30:00Z"
+  "type": "notification",
+  "id": "uuid",
+  "taskId": "task-uuid",
+  "title": "Buy groceries",
+  "reason": "overdue" | "due-soon",
+  "dueDate": "2026-05-20",
+  "priority": "LOW" | "MEDIUM" | "HIGH",
+  "sentAt": "2026-05-21T10:30:00Z"
 }
 ```
 
-**Critical Note**: Subscribe message ONLY contains `interval` field. Do NOT add `type` field.
+**Critical Implementation Details**:
+- ✅ Use STOMP protocol (not raw WebSocket)
+- ✅ Subscribe to TWO destinations: `/app/notifications` + `/user/queue/notifications`
+- ✅ Initial subscription happens automatically on STOMP connect
+- ✅ Send subscribe message to `/app/subscribe` with ONLY `interval` field
+- ✅ Send ack message to `/app/ack` with `type` and `notificationId`
+- ✅ SockJS provides WebSocket fallback for older browsers
 
 **Files to Create**:
-- [x] `ui/src/websocket/notificationService.ts`
-- [x] `ui/src/composables/useNotifications.ts`
+- [x] `ui/src/websocket/notificationService.ts` (STOMP implementation)
+- [x] `ui/src/composables/useNotifications.ts` (lifecycle + STOMP setup)
+- [x] `ui/package.json` - added `@stomp/stompjs` (raw WebSocket, no SockJS needed)
 
 ---
 

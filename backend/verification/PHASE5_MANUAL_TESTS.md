@@ -65,7 +65,7 @@ setTimeout(() => {
    
     stompClient.connect({}, function(frame) {                                                                                                                                                                        
       console.log('✅ STOMP Connected:', frame);                                                                                                                                                                   
-
+      // REQUIRED initial Subscription as first call after connect!!!
       // Only subscribe AFTER connection confirmed
       console.log('📌 About to subscribe...');
       const subscription = stompClient.subscribe('/app/notifications', function(msg) {

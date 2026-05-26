@@ -17,6 +17,7 @@ const settingsStore = useSettingsStore();
 const { updateInterval } = useNotifications();
 
 const intervalMs = ref(settingsStore.notificationInterval);
+const toastDismissMs = ref(settingsStore.toastDismissTime);
 const presets = [
   { label: '10 seconds', value: 10000 },
   { label: '30 seconds', value: 30000 },
@@ -24,9 +25,23 @@ const presets = [
   { label: '5 minutes', value: 300000 },
   { label: '10 minutes', value: 600000 },
 ];
+const toastDismissPresets = [
+  { label: '10 seconds', value: 10000 },
+  { label: '30 seconds', value: 30000 },
+  { label: '1 minute', value: 60000 },
+  { label: '2 minutes', value: 120000 },
+  { label: '5 minutes', value: 300000 },
+];
 
 const displayInterval = computed(() => {
   const seconds = Math.round(intervalMs.value / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.round(seconds / 60);
+  return `${minutes}m`;
+});
+
+const displayToastDismiss = computed(() => {
+  const seconds = Math.round(toastDismissMs.value / 1000);
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.round(seconds / 60);
   return `${minutes}m`;
@@ -39,12 +54,24 @@ watch(
   }
 );
 
+watch(
+  () => settingsStore.toastDismissTime,
+  (newValue) => {
+    toastDismissMs.value = newValue;
+  }
+);
+
 const handlePreset = (value: number) => {
   intervalMs.value = value;
 };
 
+const handlePresetToast = (value: number) => {
+  toastDismissMs.value = value;
+};
+
 const handleSave = () => {
   updateInterval(intervalMs.value);
+  settingsStore.setToastDismissTime(toastDismissMs.value);
   emit('update:modelValue', false);
 };
 
@@ -104,11 +131,61 @@ const handleClose = () => {
         </div>
       </div>
 
+      <!-- Toast Dismiss Setting -->
+      <div class="space-y-3 pt-4 border-t">
+        <label class="block text-sm font-medium text-gray-900">
+          Notification Pop-up Duration
+        </label>
+        <p class="text-sm text-gray-600">
+          How long notification pop-ups stay visible ({{ displayToastDismiss }})
+        </p>
+
+        <!-- Preset Buttons -->
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            v-for="preset in toastDismissPresets"
+            :key="preset.value"
+            type="button"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+            :class="
+              toastDismissMs === preset.value
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            "
+            @click="handlePresetToast(preset.value)"
+          >
+            {{ preset.label }}
+          </button>
+        </div>
+
+        <!-- Custom Range Slider -->
+        <div class="space-y-2">
+          <label for="toast-dismiss-slider" class="text-xs text-gray-600"
+            >Or set custom value:</label
+          >
+          <div class="flex items-center gap-3">
+            <input
+              id="toast-dismiss-slider"
+              v-model.number="toastDismissMs"
+              type="range"
+              min="5000"
+              max="300000"
+              step="5000"
+              class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <span class="text-sm font-medium text-gray-900 w-12">{{ displayToastDismiss }}</span>
+          </div>
+          <p class="text-xs text-gray-500">Range: 5 seconds to 5 minutes</p>
+        </div>
+      </div>
+
       <!-- Info Box -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
         <p class="text-sm text-blue-900">
-          ℹ️ Shorter intervals get more frequent updates but use more resources. Longer intervals
-          are more efficient but updates arrive less frequently.
+          ℹ️ <strong>Check Interval:</strong> How often the server checks for new tasks
+        </p>
+        <p class="text-sm text-blue-900">
+          ℹ️ <strong>Pop-up Duration:</strong> How long each notification stays on screen
         </p>
       </div>
 
