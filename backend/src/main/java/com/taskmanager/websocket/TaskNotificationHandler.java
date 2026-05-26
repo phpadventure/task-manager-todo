@@ -39,7 +39,7 @@ public class TaskNotificationHandler {
     private final Map<UUID, Long> lastSentTime = new ConcurrentHashMap<>();
 
     // AS FOR MVP WE ASSUME ONLY ONE SESSION!!!! BUT USER CAN HAVE A SET OF SESSION
-    private final Map<UUID, String> userSessionMap = new ConcurrentHashMap<>(); 
+    private final Map<UUID, String> userSessionMap = new ConcurrentHashMap<>();
 
     public TaskNotificationHandler(TaskService taskService,
             SimpMessagingTemplate messagingTemplate) {
@@ -52,11 +52,23 @@ public class TaskNotificationHandler {
             Authentication authentication) {
         User userDetails = ((CustomOAuth2User) authentication.getPrincipal()).getUser();
         UUID userId = userDetails.getId();
-        sentNotifications.put(userId, new HashSet<>());
-        userIntervals.put(userId, 60000L);
-
         String username = authentication.getName();
+
+        // Check if user already has active session
+        String previousSession = userSessionMap.get(userId);
+        if (previousSession != null && !previousSession.equals(username)) {
+            LOGGER.warn("User {} reconnected with new session. Old: {}, New: {}",
+                userId, previousSession, username);
+            removeUser(userId);
+        }
+
+        // Initialize/preserve sent notifications (don't overwrite on reconnect)
+        sentNotifications.computeIfAbsent(userId, k -> new HashSet<>());
+        userIntervals.putIfAbsent(userId, 60000L);
+        lastSentTime.putIfAbsent(userId, System.currentTimeMillis());
         userSessionMap.put(userId, username);
+
+        LOGGER.info("User {} subscribed to notifications with session {}", userId, username);
 
         List<NotificationMessage> initialBatch = getOverdueAndDueSoonNotifications(userId);
         trackSentNotifications(userId, initialBatch);
@@ -67,10 +79,16 @@ public class TaskNotificationHandler {
     @MessageMapping("/subscribe")
     public void handleSubscribeMessage(ClientSubscribeMessage message,
             Authentication authentication) {
-        User userDetails = ((CustomOAuth2User) authentication.getPrincipal()).getUser();
-        UUID userId = userDetails.getId();
-        if (message.getInterval() != null && message.getInterval() > 0) {
-            userIntervals.put(userId, message.getInterval());
+        try {
+            User userDetails = ((CustomOAuth2User) authentication.getPrincipal()).getUser();
+            UUID userId = userDetails.getId();
+            if (message.getInterval() != null && message.getInterval() > 0) {
+                userIntervals.put(userId, message.getInterval());
+                LOGGER.debug("Updated notification interval for user {}: {} ms",
+                    userId, message.getInterval());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error handling subscribe message", e);
         }
     }
 
@@ -133,14 +151,24 @@ public class TaskNotificationHandler {
 
     public void sendNotificationToUser(UUID userId, NotificationMessage notification) {
         if (!userSessionMap.containsKey(userId)) {
+            LOGGER.debug("User {} not connected, skipping notification: taskId={}",
+                userId, notification.getTaskId());
             return;
         }
 
-        messagingTemplate.convertAndSendToUser(
-                userSessionMap.get(userId),
-                NOTIFICATION_QUEUE,
-                notification
-        );
+        try {
+            String sessionId = userSessionMap.get(userId);
+            messagingTemplate.convertAndSendToUser(
+                    sessionId,
+                    NOTIFICATION_QUEUE,
+                    notification
+            );
+            LOGGER.debug("Sent notification to user {}: taskId={}, reason={}",
+                userId, notification.getTaskId(), notification.getReason());
+        } catch (Exception e) {
+            LOGGER.error("Error sending notification to user {}: taskId={}",
+                userId, notification.getTaskId(), e);
+        }
     }
 
     public void sendAndTrackNotification(UUID userId,
@@ -180,9 +208,24 @@ public class TaskNotificationHandler {
 
     @EventListener
     public void handleWebSocketDisconnect(SessionDisconnectEvent event) {
-        if (event.getUser() != null && event.getUser() instanceof SecurityUser) {
-            UUID userId = ((SecurityUser) event.getUser()).getId();
-            removeUser(userId);
+        try {
+            if (event.getUser() != null && event.getUser() instanceof SecurityUser) {
+                UUID userId = ((SecurityUser) event.getUser()).getId();
+                String sessionId = event.getSessionId();
+
+                String currentSession = userSessionMap.get(userId);
+                if (currentSession != null && currentSession.equals(sessionId)) {
+                    LOGGER.info("User {} disconnected: sessionId={}", userId, sessionId);
+                    removeUser(userId);
+                } else {
+                    LOGGER.debug(
+                        "Ignoring disconnect for stale session. userId={}, "
+                        + "oldSession={}, currentSession={}",
+                        userId, sessionId, currentSession);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error handling WebSocket disconnect", e);
         }
     }
 }
