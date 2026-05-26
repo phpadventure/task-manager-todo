@@ -11,6 +11,9 @@ const { fetchLists, isLoading } = useLists();
 const { load: loadPersistedListId } = useLocalStorage<string | null>('selectedListId', null);
 
 const isModalOpen = ref(false);
+const emit = defineEmits<{
+  'edit-list': [];
+}>();
 
 onMounted(async () => {
   await fetchLists();
@@ -31,6 +34,10 @@ const selectList = (listId: string) => {
 const toggleModal = () => {
   isModalOpen.value = !isModalOpen.value;
 };
+
+const openEditList = () => {
+  emit('edit-list');
+};
 </script>
 
 <template>
@@ -47,19 +54,45 @@ const toggleModal = () => {
         No lists yet. Create one to get started!
       </div>
       <nav v-else class="p-3 space-y-1">
-        <button
+        <div
           v-for="list in listStore.lists"
           :key="list.id"
           :class="[
-            'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-150',
-            selectedListId === list.id
-              ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
-              : 'text-gray-700 hover:bg-gray-100',
+            'group flex items-center rounded-lg transition-colors duration-150',
+            selectedListId === list.id ? 'bg-blue-600 text-white' : 'text-gray-700',
           ]"
-          @click="selectList(list.id)"
         >
-          {{ list.title }}
-        </button>
+          <button
+            :class="[
+              'flex-1 text-left px-4 py-3 text-sm font-medium transition-colors duration-150',
+              selectedListId === list.id
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'text-gray-700 hover:bg-gray-100',
+            ]"
+            @click="selectList(list.id)"
+          >
+            {{ list.title }}
+          </button>
+          <button
+            v-if="selectedListId === list.id"
+            type="button"
+            :class="[
+              'px-3 py-3 text-white hover:bg-blue-700 rounded-r-lg transition-colors',
+              selectedListId === list.id ? 'block' : 'hidden',
+            ]"
+            aria-label="Edit list"
+            @click.stop="openEditList"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+        </div>
       </nav>
     </div>
 

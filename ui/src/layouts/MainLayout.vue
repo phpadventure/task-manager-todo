@@ -7,30 +7,43 @@
       <slot name="sidebar" />
     </aside>
 
+    <!-- Desktop Header (with UserMenu) -->
+    <div
+      class="hidden lg:flex fixed top-0 right-0 h-14 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm"
+      style="width: calc(100% - 20rem)"
+    >
+      <div class="ml-auto">
+        <UserMenu />
+      </div>
+    </div>
+
     <!-- Mobile Header -->
     <div
-      class="lg:hidden fixed top-0 left-0 right-0 h-12 md:h-14 bg-white border-b border-gray-200 flex items-center px-3 md:px-4 z-40 shadow-sm"
+      class="lg:hidden fixed top-0 left-0 right-0 h-12 md:h-14 bg-white border-b border-gray-200 flex items-center justify-between px-3 md:px-4 z-40 shadow-sm"
     >
-      <button
-        class="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
-        aria-label="Toggle sidebar"
-        @click="sidebarOpen = !sidebarOpen"
-      >
-        <svg
-          class="w-5 h-5 md:w-6 md:h-6 text-gray-600 inline-block"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <div class="flex items-center">
+        <button
+          class="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Toggle sidebar"
+          @click="sidebarOpen = !sidebarOpen"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </button>
-      <h1 class="ml-4 font-bold text-sm md:text-lg text-gray-900">Tasks</h1>
+          <svg
+            class="w-5 h-5 md:w-6 md:h-6 text-gray-600 inline-block"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+        <h1 class="ml-4 font-bold text-sm md:text-lg text-gray-900">Tasks</h1>
+      </div>
+      <UserMenu />
     </div>
 
     <!-- Mobile Sidebar Overlay -->
@@ -82,6 +95,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import UserMenu from '@/components/auth/UserMenu.vue';
 const sidebarOpen = ref(false);
 </script>
 

@@ -22,7 +22,7 @@
               type="button"
               class="text-gray-500 hover:text-gray-700 transition-colors"
               aria-label="Close modal"
-              @click="closeModal"
+              @click="isOpen = false"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

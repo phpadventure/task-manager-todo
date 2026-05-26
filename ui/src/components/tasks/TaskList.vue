@@ -1,35 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useTaskStore } from '@/stores/taskStore';
 import { useListStore } from '@/stores/listStore';
 import { useTasks } from '@/composables/useTasks';
-import { getDueDateLabel, isOverdue } from '@/utils/dateUtils';
 import Button from '@/components/common/Button.vue';
-import Badge from '@/components/common/Badge.vue';
+import TaskItem from '@/components/tasks/TaskItem.vue';
 
 const taskStore = useTaskStore();
 const listStore = useListStore();
 const { isLoading } = useTasks();
 
-const isCreateFormOpen = ref(false);
-
-const statusLabels: Record<string, string> = {
-  TO_DO: 'To Do',
-  IN_PROGRESS: 'In Progress',
-  DONE: 'Done',
-};
-
-const priorityLabels: Record<string, string> = {
-  LOW: 'Low',
-  MEDIUM: 'Medium',
-  HIGH: 'High',
-};
-
-const priorityColors: Record<string, string> = {
-  LOW: 'success',
-  MEDIUM: 'warning',
-  HIGH: 'danger',
-};
+const emit = defineEmits<{
+  'edit-task': [taskId: string];
+  'delete-task': [taskId: string];
+  'create-task': [];
+}>();
 
 const filteredTasks = computed(() => {
   const selectedListId = listStore.selectedListId;
@@ -37,16 +22,16 @@ const filteredTasks = computed(() => {
   return taskStore.getTasksByListId(selectedListId);
 });
 
-const getDueDateClass = (dueDate: string | null) => {
-  if (!dueDate) return '';
-  if (isOverdue(dueDate)) return 'text-red-600 font-semibold';
-  const today = new Date().toISOString().split('T')[0];
-  if (dueDate === today) return 'text-amber-600 font-semibold';
-  return 'text-gray-600';
+const openCreateForm = () => {
+  emit('create-task');
 };
 
-const openCreateForm = () => {
-  isCreateFormOpen.value = true;
+const handleEditTask = (taskId: string) => {
+  emit('edit-task', taskId);
+};
+
+const handleDeleteTask = (taskId: string) => {
+  emit('delete-task', taskId);
 };
 </script>
 
@@ -120,85 +105,18 @@ const openCreateForm = () => {
         </div>
       </div>
 
-      <!-- Task Cards - Responsive Layout -->
+      <!-- Task Items - Using TaskItem component -->
       <div class="p-3 md:p-4 lg:p-6">
         <div class="space-y-2 md:space-y-3 lg:space-y-4">
-          <div
+          <TaskItem
             v-for="task in filteredTasks"
             :key="task.id"
-            class="group relative rounded-lg overflow-hidden transition-all duration-300 cursor-pointer"
-            :style="{
-              background: 'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-            }"
-            @mouseenter="
-              (e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.12)';
-                (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6';
-              }
-            "
-            @mouseleave="
-              (e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
-                (e.currentTarget as HTMLElement).style.borderColor = '#e5e7eb';
-              }
-            "
-          >
-            <!-- Status Indicator Border (Left edge) -->
-            <div
-              class="absolute top-0 left-0 bottom-0 w-1.5"
-              :style="{
-                background:
-                  task.status === 'IN_PROGRESS'
-                    ? '#3b82f6'
-                    : task.status === 'TO_DO'
-                      ? '#f59e0b'
-                      : '#10b981',
-              }"
-            />
-
-            <!-- Responsive Layout: Mobile (column) -> Desktop (row) -->
-            <div
-              class="flex flex-col lg:flex-row lg:items-start p-3 md:p-4 pl-3 md:pl-4 gap-2 md:gap-3"
-            >
-              <!-- Title & Description -->
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-900 text-sm md:text-base line-clamp-1">
-                  {{ task.title }}
-                </h3>
-                <p
-                  v-if="task.description"
-                  class="text-xs md:text-sm text-gray-600 line-clamp-1 mt-1"
-                >
-                  {{ task.description }}
-                </p>
-              </div>
-
-              <!-- Badges & Due Date Row -->
-              <div class="flex flex-wrap gap-1.5 md:gap-2 lg:flex-nowrap items-start">
-                <Badge type="primary">{{ statusLabels[task.status] }}</Badge>
-                <Badge :type="priorityColors[task.priority]">
-                  {{ priorityLabels[task.priority] }}
-                </Badge>
-                <span
-                  v-if="task.dueDate"
-                  :class="[
-                    'text-xs font-medium px-2 py-0.5 rounded-full',
-                    getDueDateClass(task.dueDate),
-                  ]"
-                  :style="{ backgroundColor: '#f0fdf4' }"
-                >
-                  {{ getDueDateLabel(task.dueDate) }}
-                </span>
-              </div>
-            </div>
-          </div>
+            :task="task"
+            @edit="handleEditTask"
+            @delete="handleDeleteTask"
+          />
         </div>
       </div>
     </div>
-
-    <!-- Create Task Modal (placeholder - will be separate component) -->
-    <!-- TODO: Integrate CreateTaskForm component here -->
   </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Badge from '@/components/common/Badge.vue';
+import TaskStatusQuickChange from './TaskStatusQuickChange.vue';
 import { formatDate, getDueDateLabel } from '@/utils/dateUtils';
 
 interface Task {
@@ -22,18 +23,9 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  edit: [];
-  delete: [];
+  edit: [taskId: string];
+  delete: [taskId: string];
 }>();
-
-const statusBadgeType = computed(() => {
-  const types: Record<string, string> = {
-    TO_DO: 'primary',
-    IN_PROGRESS: 'warning',
-    DONE: 'success',
-  };
-  return types[props.task.status] || 'primary';
-});
 
 const priorityBadgeType = computed(() => {
   const types: Record<string, string> = {
@@ -42,15 +34,6 @@ const priorityBadgeType = computed(() => {
     HIGH: 'danger',
   };
   return types[props.task.priority] || 'primary';
-});
-
-const statusLabel = computed(() => {
-  const labels: Record<string, string> = {
-    TO_DO: 'To Do',
-    IN_PROGRESS: 'In Progress',
-    DONE: 'Done',
-  };
-  return labels[props.task.status] || props.task.status;
 });
 
 const priorityLabel = computed(() => {
@@ -83,7 +66,7 @@ const dueDateDisplay = computed(() => {
           type="button"
           class="text-gray-400 hover:text-blue-600 transition-colors p-1"
           aria-label="Edit task"
-          @click="$emit('edit')"
+          @click="emit('edit', task.id)"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -98,7 +81,7 @@ const dueDateDisplay = computed(() => {
           type="button"
           class="text-gray-400 hover:text-red-600 transition-colors p-1"
           aria-label="Delete task"
-          @click="$emit('delete')"
+          @click="emit('delete', task.id)"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -113,13 +96,13 @@ const dueDateDisplay = computed(() => {
     </div>
 
     <!-- Description -->
-    <p v-if="showDescription && description" class="text-sm text-gray-600 mb-3 line-clamp-2">
-      {{ description }}
+    <p v-if="showDescription && task.description" class="text-sm text-gray-600 mb-3 line-clamp-2">
+      {{ task.description }}
     </p>
 
     <!-- Badges and Due Date -->
     <div class="flex flex-wrap gap-2 items-center">
-      <Badge :type="statusBadgeType">{{ statusLabel }}</Badge>
+      <TaskStatusQuickChange :task-id="task.id" :current-status="task.status" />
       <Badge :type="priorityBadgeType">{{ priorityLabel }}</Badge>
       <div v-if="dueDateDisplay" class="flex items-center gap-1 text-xs text-gray-600">
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
