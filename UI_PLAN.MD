@@ -3,7 +3,7 @@
 ## Context
 This project requires building a responsive Vue 3 SPA with Vite that connects to the backend APIs for task management. The frontend handles OAuth2 login redirects, displays task lists with real-time WebSocket notifications, supports search/filtering, and manages form validation. Single-user per session with no data sharing.
 
-**Current State**: Infrastructure complete (Phases 1-6, 10, 14). Phase 7-12 complete with 110+ tests. Phase 8 feature components fully integrated (UserMenu, EditListModal, TaskItem with status dropdown, EditTaskForm, delete confirmations). Phase 13 E2E partial. Ready for Phase 13 completion (5 E2E test suites remaining).
+**Current State**: Infrastructure complete (Phases 1-10, 14). Phases 11-12 advanced with error handling utilities + 110+ tests. Phase 8 feature components fully integrated (UserMenu, EditListModal, TaskItem with status dropdown, EditTaskForm, delete confirmations). WebSocket notification interval persistence fixed. Phase 13 E2E partial. Overall ~75% complete.
 
 **Tech Stack**: Vue 3, Vite, Tailwind CSS, Headless UI (or shadcn), TanStack Query (Vue Query), Pinia, WebSocket API, Vitest, @vue/test-utils, Playwright
 
@@ -170,7 +170,7 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ---
 
-## Phase 5: WebSocket Integration ✅ COMPLETE (STOMP Protocol)
+## Phase 5: WebSocket Integration ✅ COMPLETE (STOMP Protocol + Notification Interval Persistence)
 
 - [x] Create `src/websocket/notificationService.ts`:
   - [x] STOMP client over raw WebSocket (native browser API)
@@ -186,11 +186,12 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 - [x] Create `src/composables/useNotifications.ts`:
   - [x] `connect()` - init STOMP connection on demand (called from App.vue after auth check)
+  - [x] **Notification interval persistence**: Auto-send subscribe message with restored interval on connect
   - [x] `disconnect()` - cleanup on app unmount
   - [x] Handle incoming notifications (all subscriptions)
   - [x] Add notifications to notificationStore
   - [x] Filter duplicates using seen notification IDs
-  - [x] Load settings (default 60s interval)
+  - [x] Load settings (default 60s interval) and auto-apply to backend
 
 **STOMP Message Flow** (Backend-Driven):
 ```typescript
@@ -556,7 +557,7 @@ stompClient.publish({
 
 ---
 
-## Phase 11: Form Validation & Error Handling
+## Phase 11: Form Validation & Error Handling ✅ SUBSTANTIALLY COMPLETE (80%)
 
 - [x] Create `src/utils/validation.ts`:
   - [x] `validateTaskTitle(title)` - required, max 255 chars
@@ -565,25 +566,29 @@ stompClient.publish({
   - [x] `validateDueDate(date)` - optional, must be today or future if provided
   - [x] `getErrorMessage(field, error)` - user-friendly error messages
 
-- ⚠️ **PARTIAL** Error handling in API calls (add to `src/api/client.ts`):
+- [x] **SUBSTANTIALLY COMPLETE** Error handling in API calls (add to `src/api/client.ts`):
   - [x] Basic 401 Unauthorized handling
-  - [ ] Display error toasts on API failures **NEEDS Toast component**
-  - [ ] Handle HTTP status codes:
-    - [ ] `400 Bad Request` → show validation error from backend response body
+  - [x] Display error toasts on API failures via `useToastError` composable
+  - [x] Handle HTTP status codes:
+    - [x] `400 Bad Request` → show validation error from backend response body
     - [x] `401 Unauthorized` → redirect to login page
-    - [ ] `403 Forbidden` → show "You don't have permission to modify this resource"
-    - [ ] `404 Not Found` → show "Resource not found or has been deleted"
-    - [ ] `409 Conflict` → show conflict-specific message (e.g., "Cannot delete list with active tasks")
-    - [ ] `500 Server Error` → show "Server error, please try again"
-  - [ ] Auto-retry logic for transient failures (5xx errors, optional exponential backoff)
-  - [ ] Log error details to console for debugging (development mode)
+    - [x] `403 Forbidden` → show "You don't have permission to modify this resource"
+    - [x] `404 Not Found` → show "Resource not found or has been deleted"
+    - [x] `409 Conflict` → show conflict-specific message (e.g., "Cannot delete list with active tasks")
+    - [x] `500 Server Error` → show "Server error, please try again"
+  - [x] Auto-retry logic for transient failures (5xx errors, optional exponential backoff)
+  - [x] Log error details to console for debugging (development mode)
+  - [x] Centralized error handler utility for consistent error display
 
-**Files to Create**:
-- [x] `ui/src/utils/validation.ts`
+**Files Created/Updated**:
+- [x] `ui/src/utils/validation.ts` ✅
+- [x] `ui/src/utils/apiErrorHandler.ts` ✅ (NEW)
+- [x] `ui/src/composables/useToastError.ts` ✅ (NEW)
+- [x] `ui/src/utils/__tests__/apiErrorHandler.spec.ts` ✅ (NEW - error handler tests)
 
 ---
 
-## Phase 12: Component Tests with Vitest ✅ COMPLETE (110+ Tests - 100%)
+## Phase 12: Component Tests with Vitest ✅ COMPLETE (115+ Tests - 100%)
 
 - [x] Create `src/components/common/__tests__/Button.spec.ts` (8 tests)
 - [x] Create `src/components/common/__tests__/Input.spec.ts` (10 tests)
@@ -595,13 +600,15 @@ stompClient.publish({
 - [x] Create `src/stores/__tests__/taskStore.spec.ts` (11 tests)
 - [x] Create `src/utils/__tests__/dateUtils.spec.ts` (5 tests with fake timers)
 - [x] Create `src/utils/__tests__/validation.spec.ts` (8 tests)
+- [x] Create `src/utils/__tests__/apiErrorHandler.spec.ts` (error handler tests) ✅ **NEW**
 - [x] Run tests: `npm run test` (passing)
 - [x] Setup code coverage: `npm run test:coverage`
 
 **Test Coverage Goals**:
-- [x] 70%+ overall coverage (Current: ~110+ tests passing)
+- [x] 70%+ overall coverage (Current: ~115+ tests passing)
 - [x] 100% coverage for utils and stores **COMPLETED**
 - [x] All critical component interactions tested **COMPLETED**
+- [x] Error handling utilities tested **COMPLETED** (NEW)
 
 **Files Created**:
 - [x] `ui/src/components/common/__tests__/Button.spec.ts` (8 tests: variants, sizes, disabled/loading, click events)
@@ -618,6 +625,8 @@ stompClient.publish({
 - [x] `ui/src/stores/__tests__/taskStore.spec.ts` (11 tests: CRUD, filtering, search)
 - [x] `ui/src/utils/__tests__/dateUtils.spec.ts` (5 tests: date formatting, overdue/due-soon detection)
 - [x] `ui/src/utils/__tests__/validation.spec.ts` (8 tests: title/description/dueDate validation)
+- [x] `ui/src/utils/__tests__/apiErrorHandler.spec.ts` (error handler tests) ✅ **NEW**
+- [x] `ui/src/composables/__tests__/` (composable tests) ✅ **NEW**
 
 ---
 
@@ -916,14 +925,14 @@ In Docker, frontend and backend served through **Nginx reverse proxy** (single o
 | 8 | Feature Components | ✅ Complete | 100% (12/12 integrated) |
 | 9 | Pages/Views | ✅ Complete | 100% (2/2 required) |
 | 10 | Routing & Main App | ✅ Complete | 100% |
-| 11 | Form Validation & Error Handling | ⚠️ Partial | 60% |
-| 12 | Component Tests | ✅ Complete | 100% (110+ tests) |
+| 11 | Form Validation & Error Handling | ✅ Substantially Complete | 80% |
+| 12 | Component Tests | ✅ Complete | 100% (115+ tests) |
 | 13 | E2E Tests | ⚠️ Partial | 17% (auth.spec.ts started) |
 | 14 | Styling & Responsive Design | ✅ Mostly Complete | 85% |
 | 15 | Documentation & Deployment | ⚠️ Partial | 40% |
-| **Overall** | | ⚠️ Substantial | **70%+** |
+| **Overall** | | ✅ Substantial | **~75%** |
 
-**Recent Fixes & Integrations (Phase 8 Completion)**:
+**Recent Fixes & Integrations**:
 1. ✅ Modal.vue X button now closes properly (direct state update)
 2. ✅ TaskItem displays status as dropdown (TaskStatusQuickChange) with API integration
 3. ✅ Task delete confirmation modal implemented with proper API call
@@ -931,6 +940,9 @@ In Docker, frontend and backend served through **Nginx reverse proxy** (single o
 5. ✅ UserMenu integrated into MainLayout header
 6. ✅ EditListModal integrated into HomePage
 7. ✅ EditTaskForm integrated into HomePage
+8. ✅ **WebSocket notification interval persistence** - restored intervals auto-sent to backend on page reload (Phase 5)
+9. ✅ **Centralized error handling** - apiErrorHandler.ts + useToastError composable for consistent error display (Phase 11)
+10. ✅ **Error tests** - apiErrorHandler.spec.ts + composable tests for robust error handling (Phase 12)
 
 **Total files created**: ~62 files (all core infrastructure and feature components complete)
 
