@@ -17,7 +17,7 @@ onMounted(async () => {
 
   // If authenticated, connect to WebSocket for notifications
   if (authStore.isAuthenticated) {
-    connect();
+    await connect();
   }
 });
 

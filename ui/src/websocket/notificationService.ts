@@ -1,4 +1,4 @@
-import { Client } from '@stomp/stompjs';
+import { Client, StompSubscription } from '@stomp/stompjs';
 
 interface WebSocketNotification {
   type: 'notification';
@@ -27,30 +27,40 @@ type CloseHandler = () => void;
 export class NotificationService {
   private client: Client | null = null;
   private url: string;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
+  private isConnecting = false;
 
   private messageHandlers: MessageHandler[] = [];
   private errorHandlers: ErrorHandler[] = [];
   private closeHandlers: CloseHandler[] = [];
+  private subscriptions: StompSubscription[] = [];
 
   constructor(url: string) {
     this.url = url;
   }
 
   connect(): Promise<void> {
+    if (this.client?.connected) {
+      return Promise.resolve();
+    }
+    if (this.isConnecting) {
+      return Promise.resolve(); // Запобігаємо подвійному підключенню у Vue Strict Mode
+    }
+
+    this.isConnecting = true;
+
     return new Promise((resolve, reject) => {
       try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = this.url.startsWith('ws')
           ? this.url
           : `${protocol}//${window.location.host}${this.url}`;
-        console.log('[WS] Creating STOMP client with raw WebSocket...');
+        
+        console.log('[WS] Creating STOMP client with URL:', wsUrl);
 
         this.client = new Client({
           brokerURL: wsUrl,
-          reconnectDelay: this.reconnectDelay * this.reconnectAttempts,
+          // Дозволяємо бібліотеці самій керувати реконнектом (кожні 5 секунд)
+          reconnectDelay: 5000, 
           heartbeatIncoming: 4000,
           heartbeatOutgoing: 4000,
           debug: (msg: string) => {
@@ -62,61 +72,68 @@ export class NotificationService {
 
         this.client.onConnect = (frame) => {
           console.log('[WS] STOMP Connected:', frame.command);
-          this.reconnectAttempts = 0;
+          this.isConnecting = false;
+          this.subscriptions = [];
 
-          // Step 1: Subscribe to /app/notifications for initial batch
-          console.log('[WS] Subscribing to /app/notifications (initial batch)...');
-          this.client?.subscribe('/app/notifications', (message) => {
+          // 1. ПІДПИСКА НА ПОЧАТКОВИЙ ПАКЕТ (/app/notifications)
+          console.log('[WS] Subscribing to /app/notifications...');
+          const appNotifSub = this.client?.subscribe('/app/notifications', (message) => {
             try {
               const parsed = JSON.parse(message.body);
               console.log('[WS] Received initial batch:', parsed);
-              // Handle both single notification and array of notifications
               const notifications = Array.isArray(parsed) ? parsed : [parsed];
               notifications.forEach((data) => {
-                console.log('[WS] Processing notification:', data);
                 this.messageHandlers.forEach((handler) => handler(data));
               });
             } catch (error) {
-              console.error(
-                '[WS] Failed to parse initial notifications:',
-                error,
-                'Body:',
-                message.body
-              );
+              console.error('[WS] Error parsing initial batch:', error);
             }
           });
+          if (appNotifSub) this.subscriptions.push(appNotifSub);
 
-          // Step 2: Subscribe to /user/queue/notifications for ongoing messages
-          console.log('[WS] Subscribing to /user/queue/notifications (ongoing messages)...');
-          this.client?.subscribe('/user/queue/notifications', (message) => {
+          // 2. МИТТЄВА ПІДПИСКА НА ДИНАМІЧНУ ЧЕРГУ КОРИСТУВАЧА
+          // ПРИБРАНО setTimeout(..., 1000) щоб уникнути втрати повідомлень від шедулера!
+          console.log('[WS] Subscribing to /user/queue/notifications...');
+          const userQueueSub = this.client?.subscribe('/user/queue/notifications', (message) => {
             try {
-              const data = JSON.parse(message.body) as WebSocketNotification;
-              console.log('[WS] Received ongoing notification:', data.title);
+              const data = JSON.parse(message.body);
+              console.log('[WS] Received notification on /user/queue:', data.title);
               this.messageHandlers.forEach((handler) => handler(data));
             } catch (error) {
-              console.error('[WS] Failed to parse ongoing notification:', error);
+              console.error('[WS] Error parsing /user/queue notification:', error);
             }
           });
+          
+          if (userQueueSub) {
+            this.subscriptions.push(userQueueSub);
+            console.log('[WS] ✅ /user/queue/notifications subscribed');
+          }
 
           resolve();
         };
 
         this.client.onStompError = (frame) => {
+          this.isConnecting = false;
           console.error('[WS] STOMP error:', frame.body);
           const errorMsg = `STOMP Error: ${frame.body}`;
           this.errorHandlers.forEach((handler) => handler(errorMsg));
           reject(new Error(errorMsg));
         };
 
-        this.client.onDisconnect = (frame) => {
-          console.log('[WS] STOMP disconnected');
+        this.client.onDisconnect = () => {
+          this.isConnecting = false;
+          console.log('[WS] STOMP deactivated/disconnected');
           this.closeHandlers.forEach((handler) => handler());
-          this.attemptReconnect();
         };
 
-        console.log('[WS] Activating STOMP connection to:', wsUrl);
+        this.client.onWebSocketClose = () => {
+          console.log('[WS] Underlying WebSocket closed. Library will auto-reconnect...');
+        };
+
+        console.log('[WS] Activating STOMP connection...');
         this.client.activate();
       } catch (error) {
+        this.isConnecting = false;
         console.error('[WS] Failed to create STOMP client:', error);
         reject(error);
       }
@@ -124,15 +141,23 @@ export class NotificationService {
   }
 
   disconnect(): void {
-    if (this.client && this.client.connected) {
-      console.log('[WS] Disconnecting STOMP client...');
+    this.isConnecting = false;
+    this.subscriptions.forEach((sub) => {
+      if (sub?.unsubscribe) {
+        sub.unsubscribe();
+      }
+    });
+    this.subscriptions = [];
+
+    if (this.client) {
+      console.log('[WS] Deactivating STOMP client...');
       this.client.deactivate();
       this.client = null;
     }
   }
 
   subscribe(interval: number): void {
-    if (this.client && this.client.connected) {
+    if (this.client?.connected) {
       const message: SubscribeMessage = { interval };
       console.log('[WS] Sending subscribe message with interval:', interval);
       this.client.publish({
@@ -145,7 +170,7 @@ export class NotificationService {
   }
 
   acknowledge(notificationId: string): void {
-    if (this.client && this.client.connected) {
+    if (this.client?.connected) {
       const message: AckMessage = { type: 'ack', notificationId };
       console.log('[WS] Sending acknowledge message for:', notificationId);
       this.client.publish({
@@ -167,23 +192,6 @@ export class NotificationService {
 
   onClose(handler: CloseHandler): void {
     this.closeHandlers.push(handler);
-  }
-
-  private attemptReconnect(): void {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      const delay = this.reconnectDelay * this.reconnectAttempts;
-      console.log(
-        `[WS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
-      );
-      setTimeout(() => {
-        this.connect().catch((error) => {
-          console.error('[WS] Reconnection failed:', error);
-        });
-      }, delay);
-    } else {
-      console.error('[WS] Max reconnection attempts reached');
-    }
   }
 
   isConnected(): boolean {

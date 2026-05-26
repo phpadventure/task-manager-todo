@@ -45,9 +45,6 @@ export const useNotifications = () => {
       });
 
       settingsStore.loadSettings();
-      const interval = settingsStore.notificationInterval;
-      console.log('[WS] Sending subscribe message with interval:', interval);
-      notificationService.subscribe(interval);
     } catch (error) {
       console.error('[WS] Failed to connect:', error);
     }

@@ -118,7 +118,7 @@ ws.on('error', err => console.error('Error:', err));
    - Server receives and processes the command
    - ❌ NOT for receiving messages
 
-2. ** BROKER DESTINATIONS: `/queue/*` `/user/*`. Client should subscribe to get messages. Broker sends.
+2. ** BROKER DESTINATIONS: `/queue/*` `/topic/*`. Client should subscribe to get messages. Broker sends.
 
 3. **`/queue/*` destinations** (Handler → Broker → Client messaging)
    - Used for public messages
@@ -141,7 +141,7 @@ ws.on('error', err => console.error('Error:', err));
 ```java
 config.enableSimpleBroker("/user");  // Only /user in broker
 ```
-- `/user/*` destinations go to broker (for user-specific routing)
+- `/user/*/queue/` destinations go to broker (for user-specific routing)
 - `/queue/*` destinations global
 
 ---
