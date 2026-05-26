@@ -54,15 +54,4 @@ public class AuthController {
         }
     }
 
-    @Operation(
-        summary = "Logout current user",
-        description = "Invalidates the session and clears authentication context")
-    @ApiResponse(
-        responseCode = "200",
-        description = "Successfully logged out")
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok().build();
-    }
 }

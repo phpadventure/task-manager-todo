@@ -60,7 +60,10 @@ public class SecurityConfig {
                 .successHandler(oAuth2SuccessHandler)
             )
             .logout(logout -> logout
+                .logoutUrl("/api/auth/logout")
                 .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
             );
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref } from 'vue';
 import { useTaskStore } from '@/stores/taskStore';
 import { useListStore } from '@/stores/listStore';
 import { useTasks } from '@/composables/useTasks';
@@ -12,21 +12,6 @@ const listStore = useListStore();
 const { isLoading } = useTasks();
 
 const isCreateFormOpen = ref(false);
-const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
-
-const handleResize = () => {
-  windowWidth.value = window.innerWidth;
-};
-
-onMounted(() => {
-  window.addEventListener('resize', handleResize);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-});
-
-const isDesktop = computed(() => windowWidth.value >= 1024);
 
 const statusLabels: Record<string, string> = {
   TO_DO: 'To Do',
@@ -41,9 +26,9 @@ const priorityLabels: Record<string, string> = {
 };
 
 const priorityColors: Record<string, string> = {
-  LOW: 'badge-info',
-  MEDIUM: 'badge-warning',
-  HIGH: 'badge-error',
+  LOW: 'success',
+  MEDIUM: 'warning',
+  HIGH: 'danger',
 };
 
 const filteredTasks = computed(() => {
@@ -88,16 +73,16 @@ const openCreateForm = () => {
       <div v-if="isLoading" class="flex items-center justify-center h-40">
         <div class="text-center">
           <div
-            class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-600 mx-auto mb-2"
+            class="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-2 border-gray-300 border-t-blue-600 mx-auto mb-2"
           ></div>
-          <p class="text-sm text-gray-500">Loading tasks...</p>
+          <p class="text-xs md:text-sm text-gray-500">Loading tasks...</p>
         </div>
       </div>
 
       <div v-else-if="!listStore.selectedListId" class="flex items-center justify-center h-64">
-        <div class="text-center">
+        <div class="text-center px-4">
           <svg
-            class="mx-auto h-12 w-12 text-gray-400"
+            class="mx-auto h-8 w-8 md:h-12 md:w-12 text-gray-400 inline-block"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -109,14 +94,14 @@ const openCreateForm = () => {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <p class="text-gray-600 mt-2">Select a list to view tasks</p>
+          <p class="text-gray-600 mt-2 text-sm md:text-base">Select a list to view tasks</p>
         </div>
       </div>
 
       <div v-else-if="filteredTasks.length === 0" class="flex items-center justify-center h-64">
-        <div class="text-center">
+        <div class="text-center px-4">
           <svg
-            class="mx-auto h-12 w-12 text-gray-400"
+            class="mx-auto h-8 w-8 md:h-12 md:w-12 text-gray-400 inline-block"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -128,117 +113,86 @@ const openCreateForm = () => {
               d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
             />
           </svg>
-          <p class="text-gray-600 mt-2 mb-4">No tasks yet</p>
+          <p class="text-gray-600 mt-2 mb-4 text-sm md:text-base">No tasks yet</p>
           <Button type="button" variant="primary" @click="openCreateForm">
             Create your first task
           </Button>
         </div>
       </div>
 
-      <!-- Desktop Task Cards (lg and up) -->
-      <div v-else-if="isDesktop" class="p-6">
-        <div class="space-y-3">
+      <!-- Task Cards - Responsive Layout -->
+      <div class="p-3 md:p-4 lg:p-6">
+        <div class="space-y-2 md:space-y-3 lg:space-y-4">
           <div
             v-for="task in filteredTasks"
             :key="task.id"
-            class="group relative bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-md hover:shadow-xl hover:border-blue-400 transition-all duration-300 cursor-pointer overflow-hidden"
+            class="group relative rounded-lg overflow-hidden transition-all duration-300 cursor-pointer"
+            :style="{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+            }"
+            @mouseenter="
+              (e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.12)';
+                (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6';
+              }
+            "
+            @mouseleave="
+              (e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
+                (e.currentTarget as HTMLElement).style.borderColor = '#e5e7eb';
+              }
+            "
           >
+            <!-- Status Indicator Border (Left edge) -->
             <div
-              class="absolute inset-0 bg-gradient-to-r from-blue-50/0 to-blue-50/0 group-hover:from-blue-50/50 group-hover:to-transparent transition-all duration-300 pointer-events-none"
+              class="absolute top-0 left-0 bottom-0 w-1.5"
+              :style="{
+                background:
+                  task.status === 'IN_PROGRESS'
+                    ? '#3b82f6'
+                    : task.status === 'TO_DO'
+                      ? '#f59e0b'
+                      : '#10b981',
+              }"
             />
 
-            <div class="relative flex items-center p-5 gap-4">
-              <!-- Status Indicator -->
-              <div
-                class="flex-shrink-0 w-1.5 h-14 rounded-full"
-                :class="{
-                  'bg-gradient-to-b from-blue-500 to-blue-600 shadow-lg':
-                    task.status === 'IN_PROGRESS',
-                  'bg-gradient-to-b from-amber-500 to-amber-600 shadow-lg': task.status === 'TO_DO',
-                  'bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-lg':
-                    task.status === 'DONE',
-                }"
-              />
-
+            <!-- Responsive Layout: Mobile (column) -> Desktop (row) -->
+            <div
+              class="flex flex-col lg:flex-row lg:items-start p-3 md:p-4 pl-3 md:pl-4 gap-2 md:gap-3"
+            >
               <!-- Title & Description -->
               <div class="flex-1 min-w-0">
-                <h3
-                  class="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-blue-700 transition-colors"
-                >
+                <h3 class="font-semibold text-gray-900 text-sm md:text-base line-clamp-1">
                   {{ task.title }}
                 </h3>
-                <p v-if="task.description" class="text-sm text-gray-500 line-clamp-1 mt-0.5">
+                <p
+                  v-if="task.description"
+                  class="text-xs md:text-sm text-gray-600 line-clamp-1 mt-1"
+                >
                   {{ task.description }}
                 </p>
               </div>
 
-              <!-- Status & Priority Badges -->
-              <div class="flex-shrink-0 flex items-center gap-2">
+              <!-- Badges & Due Date Row -->
+              <div class="flex flex-wrap gap-1.5 md:gap-2 lg:flex-nowrap items-start">
                 <Badge type="primary">{{ statusLabels[task.status] }}</Badge>
                 <Badge :type="priorityColors[task.priority]">
                   {{ priorityLabels[task.priority] }}
                 </Badge>
-              </div>
-
-              <!-- Due Date -->
-              <div class="flex-shrink-0 text-right min-w-max">
                 <span
                   v-if="task.dueDate"
-                  :class="['text-sm font-semibold', getDueDateClass(task.dueDate)]"
+                  :class="[
+                    'text-xs font-medium px-2 py-0.5 rounded-full',
+                    getDueDateClass(task.dueDate),
+                  ]"
+                  :style="{ backgroundColor: '#f0fdf4' }"
                 >
                   {{ getDueDateLabel(task.dueDate) }}
                 </span>
-                <span v-else class="text-sm text-gray-300">—</span>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mobile Card View (below lg) -->
-      <div v-else class="p-4 md:p-6 space-y-2.5">
-        <div
-          v-for="task in filteredTasks"
-          :key="task.id"
-          class="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer p-4 hover:border-blue-300 overflow-hidden relative"
-        >
-          <!-- Status Indicator Top Border -->
-          <div
-            class="absolute top-0 left-0 right-0 h-1.5 rounded-t-lg"
-            :class="{
-              'bg-blue-500': task.status === 'IN_PROGRESS',
-              'bg-amber-500': task.status === 'TO_DO',
-              'bg-emerald-500': task.status === 'DONE',
-            }"
-          />
-
-          <!-- Title & Description -->
-          <div class="mb-3 pt-2">
-            <h3
-              class="font-semibold text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors"
-            >
-              {{ task.title }}
-            </h3>
-            <p v-if="task.description" class="text-xs text-gray-500 line-clamp-2 mt-1">
-              {{ task.description }}
-            </p>
-          </div>
-
-          <!-- Badges Row -->
-          <div class="flex flex-wrap gap-2 items-center">
-            <Badge type="primary">{{ statusLabels[task.status] }}</Badge>
-            <Badge :type="priorityColors[task.priority]">
-              {{ priorityLabels[task.priority] }}
-            </Badge>
-            <span
-              v-if="task.dueDate"
-              :class="[
-                'text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100',
-                getDueDateClass(task.dueDate),
-              ]"
-            >
-              {{ getDueDateLabel(task.dueDate) }}
-            </span>
           </div>
         </div>
       </div>
