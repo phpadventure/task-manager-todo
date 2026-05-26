@@ -1,9 +1,11 @@
 import { computed, ref } from 'vue';
 import { useListStore } from '@/stores/listStore';
 import { listApi, CreateListRequest, UpdateListRequest } from '@/api/listApi';
+import { useToastError } from '@/composables/useToastError';
 
 export const useLists = () => {
   const listStore = useListStore();
+  const { showErrorWithContext } = useToastError();
   const isCreating = ref(false);
   const isUpdating = ref(false);
   const isDeleting = ref(false);
@@ -33,6 +35,7 @@ export const useLists = () => {
       return newList;
     } catch (err) {
       listStore.setError(err instanceof Error ? err.message : 'Failed to create list');
+      showErrorWithContext(err, 'list', { fallback: 'Failed to create list' });
       throw err;
     } finally {
       isCreating.value = false;
@@ -47,6 +50,7 @@ export const useLists = () => {
       return updated;
     } catch (err) {
       listStore.setError(err instanceof Error ? err.message : 'Failed to update list');
+      showErrorWithContext(err, 'list', { fallback: 'Failed to update list' });
       throw err;
     } finally {
       isUpdating.value = false;
@@ -60,6 +64,7 @@ export const useLists = () => {
       listStore.deleteList(id);
     } catch (err) {
       listStore.setError(err instanceof Error ? err.message : 'Failed to delete list');
+      showErrorWithContext(err, 'list', { fallback: 'Failed to delete list' });
       throw err;
     } finally {
       isDeleting.value = false;

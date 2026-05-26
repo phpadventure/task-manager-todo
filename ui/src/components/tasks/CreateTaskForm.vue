@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useForm } from '@/composables/useForm';
 import { useTasks } from '@/composables/useTasks';
 import { validateTaskTitle, validateTaskDescription, validateDueDate } from '@/utils/validation';
+import { isConflictError, getErrorMessage } from '@/utils/apiErrorHandler';
 import Button from '@/components/common/Button.vue';
 import Input from '@/components/common/Input.vue';
 
@@ -24,6 +25,8 @@ const { values, errors, touched, setValues, handleSubmit } = useForm({
   dueDate: '',
   priority: 'MEDIUM',
 });
+const submitError = ref<string | null>(null);
+const fieldErrors = ref<Record<string, string>>({});
 
 const priorityOptions = [
   { value: 'LOW', label: 'Low' },
@@ -55,19 +58,29 @@ const validateDueDateField = () => {
 };
 
 const onSubmit = handleSubmit(async (formData) => {
-  await createTask(props.listId, {
-    title: formData.title,
-    description: formData.description || undefined,
-    dueDate: formData.dueDate || undefined,
-    priority: formData.priority as 'LOW' | 'MEDIUM' | 'HIGH',
-  });
-  setValues({
-    title: '',
-    description: '',
-    dueDate: '',
-    priority: 'MEDIUM',
-  });
-  emit('close');
+  submitError.value = null;
+  fieldErrors.value = {};
+  try {
+    await createTask(props.listId, {
+      title: formData.title,
+      description: formData.description || undefined,
+      dueDate: formData.dueDate || undefined,
+      priority: formData.priority as 'LOW' | 'MEDIUM' | 'HIGH',
+    });
+    setValues({
+      title: '',
+      description: '',
+      dueDate: '',
+      priority: 'MEDIUM',
+    });
+    emit('close');
+  } catch (error) {
+    const errorInfo = getErrorMessage(error);
+    submitError.value = errorInfo.message;
+    if (errorInfo.fieldErrors) {
+      fieldErrors.value = errorInfo.fieldErrors;
+    }
+  }
 });
 </script>
 
@@ -80,6 +93,11 @@ const onSubmit = handleSubmit(async (formData) => {
       <h2 class="text-xl font-bold mb-4">Create New Task</h2>
 
       <form class="space-y-4" @submit="onSubmit">
+        <!-- Error Alert -->
+        <div v-if="submitError" class="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p class="text-sm text-red-800">{{ submitError }}</p>
+        </div>
+
         <!-- Title -->
         <div>
           <Input
@@ -87,7 +105,7 @@ const onSubmit = handleSubmit(async (formData) => {
             type="text"
             label="Task Title"
             placeholder="e.g., Buy groceries"
-            :error="touched.title ? errors.title : null"
+            :error="fieldErrors.title || (touched.title ? errors.title : null)"
             @blur="validateTitle"
           />
         </div>
@@ -102,8 +120,11 @@ const onSubmit = handleSubmit(async (formData) => {
             rows="3"
             @blur="validateDesc"
           ></textarea>
-          <p v-if="touched.description && errors.description" class="text-error text-xs mt-1">
-            {{ errors.description }}
+          <p
+            v-if="fieldErrors.description || (touched.description && errors.description)"
+            class="text-error text-xs mt-1"
+          >
+            {{ fieldErrors.description || errors.description }}
           </p>
         </div>
 
@@ -113,7 +134,7 @@ const onSubmit = handleSubmit(async (formData) => {
             v-model="values.dueDate"
             type="date"
             label="Due Date (optional)"
-            :error="touched.dueDate ? errors.dueDate : null"
+            :error="fieldErrors.dueDate || (touched.dueDate ? errors.dueDate : null)"
             @blur="validateDueDateField"
           />
         </div>

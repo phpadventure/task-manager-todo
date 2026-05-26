@@ -6,9 +6,11 @@ import {
   type CreateTaskRequest,
   type UpdateTaskRequest,
 } from '@/api/taskApi';
+import { useToastError } from '@/composables/useToastError';
 
 export const useTasks = () => {
   const taskStore = useTaskStore();
+  const { showErrorWithContext } = useToastError();
   const isLoading = ref(false);
   const isCreating = ref(false);
   const isUpdating = ref(false);
@@ -65,6 +67,7 @@ export const useTasks = () => {
       return newTask;
     } catch (err) {
       taskStore.setError(err instanceof Error ? err.message : 'Failed to create task');
+      showErrorWithContext(err, 'task', { fallback: 'Failed to create task' });
       throw err;
     } finally {
       isCreating.value = false;
@@ -79,6 +82,7 @@ export const useTasks = () => {
       return updated;
     } catch (err) {
       taskStore.setError(err instanceof Error ? err.message : 'Failed to update task');
+      showErrorWithContext(err, 'task', { fallback: 'Failed to update task' });
       throw err;
     } finally {
       isUpdating.value = false;
@@ -92,6 +96,7 @@ export const useTasks = () => {
       return updated;
     } catch (err) {
       taskStore.setError(err instanceof Error ? err.message : 'Failed to update task status');
+      showErrorWithContext(err, 'task', { fallback: 'Failed to update task status' });
       throw err;
     }
   };
@@ -103,6 +108,7 @@ export const useTasks = () => {
       taskStore.deleteTask(taskId);
     } catch (err) {
       taskStore.setError(err instanceof Error ? err.message : 'Failed to delete task');
+      showErrorWithContext(err, 'task', { fallback: 'Failed to delete task' });
       throw err;
     } finally {
       isDeleting.value = false;

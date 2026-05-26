@@ -23,7 +23,8 @@ export const useNotifications = () => {
         console.log('[WS] Title:', notification.title, 'DueDate:', notification.dueDate);
         if (!seenNotificationIds.has(notification.id)) {
           seenNotificationIds.add(notification.id);
-          notificationStore.addNotification(notification);
+          const { type, ...taskData } = notification;
+          notificationStore.addNotification(taskData);
           console.log('[WS] Notification added to store:', {
             id: notification.id,
             title: notification.title,
@@ -45,6 +46,7 @@ export const useNotifications = () => {
       });
 
       settingsStore.loadSettings();
+      notificationService.subscribe(settingsStore.notificationInterval);
     } catch (error) {
       console.error('[WS] Failed to connect:', error);
     }

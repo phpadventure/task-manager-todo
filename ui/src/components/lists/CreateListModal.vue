@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useForm } from '@/composables/useForm';
 import { useLists } from '@/composables/useLists';
 import { validateListTitle } from '@/utils/validation';
+import { getErrorMessage } from '@/utils/apiErrorHandler';
 import Button from '@/components/common/Button.vue';
 import Input from '@/components/common/Input.vue';
 
@@ -20,6 +21,8 @@ const { createList, isCreating } = useLists();
 const { values, errors, touched, isDirty, isValid, setValues, handleSubmit } = useForm({
   title: '',
 });
+const submitError = ref<string | null>(null);
+const fieldErrors = ref<Record<string, string>>({});
 
 watch(
   () => props.isOpen,
@@ -31,8 +34,18 @@ watch(
 );
 
 const onSubmit = handleSubmit(async (formData) => {
-  await createList(formData.title);
-  emit('close');
+  submitError.value = null;
+  fieldErrors.value = {};
+  try {
+    await createList(formData.title);
+    emit('close');
+  } catch (error) {
+    const errorInfo = getErrorMessage(error);
+    submitError.value = errorInfo.message;
+    if (errorInfo.fieldErrors) {
+      fieldErrors.value = errorInfo.fieldErrors;
+    }
+  }
 });
 
 const onTitleBlur = () => {
@@ -54,13 +67,18 @@ const canSubmit = computed(() => values.title.trim().length > 0 && !isCreating.v
       <h2 class="text-xl font-bold mb-4">Create New List</h2>
 
       <form class="space-y-4" @submit="onSubmit">
+        <!-- Error Alert -->
+        <div v-if="submitError" class="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p class="text-sm text-red-800">{{ submitError }}</p>
+        </div>
+
         <div>
           <Input
             v-model="values.title"
             type="text"
             label="List Title"
             placeholder="e.g., Work, Personal, Shopping"
-            :error="touched.title ? errors.title : null"
+            :error="fieldErrors.title || (touched.title ? errors.title : null)"
             @blur="onTitleBlur"
           />
         </div>

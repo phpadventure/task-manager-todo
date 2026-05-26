@@ -54,13 +54,13 @@ export class NotificationService {
         const wsUrl = this.url.startsWith('ws')
           ? this.url
           : `${protocol}//${window.location.host}${this.url}`;
-        
+
         console.log('[WS] Creating STOMP client with URL:', wsUrl);
 
         this.client = new Client({
           brokerURL: wsUrl,
           // Дозволяємо бібліотеці самій керувати реконнектом (кожні 5 секунд)
-          reconnectDelay: 5000, 
+          reconnectDelay: 5000,
           heartbeatIncoming: 4000,
           heartbeatOutgoing: 4000,
           debug: (msg: string) => {
@@ -103,7 +103,7 @@ export class NotificationService {
               console.error('[WS] Error parsing /user/queue notification:', error);
             }
           });
-          
+
           if (userQueueSub) {
             this.subscriptions.push(userQueueSub);
             console.log('[WS] ✅ /user/queue/notifications subscribed');

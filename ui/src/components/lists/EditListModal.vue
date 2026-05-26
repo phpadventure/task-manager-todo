@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useForm } from '@/composables/useForm';
 import { useLists } from '@/composables/useLists';
 import { validateListTitle } from '@/utils/validation';
+import { getErrorMessage } from '@/utils/apiErrorHandler';
 import Modal from '@/components/common/Modal.vue';
 import Button from '@/components/common/Button.vue';
 import Input from '@/components/common/Input.vue';
@@ -24,6 +25,9 @@ const { values, errors, touched, setValues, handleSubmit } = useForm({
   title: '',
 });
 const showDeleteConfirm = ref(false);
+const submitError = ref<string | null>(null);
+const deleteError = ref<string | null>(null);
+const fieldErrors = ref<Record<string, string>>({});
 
 watch(
   () => props.isOpen,
@@ -37,14 +41,30 @@ watch(
 
 const onSubmit = handleSubmit(async (formData) => {
   if (!props.listId) return;
-  await updateList(props.listId, formData.title);
-  emit('close');
+  submitError.value = null;
+  fieldErrors.value = {};
+  try {
+    await updateList(props.listId, formData.title);
+    emit('close');
+  } catch (error) {
+    const errorInfo = getErrorMessage(error);
+    submitError.value = errorInfo.message;
+    if (errorInfo.fieldErrors) {
+      fieldErrors.value = errorInfo.fieldErrors;
+    }
+  }
 });
 
 const onDelete = async () => {
   if (!props.listId) return;
-  await deleteList(props.listId);
-  emit('close');
+  deleteError.value = null;
+  try {
+    await deleteList(props.listId);
+    emit('close');
+  } catch (error) {
+    deleteError.value = getErrorMessage(error).message;
+    showDeleteConfirm.value = false;
+  }
 };
 
 const onTitleBlur = () => {
@@ -65,6 +85,11 @@ const isLoading = computed(() => isUpdating.value || isDeleting.value);
     </template>
 
     <div v-if="!showDeleteConfirm" class="space-y-4">
+      <!-- Error Alert -->
+      <div v-if="submitError" class="bg-red-50 border border-red-200 rounded-lg p-3">
+        <p class="text-sm text-red-800">{{ submitError }}</p>
+      </div>
+
       <!-- Title -->
       <div>
         <Input
@@ -72,7 +97,7 @@ const isLoading = computed(() => isUpdating.value || isDeleting.value);
           type="text"
           label="List Title"
           placeholder="e.g., Work, Personal, Shopping"
-          :error="touched.title ? errors.title : null"
+          :error="fieldErrors.title || (touched.title ? errors.title : null)"
           @blur="onTitleBlur"
         />
       </div>
@@ -80,6 +105,11 @@ const isLoading = computed(() => isUpdating.value || isDeleting.value);
 
     <!-- Delete Confirmation -->
     <div v-else class="space-y-4">
+      <!-- Delete Error Alert -->
+      <div v-if="deleteError" class="bg-red-50 border border-red-200 rounded-lg p-3">
+        <p class="text-sm text-red-800">{{ deleteError }}</p>
+      </div>
+
       <div class="bg-red-50 border border-red-200 rounded-lg p-4">
         <p class="font-medium text-red-900">Delete this list?</p>
         <p class="text-sm text-red-700 mt-1">
