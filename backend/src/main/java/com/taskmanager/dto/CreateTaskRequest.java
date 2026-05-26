@@ -24,7 +24,6 @@ public class CreateTaskRequest {
 
   private String description;
 
-  @NotNull(message = ValidationMessages.STATUS_REQUIRED)
   private TaskStatus status;
 
   @NotNull(message = ValidationMessages.PRIORITY_REQUIRED)
