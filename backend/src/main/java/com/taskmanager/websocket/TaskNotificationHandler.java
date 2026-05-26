@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import com.taskmanager.dto.websocket.ClientAckMessage;
 import com.taskmanager.dto.websocket.ClientSubscribeMessage;
@@ -37,6 +38,8 @@ public class TaskNotificationHandler {
             new ConcurrentHashMap<>();
     private final Map<UUID, Long> userIntervals = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastSentTime = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<UUID, Set<UUID>>> taskToNotificationIdMap =
+            new ConcurrentHashMap<>();
 
     // AS FOR MVP WE ASSUME ONLY ONE SESSION!!!! BUT USER CAN HAVE A SET OF SESSION
     private final Map<UUID, String> userSessionMap = new ConcurrentHashMap<>();
@@ -71,6 +74,20 @@ public class TaskNotificationHandler {
         LOGGER.info("User {} subscribed to notifications with session {}", userId, username);
 
         List<NotificationMessage> initialBatch = getOverdueAndDueSoonNotifications(userId);
+        // Filter: don't send notifications for tasks that had any notification acked
+        Map<UUID, Set<UUID>> userTaskMap = taskToNotificationIdMap.getOrDefault(userId,
+                new ConcurrentHashMap<>());
+        initialBatch = initialBatch.stream()
+                .filter(notification -> {
+                    UUID taskId = notification.getTaskId();
+                    Set<UUID> prevNotificationIds = userTaskMap.getOrDefault(taskId,
+                            ConcurrentHashMap.newKeySet());
+                    // Skip if any previous notification for this task was acked
+                    boolean anyAcked = prevNotificationIds.stream()
+                            .anyMatch(notifId -> hasBeenAcked(userId, notifId));
+                    return !anyAcked;
+                })
+                .collect(Collectors.toList());
         trackSentNotifications(userId, initialBatch);
         updateLastSentTime(userId, System.currentTimeMillis());
         return initialBatch;
@@ -139,9 +156,24 @@ public class TaskNotificationHandler {
 
     private void trackSentNotifications(UUID userId, List<NotificationMessage> notifications) {
         Set<String> sent = sentNotifications.computeIfAbsent(userId, k -> new HashSet<>());
+        Map<UUID, Set<UUID>> taskMap = taskToNotificationIdMap.computeIfAbsent(userId,
+                k -> new ConcurrentHashMap<>());
         for (NotificationMessage notification : notifications) {
             sent.add(notification.getTaskId() + ":" + notification.getReason());
+            taskMap.computeIfAbsent(notification.getTaskId(), k -> ConcurrentHashMap.newKeySet())
+                    .add(notification.getId());
         }
+    }
+
+    private void trackNotificationForTask(UUID userId, UUID taskId, UUID notificationId) {
+        taskToNotificationIdMap.computeIfAbsent(userId, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(taskId, k -> ConcurrentHashMap.newKeySet())
+                .add(notificationId);
+    }
+
+    private boolean hasBeenAcked(UUID userId, UUID notificationId) {
+        Set<String> sent = sentNotifications.getOrDefault(userId, new HashSet<>());
+        return sent.contains("acked:" + notificationId);
     }
 
     public boolean hasAlreadySent(UUID userId, UUID taskId, String reason) {
@@ -177,6 +209,7 @@ public class TaskNotificationHandler {
         Set<String> sent = sentNotifications.computeIfAbsent(userId,
                 k -> new HashSet<>());
         sent.add(notification.getTaskId() + ":" + notification.getReason());
+        trackNotificationForTask(userId, notification.getTaskId(), notification.getId());
     }
 
     public void clearSentNotifications(UUID userId) {
@@ -192,6 +225,7 @@ public class TaskNotificationHandler {
         userIntervals.remove(userId);
         lastSentTime.remove(userId);
         userSessionMap.remove(userId);
+        taskToNotificationIdMap.remove(userId);
     }
 
     public Set<UUID> getConnectedUsers() {
