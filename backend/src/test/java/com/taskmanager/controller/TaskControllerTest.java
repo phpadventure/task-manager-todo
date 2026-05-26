@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.taskmanager.dto.CreateTaskRequest;
 import com.taskmanager.dto.UpdateTaskRequest;
 import com.taskmanager.entity.Task;
+import com.taskmanager.entity.TaskPriority;
 import com.taskmanager.entity.TaskStatus;
 import com.taskmanager.entity.User;
 import com.taskmanager.exception.ResourceNotFoundException;
@@ -191,6 +193,9 @@ class TaskControllerTest {
     CreateTaskRequest request = new CreateTaskRequest();
     request.setTitle("New Task");
     request.setDescription("Description");
+    request.setStatus(TaskStatus.TO_DO);
+    request.setPriority(TaskPriority.MEDIUM);
+    request.setDueDate(LocalDate.now().plusDays(1));
 
     when(taskService.createTask(eq(userId), eq(listId), any(CreateTaskRequest.class)))
         .thenReturn(task);
@@ -208,6 +213,9 @@ class TaskControllerTest {
   void testCreateTask_BlankTitle_ShouldReturnBadRequest() throws Exception {
     CreateTaskRequest request = new CreateTaskRequest();
     request.setTitle("");
+    request.setStatus(TaskStatus.TO_DO);
+    request.setPriority(TaskPriority.MEDIUM);
+    request.setDueDate(LocalDate.now().plusDays(1));
 
     mockMvc
         .perform(
@@ -222,6 +230,9 @@ class TaskControllerTest {
   void testCreateTask_ListNotFound_ShouldReturnNotFound() throws Exception {
     CreateTaskRequest request = new CreateTaskRequest();
     request.setTitle("New Task");
+    request.setStatus(TaskStatus.TO_DO);
+    request.setPriority(TaskPriority.MEDIUM);
+    request.setDueDate(LocalDate.now().plusDays(1));
 
     when(taskService.createTask(eq(userId), eq(listId), any(CreateTaskRequest.class)))
         .thenThrow(new ResourceNotFoundException("List", listId));
@@ -339,9 +350,54 @@ class TaskControllerTest {
   }
 
   @Test
+  void testCreateTask_MissingStatus_ShouldReturnBadRequest() throws Exception {
+    String requestBody = "{\"title\":\"Task\",\"priority\":\"MEDIUM\",\"dueDate\":\"2026-05-30\"}";
+
+    mockMvc
+        .perform(
+            post("/lists/{listId}/tasks", listId)
+                .contentType("application/json")
+                .content(requestBody)
+                .principal(authPrincipal))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Validation failed"))
+        .andExpect(jsonPath("$.details.status").exists());
+  }
+
+  @Test
+  void testCreateTask_MissingPriority_ShouldReturnBadRequest() throws Exception {
+    String requestBody = "{\"title\":\"Task\",\"status\":\"TO_DO\",\"dueDate\":\"2026-05-30\"}";
+
+    mockMvc
+        .perform(
+            post("/lists/{listId}/tasks", listId)
+                .contentType("application/json")
+                .content(requestBody)
+                .principal(authPrincipal))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Validation failed"))
+        .andExpect(jsonPath("$.details.priority").exists());
+  }
+
+  @Test
+  void testCreateTask_MissingDueDate_ShouldReturnBadRequest() throws Exception {
+    String requestBody = "{\"title\":\"Task\",\"status\":\"TO_DO\",\"priority\":\"MEDIUM\"}";
+
+    mockMvc
+        .perform(
+            post("/lists/{listId}/tasks", listId)
+                .contentType("application/json")
+                .content(requestBody)
+                .principal(authPrincipal))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Validation failed"))
+        .andExpect(jsonPath("$.details.dueDate").exists());
+  }
+
+  @Test
   void testCreateTask_InvalidEnumValue_ShouldReturnBadRequestWithAllowedValues()
       throws Exception {
-    String requestBody = "{\"title\":\"Task\",\"priority\":\"INVALID_PRIORITY\"}";
+    String requestBody = "{\"title\":\"Task\",\"priority\":\"INVALID_PRIORITY\",\"status\":\"TO_DO\",\"dueDate\":\"2026-05-30\"}";
 
     mockMvc
         .perform(

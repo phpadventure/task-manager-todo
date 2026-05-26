@@ -12,6 +12,7 @@ export const isOverdue = (dueDate: string | undefined): boolean => {
   if (!dueDate) return false;
   const due = new Date(dueDate);
   const today = new Date();
+  due.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
   return due < today;
 };
@@ -28,6 +29,20 @@ export const isDueSoon = (dueDate: string | undefined): boolean => {
   inThreeDays.setHours(0, 0, 0, 0);
 
   return due >= today && due <= inThreeDays;
+};
+
+export const isWithinNext7Days = (dueDate: string | undefined): boolean => {
+  if (!dueDate) return false;
+  const due = new Date(dueDate);
+  const today = new Date();
+  const in7Days = new Date(today);
+  in7Days.setDate(in7Days.getDate() + 7);
+
+  due.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  in7Days.setHours(0, 0, 0, 0);
+
+  return due >= today && due <= in7Days;
 };
 
 export const getDueDateLabel = (dueDate: string | undefined): string => {
@@ -53,9 +68,7 @@ export const isToday = (dueDate: string | undefined): boolean => {
   if (!dueDate) return false;
   const due = new Date(dueDate);
   const today = new Date();
-  return (
-    due.getFullYear() === today.getFullYear() &&
-    due.getMonth() === today.getMonth() &&
-    due.getDate() === today.getDate()
-  );
+  due.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return due.getTime() === today.getTime();
 };

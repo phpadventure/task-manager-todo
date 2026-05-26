@@ -7,6 +7,7 @@ import com.taskmanager.entity.TaskPriority;
 import com.taskmanager.entity.TaskStatus;
 import com.taskmanager.util.ValidationMessages;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,9 +23,14 @@ public class CreateTaskRequest {
   private String title;
 
   private String description;
+
+  @NotNull(message = ValidationMessages.STATUS_REQUIRED)
   private TaskStatus status;
+
+  @NotNull(message = ValidationMessages.PRIORITY_REQUIRED)
   private TaskPriority priority;
 
+  @NotNull(message = ValidationMessages.DUE_DATE_REQUIRED)
   @JsonFormat(
       shape = JsonFormat.Shape.STRING,
       pattern = ValidationMessages.DATE_FORMAT_PATTERN)

@@ -12,4 +12,7 @@ public final class ValidationMessages {
   // Required field messages
   public static final String TITLE_REQUIRED = "Title is required";
   public static final String LIST_NAME_REQUIRED = "List name is required";
+  public static final String STATUS_REQUIRED = "Status is required";
+  public static final String PRIORITY_REQUIRED = "Priority is required";
+  public static final String DUE_DATE_REQUIRED = "Due date is required";
 }
