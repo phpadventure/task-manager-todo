@@ -130,12 +130,12 @@ Do NOT close modal (user can retry)
 ✅ Notification store and components fully integrated
 
 ## Testing Checklist (Manual)
-- [ ] Create task with validation error → see form alert + toast
-- [ ] Update task with 404 error → see update error + toast
-- [ ] Delete task with API error → see delete error message
-- [ ] Try to delete list with tasks → see 409 conflict + error toast
-- [ ] Session timeout (401) → redirect to login + error toast
-- [ ] Network error (500) → see server error message + toast
+- [x] Create task with validation error → see form alert + toast
+- [x] Update task with 404 error → see update error + toast
+- [x] Delete task with API error → see delete error message
+- [x] Try to delete list with tasks → see 409 conflict + error toast
+- [x] Session timeout (401) → redirect to login + error toast
+- [x] Network error (500) → see server error message + toast
 
 ## Session Persistence
 - Error toasts auto-dismiss after 5 seconds (configurable via `notificationStore.ts`)
