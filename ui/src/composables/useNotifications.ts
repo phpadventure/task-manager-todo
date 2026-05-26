@@ -1,5 +1,6 @@
 import { onMounted, onUnmounted } from 'vue';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { NotificationService } from '@/websocket/notificationService';
 
 let notificationService: NotificationService | null = null;
@@ -7,6 +8,7 @@ const seenNotificationIds = new Set<string>();
 
 export const useNotifications = () => {
   const notificationStore = useNotificationStore();
+  const settingsStore = useSettingsStore();
 
   const connect = async () => {
     const wsUrl = import.meta.env.VITE_WS_URL || '/api/ws';
@@ -33,7 +35,8 @@ export const useNotifications = () => {
         console.log('WebSocket closed, will attempt reconnect');
       });
 
-      notificationService.subscribe(60000);
+      settingsStore.loadSettings();
+      notificationService.subscribe(settingsStore.notificationInterval);
     } catch (error) {
       console.error('Failed to connect WebSocket:', error);
     }
@@ -53,6 +56,13 @@ export const useNotifications = () => {
     notificationStore.acknowledgeNotification(notificationId);
   };
 
+  const updateInterval = (newInterval: number) => {
+    settingsStore.setNotificationInterval(newInterval);
+    if (notificationService && notificationService.isConnected()) {
+      notificationService.subscribe(newInterval);
+    }
+  };
+
   onMounted(() => {
     connect();
   });
@@ -65,5 +75,6 @@ export const useNotifications = () => {
     connect,
     disconnect,
     acknowledge,
+    updateInterval,
   };
 };

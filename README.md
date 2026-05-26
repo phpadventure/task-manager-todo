@@ -457,8 +457,19 @@ After connecting, client sends subscription interval (milliseconds):
 client.send('/app/subscribe', {}, JSON.stringify({ interval: 60000 }));
 ```
 
-- **interval**: Time in milliseconds between notification batches (default: 60000ms = 1 minute)
-- Scheduler runs every 10 seconds internally but respects per-user interval
+- **interval**: Time in milliseconds between notification batches (required, positive integer)
+  - Minimum: 5 seconds (5000ms)
+  - Maximum: 10 minutes (600000ms)
+  - Default: 60 seconds (60000ms)
+- **How it works**: Server stores per-user interval; scheduler checks every 10 seconds internally but only sends notifications if interval has elapsed since last send
+- **UI Configuration**: Users can customize interval from Settings menu in app
+
+**Example intervals**:
+```javascript
+{ interval: 10000 }   // 10 seconds - more frequent updates
+{ interval: 60000 }   // 60 seconds - balanced (default)
+{ interval: 300000 }  // 5 minutes - less frequent, more efficient
+```
 
 ### Notification Message Format
 

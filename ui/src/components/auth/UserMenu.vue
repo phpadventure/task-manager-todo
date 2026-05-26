@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useAuth } from '@/composables/useAuth';
+import NotificationSettings from '@/components/settings/NotificationSettings.vue';
+import HelpModal from '@/components/help/HelpModal.vue';
 
 const { user, logout, isLoading } = useAuth();
 const isMenuOpen = ref(false);
+const isSettingsOpen = ref(false);
+const isHelpOpen = ref(false);
 
 const userInitials = computed(() => {
   if (!user.value?.displayName) return '?';
@@ -16,6 +20,16 @@ const userInitials = computed(() => {
 
 const handleLogout = async () => {
   await logout();
+  isMenuOpen.value = false;
+};
+
+const openSettings = () => {
+  isSettingsOpen.value = true;
+  isMenuOpen.value = false;
+};
+
+const openHelp = () => {
+  isHelpOpen.value = true;
   isMenuOpen.value = false;
 };
 
@@ -88,7 +102,7 @@ const closeMenu = () => {
             type="button"
             class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             role="menuitem"
-            @click="closeMenu"
+            @click="openSettings"
           >
             <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -110,7 +124,7 @@ const closeMenu = () => {
             type="button"
             class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             role="menuitem"
-            @click="closeMenu"
+            @click="openHelp"
           >
             <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -154,6 +168,12 @@ const closeMenu = () => {
       </Transition>
     </Teleport>
   </div>
+
+  <!-- Notification Settings Modal -->
+  <NotificationSettings v-model="isSettingsOpen" />
+
+  <!-- Help Modal -->
+  <HelpModal v-model="isHelpOpen" />
 </template>
 
 <style scoped>

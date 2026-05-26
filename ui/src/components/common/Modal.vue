@@ -7,7 +7,7 @@
 
         <!-- Modal -->
         <div
-          class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 z-10 focus:outline-none"
+          class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 z-10 focus:outline-none max-h-96 flex flex-col overflow-hidden"
           role="dialog"
           aria-modal="true"
           @keydown.esc="closeModal"
@@ -36,7 +36,7 @@
           </div>
 
           <!-- Body -->
-          <div class="p-6">
+          <div class="p-6 overflow-y-auto flex-1">
             <slot />
           </div>
 
