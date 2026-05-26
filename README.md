@@ -185,20 +185,49 @@ docker-compose ps
 
 **Access**: `http://localhost` (via Nginx reverse proxy)
 
+**Architecture**:
+- **Nginx** (localhost:80) — Reverse proxy, routes to frontend & backend
+- **Frontend** (Nginx service) — Vue SPA static files served by Nginx
+- **Backend** (localhost:8080, internal) — Spring Boot API, accessible via Nginx proxy
+- **MySQL** (localhost:3306, internal) — Database
+- Single origin for all client requests (`http://localhost`)
+
 **View logs**:
 ```bash
+docker-compose logs -f nginx      # Nginx logs
+docker-compose logs -f ui         # Frontend build/service logs
 docker-compose logs -f backend    # Backend logs
 docker-compose logs -f mysql      # MySQL logs
+docker-compose logs -f            # All services
 ```
 
 **Session cookies work**:
 - Nginx reverse proxy on single origin
 - Frontend and backend communication through Nginx
 - Cookie domain: `localhost`
+- No CORS preflight needed (same-origin)
+
+**Access Swagger UI** (optional, for backend debugging):
+```bash
+# If backend port is exposed (default: 8080)
+curl http://localhost:8080/swagger-ui.html
+```
 
 **Stop services**:
 ```bash
 docker-compose down
+```
+
+**Rebuild after code changes**:
+```bash
+# Rebuild only backend
+docker-compose up -d --build backend
+
+# Rebuild only frontend
+docker-compose up -d --build ui
+
+# Rebuild all
+docker-compose up -d --build
 ```
 
 ## Verify Connections
@@ -207,15 +236,27 @@ docker-compose down
 ```bash
 docker-compose ps
 ```
-Expected output: Both `mysql` and `backend` services should be `Up` and healthy.
+Expected output: All services should be `Up` (`mysql`, `backend`, `ui`, `nginx`).
 
-### Test Backend Health
+**Typical output**:
+```
+NAME                    STATUS
+task-manager-mysql      Up (healthy)
+task-manager-backend    Up
+task-manager-ui         Up
+task-manager-nginx      Up
+```
+
+### Test Application Access (Docker)
 ```bash
-# From host machine
-curl http://localhost:8080/api/actuator/health
+# Main app (via Nginx single origin)
+curl http://localhost
 
-# From Docker network (inside backend container)
-docker-compose exec backend curl http://localhost:8080/api/actuator/health
+# API health check (via Nginx proxy)
+curl http://localhost/api/actuator/health
+
+# Backend direct (if port 8080 is exposed, optional for debugging)
+curl http://localhost:8080/api/actuator/health
 ```
 
 ### Test MySQL Connectivity from Backend
@@ -244,9 +285,19 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### Rebuild Backend (after code changes)
+### Rebuild Services (after code changes)
 ```bash
+# Rebuild backend service
 docker-compose up -d --build backend
+
+# Rebuild frontend service
+docker-compose up -d --build ui
+
+# Rebuild both backend and frontend
+docker-compose up -d --build backend ui
+
+# Full rebuild (all services)
+docker-compose up -d --build
 ```
 
 ## Code Quality
