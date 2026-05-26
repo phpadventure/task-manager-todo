@@ -4,16 +4,25 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.taskmanager.entity.TaskPriority;
 
 public class NotificationMessage {
+    @JsonProperty("type")
     private String type;
+    @JsonProperty("id")
     private UUID id;
+    @JsonProperty("taskId")
     private UUID taskId;
+    @JsonProperty("title")
     private String title;
+    @JsonProperty("reason")
     private String reason;
+    @JsonProperty("dueDate")
     private LocalDate dueDate;
+    @JsonProperty("priority")
     private TaskPriority priority;
+    @JsonProperty("sentAt")
     private LocalDateTime sentAt;
 
     public NotificationMessage() {

@@ -14,11 +14,11 @@ import com.taskmanager.dto.websocket.NotificationMessage;
 import com.taskmanager.entity.Task;
 import com.taskmanager.entity.User;
 import com.taskmanager.security.CustomOAuth2User;
-import com.taskmanager.security.SecurityUser;
 import com.taskmanager.service.TaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
@@ -52,16 +52,16 @@ public class TaskNotificationHandler {
 
     @SubscribeMapping("/notifications")
     public List<NotificationMessage> handleSubscribe(
-            Authentication authentication) {
+            Authentication authentication,
+            @Header("simpSessionId") String stompSessionId) {
         User userDetails = ((CustomOAuth2User) authentication.getPrincipal()).getUser();
         UUID userId = userDetails.getId();
-        String username = authentication.getName();
+        String principal = authentication.getName(); // Use principal name for STOMP routing
 
-        // Check if user already has active session
         String previousSession = userSessionMap.get(userId);
-        if (previousSession != null && !previousSession.equals(username)) {
-            LOGGER.warn("User {} reconnected with new session. Old: {}, New: {}",
-                userId, previousSession, username);
+        if (previousSession != null && !previousSession.equals(principal)) {
+            LOGGER.warn("User {} reconnected. Old: {}, New: {}, StompId: {}",
+                userId, previousSession, principal, stompSessionId);
             removeUser(userId);
         }
 
@@ -69,9 +69,10 @@ public class TaskNotificationHandler {
         sentNotifications.computeIfAbsent(userId, k -> new HashSet<>());
         userIntervals.putIfAbsent(userId, 60000L);
         lastSentTime.putIfAbsent(userId, System.currentTimeMillis());
-        userSessionMap.put(userId, username);
+        userSessionMap.put(userId, principal); // Store principal name for convertAndSendToUser()
 
-        LOGGER.info("User {} subscribed to notifications with session {}", userId, username);
+        LOGGER.info("User {} subscribed to notifications. Principal: {}, StompSessionId: {}",
+            userId, principal, stompSessionId);
 
         List<NotificationMessage> initialBatch = getOverdueAndDueSoonNotifications(userId);
         // Filter: don't send notifications for tasks that had any notification acked
@@ -189,17 +190,19 @@ public class TaskNotificationHandler {
         }
 
         try {
-            String sessionId = userSessionMap.get(userId);
+            String userName = userSessionMap.get(userId);
+            LOGGER.info("Sending notification to user {} with sessionId={}: taskId={}, reason={}",
+                userId, userName, notification.getTaskId(), notification.getReason());
             messagingTemplate.convertAndSendToUser(
-                    sessionId,
+                    userName,
                     NOTIFICATION_QUEUE,
                     notification
             );
-            LOGGER.debug("Sent notification to user {}: taskId={}, reason={}",
+            LOGGER.info("Successfully sent notification to user {}: taskId={}, reason={}",
                 userId, notification.getTaskId(), notification.getReason());
         } catch (Exception e) {
-            LOGGER.error("Error sending notification to user {}: taskId={}",
-                userId, notification.getTaskId(), e);
+            LOGGER.error("Error sending notification to user {}: taskId={}, sessionId={}",
+                userId, notification.getTaskId(), userSessionMap.get(userId), e);
         }
     }
 
@@ -243,20 +246,16 @@ public class TaskNotificationHandler {
     @EventListener
     public void handleWebSocketDisconnect(SessionDisconnectEvent event) {
         try {
-            if (event.getUser() != null && event.getUser() instanceof SecurityUser) {
-                UUID userId = ((SecurityUser) event.getUser()).getId();
-                String sessionId = event.getSessionId();
-
-                String currentSession = userSessionMap.get(userId);
-                if (currentSession != null && currentSession.equals(sessionId)) {
-                    LOGGER.info("User {} disconnected: sessionId={}", userId, sessionId);
-                    removeUser(userId);
-                } else {
-                    LOGGER.debug(
-                        "Ignoring disconnect for stale session. userId={}, "
-                        + "oldSession={}, currentSession={}",
-                        userId, sessionId, currentSession);
-                }
+            String disconnectSessionId = event.getSessionId();
+            if (event.getUser() != null) {
+                String principal = event.getUser().getName();
+                userSessionMap.forEach((userId, storedPrincipal) -> {
+                    if (storedPrincipal != null && storedPrincipal.equals(principal)) {
+                        LOGGER.info("User {} disconnected: sessionId={}, principal={}",
+                            userId, disconnectSessionId, principal);
+                        removeUser(userId);
+                    }
+                });
             }
         } catch (Exception e) {
             LOGGER.error("Error handling WebSocket disconnect", e);

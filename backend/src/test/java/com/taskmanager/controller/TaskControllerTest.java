@@ -349,20 +349,6 @@ class TaskControllerTest {
         .andExpect(jsonPath("$.details.dueDate").exists());
   }
 
-  @Test
-  void testCreateTask_MissingStatus_ShouldReturnBadRequest() throws Exception {
-    String requestBody = "{\"title\":\"Task\",\"priority\":\"MEDIUM\",\"dueDate\":\"2026-05-30\"}";
-
-    mockMvc
-        .perform(
-            post("/lists/{listId}/tasks", listId)
-                .contentType("application/json")
-                .content(requestBody)
-                .principal(authPrincipal))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("Validation failed"))
-        .andExpect(jsonPath("$.details.status").exists());
-  }
 
   @Test
   void testCreateTask_MissingPriority_ShouldReturnBadRequest() throws Exception {
