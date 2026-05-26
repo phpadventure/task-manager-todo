@@ -37,15 +37,15 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 **Note**: No OAUTH_*_CLIENT_ID in frontend `.env`—OAuth redirects handled by backend (SecurityConfig redirects to provider).
 
 **Files to Create**:
-- [ ] `ui/vite.config.ts`
-- [ ] `ui/tsconfig.json`
+- [x] `ui/vite.config.ts`
+- [ ] `ui/tsconfig.json` ⚠️ **Missing**
 - [ ] `ui/tsconfig.app.json`
-- [ ] `ui/tailwind.config.js`
-- [ ] `ui/postcss.config.js`
-- [ ] `ui/.env.example`
-- [ ] `ui/.env.development`
-- [ ] `ui/vitest.config.ts`
-- [ ] `ui/playwright.config.ts`
+- [x] `ui/tailwind.config.js`
+- [x] `ui/postcss.config.js`
+- [x] `ui/.env.example`
+- [x] `ui/.env.development`
+- [x] `ui/vitest.config.ts`
+- [x] `ui/playwright.config.ts`
 
 ---
 
@@ -58,10 +58,10 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 - [x] Create reusable CSS utilities for common patterns
 
 **Files to Create**:
-- [ ] `ui/src/styles/globals.css`
-- [ ] `ui/src/styles/variables.css`
-- [ ] `ui/src/layouts/MainLayout.vue`
-- [ ] `ui/src/layouts/AuthLayout.vue`
+- [x] `ui/src/styles/globals.css`
+- [x] `ui/src/styles/variables.css`
+- [x] `ui/src/layouts/MainLayout.vue`
+- [x] `ui/src/layouts/AuthLayout.vue`
 
 ---
 
@@ -108,10 +108,10 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Auto-dismiss after 5 seconds
 
 **Files to Create**:
-- [ ] `ui/src/stores/authStore.ts`
-- [ ] `ui/src/stores/listStore.ts`
-- [ ] `ui/src/stores/taskStore.ts`
-- [ ] `ui/src/stores/notificationStore.ts`
+- [x] `ui/src/stores/authStore.ts`
+- [x] `ui/src/stores/listStore.ts`
+- [x] `ui/src/stores/taskStore.ts`
+- [x] `ui/src/stores/notificationStore.ts`
 
 ---
 
@@ -154,12 +154,12 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] `validateFilters(filters)` - check valid status/priority values
 
 **Files to Create**:
-- [ ] `ui/src/api/client.ts`
-- [ ] `ui/src/api/authApi.ts`
-- [ ] `ui/src/api/listApi.ts`
-- [ ] `ui/src/api/taskApi.ts`
-- [ ] `ui/src/utils/dateUtils.ts`
-- [ ] `ui/src/utils/filterUtils.ts`
+- [x] `ui/src/api/client.ts`
+- [x] `ui/src/api/authApi.ts`
+- [x] `ui/src/api/listApi.ts`
+- [x] `ui/src/api/taskApi.ts`
+- [x] `ui/src/utils/dateUtils.ts`
+- [x] `ui/src/utils/filterUtils.ts`
 
 ---
 
@@ -209,8 +209,8 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 **Critical Note**: Subscribe message ONLY contains `interval` field. Do NOT add `type` field.
 
 **Files to Create**:
-- [ ] `ui/src/websocket/notificationService.ts`
-- [ ] `ui/src/composables/useNotifications.ts`
+- [x] `ui/src/websocket/notificationService.ts`
+- [x] `ui/src/composables/useNotifications.ts`
 
 ---
 
@@ -247,11 +247,11 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Persist selected list ID
 
 **Files to Create**:
-- [ ] `ui/src/composables/useAuth.ts`
-- [ ] `ui/src/composables/useLists.ts`
-- [ ] `ui/src/composables/useTasks.ts`
-- [ ] `ui/src/composables/useForm.ts`
-- [ ] `ui/src/composables/useLocalStorage.ts`
+- [x] `ui/src/composables/useAuth.ts`
+- [x] `ui/src/composables/useLists.ts`
+- [x] `ui/src/composables/useTasks.ts`
+- [x] `ui/src/composables/useForm.ts`
+- [x] `ui/src/composables/useLocalStorage.ts`
 
 ---
 
@@ -273,28 +273,28 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Multi-select variant
   - [x] Error state
 
-- [ ] Create `src/components/common/Modal.vue`
-  - [ ] Header, body, footer slots
-  - [ ] Close button
-  - [ ] Focus trap, backdrop
+- [x] Create `src/components/common/Modal.vue`
+  - [x] Header, body, footer slots
+  - [x] Close button
+  - [x] Focus trap, backdrop
 
-- [ ] Create `src/components/common/Drawer.vue`
+- [ ] Create `src/components/common/Drawer.vue` (lower priority)
   - [ ] Slide-in panel (mobile-friendly)
   - [ ] Close button
   - [ ] Overlay
 
-- [ ] Create `src/components/common/Spinner.vue`
-  - [ ] Loading indicator
-  - [ ] Sizes: sm, md, lg
+- [x] Create `src/components/common/Spinner.vue`
+  - [x] Loading indicator
+  - [x] Sizes: sm, md, lg
 
-- [ ] Create `src/components/common/EmptyState.vue`
-  - [ ] Icon, heading, description
-  - [ ] Optional action button
+- [x] Create `src/components/common/EmptyState.vue`
+  - [x] Icon, heading, description
+  - [x] Optional action button
 
-- [ ] Create `src/components/common/Toast.vue`
-  - [ ] For notifications
-  - [ ] Auto-dismiss
-  - [ ] Types: success, error, info, warning
+- [x] Create `src/components/common/Toast.vue`
+  - [x] For notifications
+  - [x] Auto-dismiss
+  - [x] Types: success, error, info, warning
 
 - [x] Create `src/components/common/Badge.vue`
   - [x] Status badge mapping (use exact enum values):
@@ -308,15 +308,15 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Color coding consistent across app
 
 **Files to Create**:
-- [ ] `ui/src/components/common/Button.vue`
-- [ ] `ui/src/components/common/Input.vue`
-- [ ] `ui/src/components/common/Select.vue`
-- [ ] `ui/src/components/common/Modal.vue`
-- [ ] `ui/src/components/common/Drawer.vue`
-- [ ] `ui/src/components/common/Spinner.vue`
-- [ ] `ui/src/components/common/EmptyState.vue`
-- [ ] `ui/src/components/common/Toast.vue`
-- [ ] `ui/src/components/common/Badge.vue`
+- [x] `ui/src/components/common/Button.vue`
+- [x] `ui/src/components/common/Input.vue`
+- [x] `ui/src/components/common/Select.vue`
+- [x] `ui/src/components/common/Modal.vue`
+- [ ] `ui/src/components/common/Drawer.vue` (lower priority)
+- [x] `ui/src/components/common/Spinner.vue`
+- [x] `ui/src/components/common/EmptyState.vue`
+- [x] `ui/src/components/common/Toast.vue`
+- [x] `ui/src/components/common/Badge.vue`
 
 ---
 
@@ -348,10 +348,10 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] **No OAuth client IDs or tokens in frontend** (all OAuth details and provider credentials handled server-side)
   - [x] Session persistence: Vite proxy + backend CORS allow session cookie with `/api` requests
 
-- [ ] Create `src/components/auth/UserMenu.vue`:
-  - [ ] Display user avatar + name
-  - [ ] Dropdown with profile, settings, logout
-  - [ ] Responsive mobile menu
+- [x] Create `src/components/auth/UserMenu.vue`:
+  - [x] Display user avatar + name
+  - [x] Dropdown with profile, settings, logout
+  - [x] Responsive mobile menu
 
 ### List/Project Components
 - [x] Create `src/components/lists/ListSidebar.vue`:
@@ -361,42 +361,42 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Collapsible on mobile
   - [ ] Edit/delete list actions
 
-- [ ] Create `src/components/lists/CreateListModal.vue`:
-  - [ ] Form with title input
-  - [ ] Validation feedback
-  - [ ] Submit/cancel buttons
+- [x] Create `src/components/lists/CreateListModal.vue`:
+  - [x] Form with title input
+  - [x] Validation feedback
+  - [x] Submit/cancel buttons
 
-- [ ] Create `src/components/lists/EditListModal.vue`:
-  - [ ] Pre-populated title
-  - [ ] Delete confirmation
-  - [ ] Submit/cancel buttons
+- [x] Create `src/components/lists/EditListModal.vue`:
+  - [x] Pre-populated title
+  - [x] Delete confirmation
+  - [x] Submit/cancel buttons
 
 ### Task Components
 - [x] Create `src/components/tasks/TaskList.vue`:
   - [x] Display tasks as table or cards
   - [x] Render title, description, status, priority, due_date
-  - [ ] Quick status change buttons
-  - [ ] Edit/delete actions
+  - [ ] Quick status change buttons (can use TaskStatusQuickChange)
+  - [ ] Edit/delete actions (can use TaskItem edit/delete)
   - [x] Empty state
 
-- [ ] Create `src/components/tasks/TaskItem.vue`:
-  - [ ] Individual task display
-  - [ ] Status badge
-  - [ ] Priority badge
-  - [ ] Due date indicator
-  - [ ] Hover actions
+- [x] Create `src/components/tasks/TaskItem.vue`:
+  - [x] Individual task display
+  - [x] Status badge
+  - [x] Priority badge
+  - [x] Due date indicator
+  - [x] Hover actions (edit/delete buttons)
 
-- [ ] Create `src/components/tasks/CreateTaskForm.vue`:
-  - [ ] Inputs: title (required), description, dueDate, priority
-  - [ ] Form validation with feedback
-  - [ ] Submit/cancel buttons
-  - [ ] Success message on submit
+- [x] Create `src/components/tasks/CreateTaskForm.vue`:
+  - [x] Inputs: title (required), description, dueDate, priority
+  - [x] Form validation with feedback
+  - [x] Submit/cancel buttons
+  - [x] Success message on submit
 
-- [ ] Create `src/components/tasks/EditTaskForm.vue`:
-  - [ ] Pre-populated fields
-  - [ ] Validation feedback
-  - [ ] Delete confirmation
-  - [ ] Submit/cancel buttons
+- [x] Create `src/components/tasks/EditTaskForm.vue`:
+  - [x] Pre-populated fields
+  - [x] Validation feedback
+  - [x] Delete confirmation
+  - [x] Submit/cancel buttons
 
 - [x] Create `src/components/tasks/TaskFilterBar.vue`:
   - [x] Search input (debounced)
@@ -411,11 +411,11 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
     - Display labels: "Overdue", "Today", "Next 7 Days", "All"
   - [x] Clear filters button
 
-- [ ] Create `src/components/tasks/TaskStatusQuickChange.vue`:
-  - [ ] Dropdown to change status inline
-  - [ ] Use exact enum values: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase - must match backend enums)
-  - [ ] Display labels: "To Do", "In Progress", "Done"
-  - [ ] Send PATCH request to `/api/tasks/{taskId}/status?status={newStatus}` with uppercase enum value
+- [x] Create `src/components/tasks/TaskStatusQuickChange.vue`:
+  - [x] Dropdown to change status inline
+  - [x] Use exact enum values: `TO_DO`, `IN_PROGRESS`, `DONE` (uppercase - must match backend enums)
+  - [x] Display labels: "To Do", "In Progress", "Done"
+  - [x] Send PATCH request to `/api/tasks/{taskId}/status?status={newStatus}` with uppercase enum value
 
 ### Notification Components
 - [x] Create `src/components/notifications/NotificationToast.vue`:
@@ -431,18 +431,18 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Fade-in/fade-out animations for UX
 
 **Files to Create**:
-- [ ] `ui/src/components/auth/LoginPage.vue`
-- [ ] `ui/src/components/auth/UserMenu.vue`
-- [ ] `ui/src/components/lists/ListSidebar.vue`
-- [ ] `ui/src/components/lists/CreateListModal.vue`
-- [ ] `ui/src/components/lists/EditListModal.vue`
-- [ ] `ui/src/components/tasks/TaskList.vue`
-- [ ] `ui/src/components/tasks/TaskItem.vue`
-- [ ] `ui/src/components/tasks/CreateTaskForm.vue`
-- [ ] `ui/src/components/tasks/EditTaskForm.vue`
-- [ ] `ui/src/components/tasks/TaskFilterBar.vue`
-- [ ] `ui/src/components/tasks/TaskStatusQuickChange.vue`
-- [ ] `ui/src/components/notifications/NotificationToast.vue`
+- [x] `ui/src/components/auth/LoginPage.vue`
+- [x] `ui/src/components/auth/UserMenu.vue`
+- [x] `ui/src/components/lists/ListSidebar.vue`
+- [x] `ui/src/components/lists/CreateListModal.vue`
+- [x] `ui/src/components/lists/EditListModal.vue`
+- [x] `ui/src/components/tasks/TaskList.vue`
+- [x] `ui/src/components/tasks/TaskItem.vue`
+- [x] `ui/src/components/tasks/CreateTaskForm.vue`
+- [x] `ui/src/components/tasks/EditTaskForm.vue`
+- [x] `ui/src/components/tasks/TaskFilterBar.vue`
+- [x] `ui/src/components/tasks/TaskStatusQuickChange.vue`
+- [x] `ui/src/components/notifications/NotificationToast.vue`
 
 ---
 
@@ -461,16 +461,16 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Create/edit task modals
   - [x] Load initial data on mount
 
-- [ ] Create `src/pages/TaskDetailPage.vue` (optional):
+- [ ] Create `src/pages/TaskDetailPage.vue` (optional) **MISSING**:
   - [ ] Full task detail view
   - [ ] Edit form
   - [ ] Delete action
   - [ ] Comments section (future feature)
 
 **Files to Create**:
-- [ ] `ui/src/pages/AuthPage.vue`
-- [ ] `ui/src/pages/HomePage.vue`
-- [ ] `ui/src/pages/TaskDetailPage.vue`
+- [x] `ui/src/pages/AuthPage.vue`
+- [x] `ui/src/pages/HomePage.vue`
+- [ ] `ui/src/pages/TaskDetailPage.vue` (optional)
 
 ---
 
@@ -496,88 +496,92 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [x] Mount to DOM
 
 **Files to Create**:
-- [ ] `ui/src/router/index.ts`
-- [ ] `ui/src/App.vue`
-- [ ] `ui/src/main.ts`
-- [ ] `ui/src/index.html`
+- [x] `ui/src/router/index.ts`
+- [x] `ui/src/App.vue`
+- [x] `ui/src/main.js` (TypeScript as .ts, implemented as .js)
+- [x] `ui/index.html`
 
 ---
 
 ## Phase 11: Form Validation & Error Handling
 
-- [ ] Create `src/utils/validation.ts`:
-  - [ ] `validateTaskTitle(title)` - required, max 255 chars
-  - [ ] `validateTaskDescription(desc)` - optional, max 5000 chars
-  - [ ] `validateListTitle(title)` - required, max 255 chars
-  - [ ] `validateDueDate(date)` - optional, must be today or future if provided
-  - [ ] `getErrorMessage(field, error)` - user-friendly error messages
+- [x] Create `src/utils/validation.ts`:
+  - [x] `validateTaskTitle(title)` - required, max 255 chars
+  - [x] `validateTaskDescription(desc)` - optional, max 5000 chars
+  - [x] `validateListTitle(title)` - required, max 255 chars
+  - [x] `validateDueDate(date)` - optional, must be today or future if provided
+  - [x] `getErrorMessage(field, error)` - user-friendly error messages
 
-- [ ] Create error handling in API calls (add to `src/api/client.ts`):
-  - [ ] Display error toasts on API failures (use Toast component)
+- ⚠️ **PARTIAL** Error handling in API calls (add to `src/api/client.ts`):
+  - [x] Basic 401 Unauthorized handling
+  - [ ] Display error toasts on API failures **NEEDS Toast component**
   - [ ] Handle HTTP status codes:
-    - `400 Bad Request` → show validation error from backend response body
-    - `401 Unauthorized` → clear session, redirect to login page, show "Session expired"
-    - `403 Forbidden` → show "You don't have permission to modify this resource"
-    - `404 Not Found` → show "Resource not found or has been deleted"
-    - `409 Conflict` → show conflict-specific message (e.g., "Cannot delete list with active tasks")
-    - `500 Server Error` → show "Server error, please try again"
+    - [ ] `400 Bad Request` → show validation error from backend response body
+    - [x] `401 Unauthorized` → redirect to login page
+    - [ ] `403 Forbidden` → show "You don't have permission to modify this resource"
+    - [ ] `404 Not Found` → show "Resource not found or has been deleted"
+    - [ ] `409 Conflict` → show conflict-specific message (e.g., "Cannot delete list with active tasks")
+    - [ ] `500 Server Error` → show "Server error, please try again"
   - [ ] Auto-retry logic for transient failures (5xx errors, optional exponential backoff)
   - [ ] Log error details to console for debugging (development mode)
 
 **Files to Create**:
-- [ ] `ui/src/utils/validation.ts`
+- [x] `ui/src/utils/validation.ts`
 
 ---
 
 ## Phase 12: Component Tests with Vitest
 
-- [ ] Create `src/components/common/__tests__/Button.spec.ts`
-- [ ] Create `src/components/common/__tests__/Input.spec.ts`
-- [ ] Create `src/components/common/__tests__/Modal.spec.ts`
-- [ ] Create `src/components/tasks/__tests__/TaskList.spec.ts`
-- [ ] Create `src/components/tasks/__tests__/TaskFilterBar.spec.ts`
-- [ ] Create `src/components/tasks/__tests__/CreateTaskForm.spec.ts`
-- [ ] Create `src/stores/__tests__/authStore.spec.ts`
-- [ ] Create `src/stores/__tests__/taskStore.spec.ts`
-- [ ] Create `src/utils/__tests__/dateUtils.spec.ts`
-- [ ] Create `src/utils/__tests__/validation.spec.ts`
+- [ ] Create `src/components/common/__tests__/Button.spec.ts` **MISSING**
+- [ ] Create `src/components/common/__tests__/Input.spec.ts` **MISSING**
+- [ ] Create `src/components/common/__tests__/Modal.spec.ts` **MISSING**
+- [x] Create `src/components/tasks/__tests__/TaskList.spec.ts`
+- [x] Create `src/components/tasks/__tests__/TaskFilterBar.spec.ts`
+- [x] Create `src/components/tasks/__tests__/CreateTaskForm.spec.ts`
+- [ ] Create `src/stores/__tests__/authStore.spec.ts` **MISSING**
+- [ ] Create `src/stores/__tests__/taskStore.spec.ts` **MISSING**
+- [ ] Create `src/utils/__tests__/dateUtils.spec.ts` **MISSING**
+- [ ] Create `src/utils/__tests__/validation.spec.ts` **MISSING**
 - [ ] Run tests: `npm run test`
 - [ ] Setup code coverage: `npm run test:coverage`
 
 **Test Coverage Goals**:
-- [ ] 70%+ overall coverage
-- [ ] 100% coverage for utils and stores
-- [ ] All critical component interactions tested
+- [ ] 70%+ overall coverage (Current: ~30-40% estimated)
+- [ ] 100% coverage for utils and stores **NOT STARTED**
+- [ ] All critical component interactions tested (Partial: feature components only)
 
 **Files to Create**:
-- [ ] `ui/src/components/common/__tests__/Button.spec.ts`
-- [ ] `ui/src/components/common/__tests__/Input.spec.ts`
-- [ ] `ui/src/components/common/__tests__/Modal.spec.ts`
-- [ ] `ui/src/components/tasks/__tests__/TaskList.spec.ts`
-- [ ] `ui/src/components/tasks/__tests__/TaskFilterBar.spec.ts`
-- [ ] `ui/src/components/tasks/__tests__/CreateTaskForm.spec.ts`
-- [ ] `ui/src/stores/__tests__/authStore.spec.ts`
-- [ ] `ui/src/stores/__tests__/taskStore.spec.ts`
-- [ ] `ui/src/utils/__tests__/dateUtils.spec.ts`
-- [ ] `ui/src/utils/__tests__/validation.spec.ts`
+- [ ] `ui/src/components/common/__tests__/Button.spec.ts` **MISSING**
+- [ ] `ui/src/components/common/__tests__/Input.spec.ts` **MISSING**
+- [ ] `ui/src/components/common/__tests__/Modal.spec.ts` **MISSING**
+- [x] `ui/src/components/tasks/__tests__/TaskList.spec.ts`
+- [x] `ui/src/components/tasks/__tests__/TaskFilterBar.spec.ts`
+- [x] `ui/src/components/tasks/__tests__/CreateTaskForm.spec.ts`
+- [x] `ui/src/components/lists/__tests__/ListSidebar.spec.ts` (not in plan but exists)
+- [x] `ui/src/components/lists/__tests__/CreateListModal.spec.ts` (not in plan but exists)
+- [x] `ui/src/components/notifications/__tests__/NotificationToast.spec.ts` (not in plan but exists)
+- [ ] `ui/src/stores/__tests__/authStore.spec.ts` **MISSING**
+- [ ] `ui/src/stores/__tests__/taskStore.spec.ts` **MISSING**
+- [ ] `ui/src/utils/__tests__/dateUtils.spec.ts` **MISSING**
+- [ ] `ui/src/utils/__tests__/validation.spec.ts` **MISSING**
 
 ---
 
 ## Phase 13: E2E Tests with Playwright
 
-- [ ] Create `tests/auth.spec.ts`:
-  - [ ] Login with Google OAuth
-  - [ ] Login with GitHub OAuth
+- ⚠️ **PARTIAL** Create `tests/auth.spec.ts`:
+  - [ ] Login with Google OAuth **PARTIAL/INCOMPLETE**
+  - [ ] Login with GitHub OAuth **PARTIAL/INCOMPLETE**
   - [ ] User profile displayed after login
   - [ ] Logout redirects to login page
 
-- [ ] Create `tests/lists.spec.ts`:
+- [ ] Create `tests/lists.spec.ts` **MISSING**:
   - [ ] Create new list
   - [ ] List appears in sidebar
   - [ ] Update list title
   - [ ] Delete list with confirmation
 
-- [ ] Create `tests/tasks.spec.ts`:
+- [ ] Create `tests/tasks.spec.ts` **MISSING**:
   - [ ] Create task in list
   - [ ] Task appears in task list
   - [ ] Search tasks by title
@@ -585,19 +589,19 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Update task
   - [ ] Delete task with confirmation
 
-- [ ] Create `tests/websocket.spec.ts`:
+- [ ] Create `tests/websocket.spec.ts` **MISSING**:
   - [ ] WebSocket connects on page load
   - [ ] Receive overdue task notification
   - [ ] Receive due-soon notification
   - [ ] Acknowledge notification (toast dismisses)
 
-- [ ] Create `tests/responsive.spec.ts`:
+- [ ] Create `tests/responsive.spec.ts` **MISSING**:
   - [ ] Layout works at 320px (mobile)
   - [ ] Layout works at 768px (tablet)
   - [ ] Layout works at 1440px (desktop)
   - [ ] Sidebar collapses on mobile
 
-- [ ] Create `tests/crossuser.spec.ts`:
+- [ ] Create `tests/crossuser.spec.ts` **MISSING**:
   - [ ] User A logs in, creates tasks
   - [ ] User A logs out
   - [ ] User B logs in, cannot see User A's data
@@ -607,24 +611,24 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 - [ ] View Playwright report: `npm run test:e2e -- --reporter=html`
 
 **Files to Create**:
-- [ ] `ui/tests/auth.spec.ts`
-- [ ] `ui/tests/lists.spec.ts`
-- [ ] `ui/tests/tasks.spec.ts`
-- [ ] `ui/tests/websocket.spec.ts`
-- [ ] `ui/tests/responsive.spec.ts`
-- [ ] `ui/tests/crossuser.spec.ts`
+- ⚠️ `ui/tests/auth.spec.ts` (partial)
+- [ ] `ui/tests/lists.spec.ts` **MISSING**
+- [ ] `ui/tests/tasks.spec.ts` **MISSING**
+- [ ] `ui/tests/websocket.spec.ts` **MISSING**
+- [ ] `ui/tests/responsive.spec.ts` **MISSING**
+- [ ] `ui/tests/crossuser.spec.ts` **MISSING**
 
 ---
 
 ## Phase 14: Styling & Responsive Design
 
-- [ ] Tailwind utilities configuration
-- [ ] Responsive breakpoints:
-  - [ ] Mobile-first (320px base)
-  - [ ] Tablet (768px)
-  - [ ] Desktop (1440px)
-- [ ] Dark mode support (optional)
-- [ ] Accessibility (WCAG 2.1 AA):
+- [x] Tailwind utilities configuration
+- [x] Responsive breakpoints:
+  - [x] Mobile-first (320px base)
+  - [x] Tablet (768px)
+  - [x] Desktop (1440px)
+- [ ] Dark mode support (optional) **NOT IMPLEMENTED**
+- [ ] Accessibility (WCAG 2.1 AA) **NOT VERIFIED**:
   - [ ] Proper heading hierarchy
   - [ ] Alt text for images
   - [ ] ARIA labels for interactive elements
@@ -642,10 +646,10 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
 
 ## Phase 15: Documentation & Deployment
 
-- [ ] Update `README.md`:
-  - [ ] Frontend setup: `npm install`, `npm run dev`
-  - [ ] Environment variables `.env` setup (Vite proxy configuration)
-  - [ ] OAuth callback URL configuration (backend redirects to success page)
+- ⚠️ **PARTIAL** Update `README.md`:
+  - [ ] Frontend setup: `npm install`, `npm run dev` **NEEDS VERIFICATION**
+  - [ ] Environment variables `.env` setup (Vite proxy configuration) **NEEDS VERIFICATION**
+  - [ ] OAuth callback URL configuration (backend redirects to success page) **NEEDS VERIFICATION**
   - [ ] Component architecture overview
   - [ ] Store structure documentation (Pinia + TanStack Query)
   - [ ] API integration patterns
@@ -662,25 +666,25 @@ This project requires building a responsive Vue 3 SPA with Vite that connects to
   - [ ] Vite proxy configuration for local development
   - [ ] Session-based auth with HttpOnly cookies
 
-- [ ] Create `COMPONENT_GUIDE.md`:
+- [ ] Create `COMPONENT_GUIDE.md` **MISSING**:
   - [ ] Component props, slots, emits
   - [ ] Usage examples
   - [ ] Common patterns
   - [ ] Enum mappings (TO_DO → "To Do", etc.)
 
-- [ ] Create `.env.example`:
-  - [ ] `VITE_API_URL=http://localhost:8080` (or environment-specific)
+- [x] Create `.env.example`:
+  - [x] `VITE_API_URL=http://localhost:8080` (or environment-specific)
 
-- [ ] Setup build and deployment:
-  - [ ] Build production: `npm run build`
-  - [ ] Optimize bundle size
-  - [ ] Setup CI/CD for frontend (GitHub Actions)
-  - [ ] Docker setup (see `docker-compose.yml` for full-stack deployment)
+- ⚠️ **PARTIAL** Setup build and deployment:
+  - [x] Build production: `npm run build` (exists)
+  - [ ] Optimize bundle size **NOT DONE**
+  - [ ] Setup CI/CD for frontend (GitHub Actions) **NOT DONE**
+  - [ ] Docker setup (see `docker-compose.yml` for full-stack deployment) **NOT DONE**
 
 **Files to Create/Update**:
-- [ ] Update `README.md`
-- [ ] Create `COMPONENT_GUIDE.md`
-- [ ] Create `.env.example`
+- ⚠️ `ui/README.md` (exists, needs verification)
+- [ ] Create `COMPONENT_GUIDE.md` **MISSING**
+- [x] `ui/.env.example` (exists)
 
 ---
 
@@ -806,13 +810,13 @@ In Docker, frontend and backend served through **Nginx reverse proxy** (single o
 
 ## Local Development Verification
 
-- [ ] Install dependencies: `npm install`
-- [ ] Create `.env.development` with `VITE_API_URL=http://localhost:8080`
-- [ ] Start backend: `cd backend && ./gradlew bootRun` (runs on `http://localhost:8080`)
-- [ ] Start dev server: `npm run dev` (runs on `http://localhost:5173`)
-- [ ] Browser opens to http://localhost:5173
-- [ ] Vite hot reload works
-- [ ] API calls work with session cookie (check Network tab in DevTools, see JSESSIONID cookie)
+- [x] Install dependencies: `npm install` **DONE**
+- [x] Create `.env.development` with `VITE_API_URL=http://localhost:8080` **DONE**
+- [ ] Start backend: `cd backend && ./gradlew bootRun` (runs on `http://localhost:8080`) **USER RUNS**
+- [ ] Start dev server: `npm run dev` (runs on `http://localhost:5173`) **USER RUNS**
+- [ ] Browser opens to http://localhost:5173 **READY**
+- [ ] Vite hot reload works **READY**
+- [ ] API calls work with session cookie (check Network tab in DevTools, see JSESSIONID cookie) **READY**
 
 ### Manual Testing Checklist
 - [ ] Login with Google OAuth (or mock)
